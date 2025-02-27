@@ -1,13 +1,6 @@
 package com.example.taxapp.chatbot
 
-import android.speech.tts.TextToSpeech
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.LocalDarkMode
@@ -59,9 +54,14 @@ import com.example.taxapp.accessibility.LocalTtsManager
 
 @Composable
 fun ChatFAB(
-    chatViewModel: ChatViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
+    // Get the ViewModel using the viewModel() function with the LocalContext.current as the ViewModelStoreOwner
+    val context = LocalContext.current
+    val chatViewModel: ChatViewModel = viewModel(
+        factory = ViewModelFactory(context.applicationContext as Application)
+    )
+
     val chatState by chatViewModel.chatState.collectAsState()
     val accessibleColors = LocalThemeColors.current
     val ttsManager = LocalTtsManager.current
@@ -94,6 +94,17 @@ fun ChatFAB(
                 chatViewModel = chatViewModel
             )
         }
+    }
+}
+
+// Factory for creating the ChatViewModel with an Application parameter
+class ViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ChatViewModel(application) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 

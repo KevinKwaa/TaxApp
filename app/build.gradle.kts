@@ -1,3 +1,7 @@
+// Add these imports at the top of your build.gradle.kts file
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -20,7 +24,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        //buildConfigField("String", "HUGGINGFACE_API_TOKEN", getHuggingFaceToken())
+
+        // Add API key from local.properties
+        buildConfigField("String", "GEMINI_API_KEY", getApiKey("GEMINI_API_KEY"))
     }
 
     buildTypes {
@@ -41,6 +47,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true // Enable BuildConfig generation
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -52,8 +59,18 @@ android {
     }
 }
 
-dependencies {
+// Function to get API key from local.properties
+fun getApiKey(propertyKey: String): String {
+    val properties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        properties.load(FileInputStream(localPropertiesFile))
+    }
+    return "\"${properties.getProperty(propertyKey, "")}\""
+}
 
+dependencies {
+    // Existing dependencies...
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -66,8 +83,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.datastore.core.android)
     implementation(libs.androidx.datastore.preferences.core.jvm)
-    implementation(libs.generativeai)
-    //implementation(libs.androidx.security.crypto.ktx)
+    implementation(libs.generativeai) // This is the Gemini AI dependency
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
