@@ -1,6 +1,12 @@
 package com.example.taxapp.chatbot
 
 import android.app.Application
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +29,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -91,7 +98,8 @@ fun ChatFAB(
         // Chat Dialog
         if (chatState.isChatVisible) {
             ChatDialog(
-                chatViewModel = chatViewModel
+                chatViewModel = chatViewModel,
+                isProcessing = chatState.isProcessing
             )
         }
     }
@@ -110,7 +118,8 @@ class ViewModelFactory(private val application: Application) : ViewModelProvider
 
 @Composable
 fun ChatDialog(
-    chatViewModel: ChatViewModel
+    chatViewModel: ChatViewModel,
+    isProcessing: Boolean = false
 ) {
     val chatState by chatViewModel.chatState.collectAsState()
     val accessibleColors = LocalThemeColors.current
@@ -146,12 +155,26 @@ fun ChatDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "AI Assistant",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = accessibleColors.headerText
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.ai_assistant),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = accessibleColors.headerText
+                        )
+
+                        // Show loading indicator when processing
+                        if (isProcessing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = accessibleColors.selectedDay,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
 
                     IconButton(
                         onClick = {
@@ -161,7 +184,7 @@ fun ChatDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Close chat",
+                            contentDescription = stringResource(R.string.close_chat),
                             tint = accessibleColors.headerText
                         )
                     }
@@ -179,12 +202,19 @@ fun ChatDialog(
                     items(chatState.messages) { message ->
                         ChatMessageItem(message = message)
                     }
+
+                    // Show typing indicator if processing
+                    if (isProcessing) {
+                        item {
+                            TypingIndicator()
+                        }
+                    }
                 }
 
                 // Auto-scroll to the bottom when new messages are added
-                LaunchedEffect(chatState.messages.size) {
-                    if (chatState.messages.isNotEmpty()) {
-                        listState.animateScrollToItem(chatState.messages.size - 1)
+                LaunchedEffect(chatState.messages.size, isProcessing) {
+                    if (chatState.messages.isNotEmpty() || isProcessing) {
+                        listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
                     }
                 }
 
@@ -198,10 +228,11 @@ fun ChatDialog(
                     OutlinedTextField(
                         value = chatState.userInput,
                         onValueChange = { chatViewModel.updateUserInput(it) },
-                        placeholder = { Text("Type your question...") },
+                        placeholder = { Text(stringResource(R.string.type_your_question)) },
                         modifier = Modifier
                             .weight(1f)
-                            .padding(end = 8.dp)
+                            .padding(end = 8.dp),
+                        enabled = !isProcessing
                     )
 
                     IconButton(
@@ -209,11 +240,11 @@ fun ChatDialog(
                             chatViewModel.sendMessage(chatState.userInput)
                             ttsManager?.speak("Message sent")
                         },
-                        enabled = chatState.userInput.isNotBlank() && !chatState.isProcessing,
+                        enabled = chatState.userInput.isNotBlank() && !isProcessing,
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                if (chatState.userInput.isNotBlank() && !chatState.isProcessing)
+                                if (chatState.userInput.isNotBlank() && !isProcessing)
                                     accessibleColors.buttonBackground
                                 else
                                     accessibleColors.buttonBackground.copy(alpha = 0.5f),
@@ -222,12 +253,86 @@ fun ChatDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Send,
-                            contentDescription = "Send message",
+                            contentDescription = stringResource(R.string.send_message),
                             tint = accessibleColors.buttonText
                         )
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun TypingIndicator() {
+    val accessibleColors = LocalThemeColors.current
+    val dotSize = 8.dp
+    val animationDuration = 1000
+
+    // Animated dots
+    val infiniteTransition = rememberInfiniteTransition(label = "typing")
+
+    val dotOneAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(animationDuration, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dot1"
+    )
+
+    val dotTwoAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(animationDuration, delayMillis = 300, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dot2"
+    )
+
+    val dotThreeAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(animationDuration, delayMillis = 600, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dot3"
+    )
+
+    // Typing indicator container
+    Box(
+        modifier = Modifier
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+            .widthIn(max = 100.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(accessibleColors.cardBackground.copy(alpha = 0.7f))
+            .padding(8.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(dotSize)
+                    .clip(CircleShape)
+                    .background(accessibleColors.selectedDay.copy(alpha = dotOneAlpha))
+            )
+            Box(
+                modifier = Modifier
+                    .size(dotSize)
+                    .clip(CircleShape)
+                    .background(accessibleColors.selectedDay.copy(alpha = dotTwoAlpha))
+            )
+            Box(
+                modifier = Modifier
+                    .size(dotSize)
+                    .clip(CircleShape)
+                    .background(accessibleColors.selectedDay.copy(alpha = dotThreeAlpha))
+            )
         }
     }
 }

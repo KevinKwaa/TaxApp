@@ -50,7 +50,7 @@
     <string name="stop_speaking">Berhenti Bercakap</string>
 
     <!-- Chatbot -->
-    <string name="ai_assistant">Pembantu AI</string>
+    <string name="ai_assistant">Chatbot AI</string>
     <string name="chat_with_me">Sembang dengan saya</string>
     <string name="type_your_question">Taip soalan anda...</string>
     <string name="send_message">Hantar mesej</string>

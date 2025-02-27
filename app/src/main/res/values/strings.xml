@@ -48,7 +48,7 @@
     <string name="stop_speaking">Stop Speaking</string>
 
     <!-- Chatbot -->
-    <string name="ai_assistant">AI Assistant</string>
+    <string name="ai_assistant">AI Chatbot</string>
     <string name="chat_with_me">Chat with me</string>
     <string name="type_your_question">Type your question...</string>
     <string name="send_message">Send message</string>

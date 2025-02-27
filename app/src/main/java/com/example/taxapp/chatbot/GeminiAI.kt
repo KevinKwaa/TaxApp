@@ -2,6 +2,7 @@ package com.example.taxapp.chatbot
 
 import android.content.Context
 import com.example.taxapp.BuildConfig
+import com.example.taxapp.utils.NetworkUtil
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.RequestOptions
@@ -15,6 +16,7 @@ import kotlinx.coroutines.withContext
 /**
  * Service class for interacting with Google's Gemini AI API.
  * Handles conversations with the AI model for the chatbot feature.
+ * Includes fallback to hardcoded responses for offline scenarios.
  */
 class GeminiAIService(private val context: Context) {
     // Initialize the Gemini GenerativeModel
@@ -25,6 +27,9 @@ class GeminiAIService(private val context: Context) {
         )
     }
 
+    // Fallback service for offline or error scenarios
+    private val fallbackService = FallbackChatService()
+
     // Keep track of conversation history for context
     private val chatHistory = mutableListOf<Pair<String, String>>()
 
@@ -34,6 +39,12 @@ class GeminiAIService(private val context: Context) {
      * @return A response from the AI
      */
     suspend fun getResponse(userMessage: String): String = withContext(Dispatchers.IO) {
+        // Check if the device is online
+        if (!NetworkUtil.isOnline(context)) {
+            // Use fallback if offline
+            return@withContext fallbackService.getResponse(userMessage)
+        }
+
         try {
             // Build context-aware prompt with chat history and app-specific guidance
             val prompt = buildPrompt(userMessage)
@@ -52,8 +63,8 @@ class GeminiAIService(private val context: Context) {
 
             responseText
         } catch (e: Exception) {
-            // Handle any errors gracefully
-            "I'm sorry, I encountered an issue. Please try again later. Error: ${e.message}"
+            // Use the fallback service when there's an error with the AI service
+            fallbackService.getResponse(userMessage)
         }
     }
 

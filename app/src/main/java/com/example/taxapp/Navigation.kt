@@ -179,7 +179,7 @@ fun SchedulerApp() {
 
         // Add ChatFAB to overlay on all screens
         ChatFAB(
-            chatViewModel = chatViewModel,
+            //chatViewModel = chatViewModel,
             modifier = Modifier.fillMaxSize()
         )
     }
