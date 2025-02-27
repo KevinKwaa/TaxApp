@@ -1,0 +1,56 @@
+<resources>
+    <string name="app_name">TaxApp</string>
+    <string name="scheduler">Scheduler</string>
+    <string name="current_language">Current Language:</string>
+    <string name="select_language">Select Language:</string>
+    <string name="language_english">English</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_malay">Bahasa Melayu</string>
+    <string name="events_for">Events for %1$s</string>
+    <string name="no_events">No events scheduled for this day</string>
+    <string name="add_new_event">Add New Event</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- AddEventScreen and EditEventScreen -->
+    <string name="event_details">Event Details</string>
+    <string name="edit_event">Edit Event</string>
+    <string name="event_name">Event Name</string>
+    <string name="event_date">Event Date</string>
+    <string name="start_time">Start Time (HH:MM)</string>
+    <string name="end_time">End Time (HH:MM)</string>
+    <string name="description">Description</string>
+    <string name="reminder_for_event">Reminder for Event:</string>
+    <string name="save_event">Save Event</string>
+    <string name="save_changes">Save Changes</string>
+
+    <!-- EventDetailScreen -->
+    <string name="date_colon">Date: </string>
+    <string name="time_colon">Time: </string>
+    <string name="description_colon">Description:</string>
+    <string name="reminder_colon">Reminder: </string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="delete_event">Delete Event</string>
+    <string name="back_to_calendar">Back to Calendar</string>
+    <string name="delete_confirmation">Are you sure you want to delete this event?</string>
+    <string name="delete">Delete</string>
+
+    <!-- AccessibilitySettings -->
+    <string name="accessibility_features">Accessibility Features</string>
+    <string name="font_size">Font Size</string>
+    <string name="text_to_speech">Text to Speech</string>
+    <string name="visual_accessibility">Visual Accessibility</string>
+    <string name="color_blind_mode">Color Blind Mode</string>
+    <string name="high_contrast_mode">High Contrast Mode</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="apply_changes">Apply Changes</string>
+    <string name="stop_speaking">Stop Speaking</string>
+
+    <!-- Chatbot -->
+    <string name="ai_assistant">AI Assistant</string>
+    <string name="chat_with_me">Chat with me</string>
+    <string name="type_your_question">Type your question...</string>
+    <string name="send_message">Send message</string>
+    <string name="close_chat">Close chat</string>
+</resources>

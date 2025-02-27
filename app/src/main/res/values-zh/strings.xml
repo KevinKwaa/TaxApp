@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Calendar Screen -->
+    <string name="app_name">税务应用程序</string>
+    <string name="scheduler">日程安排</string>
+    <string name="current_language">当前语言：</string>
+    <string name="select_language">选择语言：</string>
+    <string name="language_english">English</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_malay">Bahasa Melayu</string>
+    <string name="events_for">%1$s 的事件</string>
+    <string name="no_events">这一天没有安排事件</string>
+    <string name="add_new_event">添加新事件</string>
+    <string name="confirm">确认</string>
+    <string name="cancel">取消</string>
+
+    <!-- AddEventScreen and EditEventScreen -->
+    <string name="event_details">事件详情</string>
+    <string name="edit_event">编辑事件</string>
+    <string name="event_name">事件名称</string>
+    <string name="event_date">事件日期</string>
+    <string name="start_time">开始时间 (HH:MM)</string>
+    <string name="end_time">结束时间 (HH:MM)</string>
+    <string name="description">描述</string>
+    <string name="reminder_for_event">事件提醒：</string>
+    <string name="save_event">保存事件</string>
+    <string name="save_changes">保存更改</string>
+
+    <!-- EventDetailScreen -->
+    <string name="date_colon">日期：</string>
+    <string name="time_colon">时间：</string>
+    <string name="description_colon">描述：</string>
+    <string name="reminder_colon">提醒：</string>
+    <string name="enabled">已启用</string>
+    <string name="disabled">已禁用</string>
+    <string name="delete_event">删除事件</string>
+    <string name="back_to_calendar">返回日历</string>
+    <string name="delete_confirmation">您确定要删除此事件吗？</string>
+    <string name="delete">删除</string>
+
+    <!-- AccessibilitySettings -->
+    <string name="accessibility_features">辅助功能</string>
+    <string name="font_size">字体大小</string>
+    <string name="text_to_speech">文字转语音</string>
+    <string name="visual_accessibility">视觉辅助</string>
+    <string name="color_blind_mode">色盲模式</string>
+    <string name="high_contrast_mode">高对比度模式</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="apply_changes">应用更改</string>
+    <string name="stop_speaking">停止说话</string>
+
+    <!-- Chatbot -->
+    <string name="ai_assistant">人工智能助手</string>
+    <string name="chat_with_me">跟我聊天</string>
+    <string name="type_your_question">输入您的问题...</string>
+    <string name="send_message">发送消息</string>
+    <string name="close_chat">关闭聊天</string>
+</resources>

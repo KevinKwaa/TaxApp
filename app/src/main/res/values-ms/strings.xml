@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Calendar Screen -->
+    <string name="app_name">AppCukai</string>
+    <string name="scheduler">Penjadual</string>
+    <string name="current_language">Bahasa Semasa:</string>
+    <string name="select_language">Pilih Bahasa:</string>
+    <string name="language_english">English</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_malay">Bahasa Melayu</string>
+    <string name="events_for">Acara untuk %1$s</string>
+    <string name="no_events">Tiada acara dijadualkan untuk hari ini</string>
+    <string name="add_new_event">Tambah Acara Baru</string>
+    <string name="confirm">Sahkan</string>
+    <string name="cancel">Batal</string>
+
+    <!-- AddEventScreen and EditEventScreen -->
+    <string name="event_details">Butiran Acara</string>
+    <string name="edit_event">Edit Acara</string>
+    <string name="event_name">Nama Acara</string>
+    <string name="event_date">Tarikh Acara</string>
+    <string name="start_time">Masa Mula (HH:MM)</string>
+    <string name="end_time">Masa Tamat (HH:MM)</string>
+    <string name="description">Penerangan</string>
+    <string name="reminder_for_event">Peringatan untuk Acara:</string>
+    <string name="save_event">Simpan Acara</string>
+    <string name="save_changes">Simpan Perubahan</string>
+
+    <!-- EventDetailScreen -->
+    <string name="date_colon">Tarikh: </string>
+    <string name="time_colon">Masa: </string>
+    <string name="description_colon">Penerangan:</string>
+    <string name="reminder_colon">Peringatan: </string>
+    <string name="enabled">Diaktifkan</string>
+    <string name="disabled">Dinyahaktifkan</string>
+    <string name="delete_event">Padam Acara</string>
+    <string name="back_to_calendar">Kembali ke Kalendar</string>
+    <string name="delete_confirmation">Adakah anda pasti mahu memadam acara ini?</string>
+    <string name="delete">Padam</string>
+
+    <!-- AccessibilitySettings -->
+    <string name="accessibility_features">Fungsi Kemudahan</string>
+    <string name="font_size">Saiz Font</string>
+    <string name="text_to_speech">Teks kepada ucapan</string>
+    <string name="visual_accessibility">Kemudahan Visual</string>
+    <string name="color_blind_mode">Mod Buta Warna</string>
+    <string name="high_contrast_mode">Mod Kontras Tinggi</string>
+    <string name="dark_mode">Mod Gelap</string>
+    <string name="apply_changes">Simpan Perubahan</string>
+    <string name="stop_speaking">Berhenti Bercakap</string>
+
+    <!-- Chatbot -->
+    <string name="ai_assistant">Pembantu AI</string>
+    <string name="chat_with_me">Sembang dengan saya</string>
+    <string name="type_your_question">Taip soalan anda...</string>
+    <string name="send_message">Hantar mesej</string>
+    <string name="close_chat">Tutup chat</string>
+</resources>
