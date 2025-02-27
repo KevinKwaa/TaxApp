@@ -23,12 +23,21 @@ import kotlinx.coroutines.withContext
 class GeminiAIService(private val context: Context) {
     // Initialize the Gemini GenerativeModel
     private val generativeModel by lazy {
+//        try {
+//            val response = GenerativeModel.listModels(BuildConfig.GEMINI_API_KEY)
+//            Log.d("GeminiAIService", "Available models: $response")
+//        } catch (e: Exception) {
+//            Log.e("GeminiAIService", "Error listing models", e)
+//        }
+        val requestOptions = RequestOptions(apiVersion = "v1")
+
         try {
-            Log.d("GeminiAIService", "API Key: ${BuildConfig.GEMINI_API_KEY.take(5)}...")
-            Log.d("GeminiAIService", "Network Status: ${NetworkUtil.isOnline(context)}")
+            //Log.d("GeminiAIService", "API Key: ${BuildConfig.GEMINI_API_KEY.take(5)}...")
+            //Log.d("GeminiAIService", "Network Status: ${NetworkUtil.isOnline(context)}")
             GenerativeModel(
-                modelName = "gemini-pro",
+                modelName = "gemini-2.0-flash",
                 apiKey = BuildConfig.GEMINI_API_KEY,
+                requestOptions = requestOptions,
             )
         } catch (e: Exception) {
             Log.e("GeminiAIService", "Error initializing GenerativeModel", e)
@@ -48,6 +57,53 @@ class GeminiAIService(private val context: Context) {
      * @return A response from the AI
      */
     suspend fun getResponse(userMessage: String): String = withContext(Dispatchers.IO) {
+        // Build a comprehensive prompt
+        val prompt = buildPrompt(userMessage)
+        Log.d("GeminiAIService", "Full Prompt: $prompt")
+
+        // Generate content with more explicit error handling
+        val response = try {
+            generativeModel!!.generateContent(prompt)
+        } catch (e: Exception) {
+            Log.e("GeminiAIService", "Error generating content (Ask Gemini)", e)
+
+            // More detailed error reporting
+            when (e) {
+                is java.net.UnknownHostException ->
+                    Log.e("GeminiAIService", "Network connectivity issue: ${e.message}")
+
+                is java.io.IOException ->
+                    Log.e("GeminiAIService", "API connection error: ${e.message}")
+
+                is com.google.ai.client.generativeai.type.ServerException -> {
+                    Log.e("GeminiAIService", "Server error details: ${e.message}")
+                    // Extract status code if available
+                    val errorMatch = Regex("\"code\":\\s*(\\d+)").find(e.message ?: "")
+                    val statusCode = errorMatch?.groupValues?.get(1)
+                    Log.e("GeminiAIService", "HTTP status code: $statusCode")
+
+                    // Log model name being used
+                    Log.e("GeminiAIService", "Model attempting to use: gemini-pro")
+                }
+
+                is IllegalArgumentException ->
+                    Log.e("GeminiAIService", "Invalid input parameters: ${e.message}")
+
+                else ->
+                    Log.e("GeminiAIService", "Unknown error type: ${e.javaClass.simpleName}")
+            }
+
+            // Log SDK version if possible
+            try {
+                val sdkVersion = com.google.ai.client.generativeai.BuildConfig.VERSION_NAME
+                Log.e("GeminiAIService", "Generative AI SDK version: $sdkVersion")
+            } catch (ex: Exception) {
+                Log.e("GeminiAIService", "Could not determine SDK version")
+            }
+
+            return@withContext fallbackService.getResponse(userMessage)
+        }
+
         try {
             // Detailed logging for troubleshooting
             Log.d("GeminiAIService", "API Key: ${BuildConfig.GEMINI_API_KEY.take(5)}...")

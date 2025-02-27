@@ -89,8 +89,9 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.datastore.core.android)
     implementation(libs.androidx.datastore.preferences.core.jvm)
-    implementation(libs.generativeai) // This is the Gemini AI dependency
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+//    implementation(libs.generativeai) // This is the Gemini AI dependency
+    implementation("com.google.ai.client.generativeai:generativeai:0.2.0")
+    //implementation("com.google.ai.client.generativeai:generativeai:0.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
 
