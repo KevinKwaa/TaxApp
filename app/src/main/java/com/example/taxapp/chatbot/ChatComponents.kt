@@ -1,12 +1,17 @@
 package com.example.taxapp.chatbot
 
 import android.app.Application
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +31,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,6 +48,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +69,7 @@ import com.example.taxapp.R
 import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
+import kotlinx.coroutines.delay
 
 @Composable
 fun ChatFAB(
@@ -70,37 +82,60 @@ fun ChatFAB(
     )
 
     val chatState by chatViewModel.chatState.collectAsState()
+    val isHistoryViewActive by chatViewModel.isHistoryViewActive.collectAsState()
     val accessibleColors = LocalThemeColors.current
     val ttsManager = LocalTtsManager.current
 
+    // Get message count for badge
+    val chatHistory by chatViewModel.chatHistory.collectAsState()
+    val messageCount = chatHistory.size
+
     Box(modifier = modifier) {
-        // Chat FAB
-        FloatingActionButton(
-            onClick = {
-                chatViewModel.toggleChatVisibility()
-                ttsManager?.speak("Opening chat assistant")
+        // Chat FAB with badge
+        BadgedBox(
+            badge = {
+                if (messageCount > 0) {
+                    Badge {
+                        val displayCount = if (messageCount > 99) "99+" else messageCount.toString()
+                        Text(text = displayCount)
+                    }
+                }
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
-                .semantics {
+        ) {
+            FloatingActionButton(
+                onClick = {
+                    chatViewModel.toggleChatVisibility()
+                    ttsManager?.speak("Opening chat assistant")
+                },
+                modifier = Modifier.semantics {
                     contentDescription = "Open AI chat assistant"
                 },
-            containerColor = accessibleColors.buttonBackground,
-            contentColor = accessibleColors.buttonText
-        ) {
-            Icon(
-                imageVector = Icons.Filled.ChatBubble,
-                contentDescription = null
-            )
+                containerColor = accessibleColors.buttonBackground,
+                contentColor = accessibleColors.buttonText
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ChatBubble,
+                    contentDescription = null
+                )
+            }
         }
 
         // Chat Dialog
         if (chatState.isChatVisible) {
-            ChatDialog(
-                chatViewModel = chatViewModel,
-                isProcessing = chatState.isProcessing
-            )
+            if (isHistoryViewActive) {
+                ChatHistoryScreen(
+                    chatViewModel = chatViewModel,
+                    onClose = { chatViewModel.toggleHistoryView() }
+                )
+            } else {
+                ChatDialog(
+                    chatViewModel = chatViewModel,
+                    isProcessing = chatState.isProcessing
+                )
+            }
         }
     }
 }
@@ -125,6 +160,10 @@ fun ChatDialog(
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
     val ttsManager = LocalTtsManager.current
+
+    // Get message count for badge and history button
+    val chatHistory by chatViewModel.chatHistory.collectAsState()
+    val historyCount = chatHistory.size
 
     Dialog(
         onDismissRequest = { chatViewModel.toggleChatVisibility() },
@@ -176,17 +215,45 @@ fun ChatDialog(
                         }
                     }
 
-                    IconButton(
-                        onClick = {
-                            chatViewModel.toggleChatVisibility()
-                            ttsManager?.speak("Closing chat assistant")
+                    Row {
+                        // History button with badge
+                        BadgedBox(
+                            badge = {
+                                if (historyCount > 0) {
+                                    Badge {
+                                        val displayCount = if (historyCount > 99) "99+" else historyCount.toString()
+                                        Text(text = displayCount)
+                                    }
+                                }
+                            }
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    chatViewModel.toggleHistoryView()
+                                    ttsManager?.speak("Opening chat history")
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = "View chat history",
+                                    tint = accessibleColors.headerText
+                                )
+                            }
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.close_chat),
-                            tint = accessibleColors.headerText
-                        )
+
+                        // Close button
+                        IconButton(
+                            onClick = {
+                                chatViewModel.toggleChatVisibility()
+                                ttsManager?.speak("Closing chat assistant")
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.close_chat),
+                                tint = accessibleColors.headerText
+                            )
+                        }
                     }
                 }
 
@@ -363,7 +430,7 @@ fun ChatMessageItem(message: ChatMessage) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        contentAlignment = Alignment.BottomEnd
+        contentAlignment = if (message.type == MessageType.USER) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         Box(
             modifier = Modifier
@@ -377,12 +444,10 @@ fun ChatMessageItem(message: ChatMessage) {
                     )
                 )
                 .background(backgroundColor)
+                .clickable { ttsManager?.speak(message.text) }
                 .padding(12.dp)
                 .semantics {
                     contentDescription = "${if (message.type == MessageType.USER) "You" else "Assistant"}: ${message.text}"
-                }
-                .clickable {
-                    ttsManager?.speak(message.text)
                 }
         ) {
             Text(

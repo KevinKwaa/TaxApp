@@ -24,5 +24,6 @@ object NetworkUtil {
             actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
             else -> false
         }
+        //return true
     }
 }

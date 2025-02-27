@@ -5,9 +5,8 @@ import java.io.FileInputStream
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    //id("com.google.devtools.ksp") version "1.9.0-1.0.13"
+    id("com.google.devtools.ksp") version "1.9.0-1.0.13"
 }
-//apply(plugin = "kotlin-kapt")
 
 android {
     namespace = "com.example.taxapp"
@@ -27,6 +26,13 @@ android {
 
         // Add API key from local.properties
         buildConfigField("String", "GEMINI_API_KEY", getApiKey("GEMINI_API_KEY"))
+
+        // Room schema location - required for Room
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas")
+            arg("room.incremental", "true")
+            arg("room.expandProjection", "true")
+        }
     }
 
     buildTypes {
@@ -84,6 +90,13 @@ dependencies {
     implementation(libs.androidx.datastore.core.android)
     implementation(libs.androidx.datastore.preferences.core.jvm)
     implementation(libs.generativeai) // This is the Gemini AI dependency
+
+    // Room Database dependencies - fixed to use KSP
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion") // Use KSP instead of kapt
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -9,7 +9,7 @@ class FallbackChatService {
     fun getResponse(userMessage: String): String {
         return when {
             userMessage.contains("event", ignoreCase = true) ->
-                "To add an event, tap the '+' button on the calendar screen and fill in the event details."
+                "To add an event, tap the 'Add Event' button on the calendar screen and fill in the event details."
 
             userMessage.contains("reminder", ignoreCase = true) ->
                 "You can toggle reminders for events by using the switch on the event creation screen."

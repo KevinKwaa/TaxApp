@@ -3,12 +3,18 @@ package com.example.taxapp.chatbot
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.taxapp.chatbot.database.ChatRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-// Enhanced ViewModel that uses GeminiAIService
+// Enhanced ViewModel that uses GeminiAIService and persists chat history
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _chatState = MutableStateFlow(ChatState())
@@ -16,6 +22,21 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     // Initialize the AI service with application context
     private val aiService = GeminiAIService(application.applicationContext)
+
+    // Initialize the chat repository
+    private val chatRepository = ChatRepository(application.applicationContext)
+
+    // Stored chat history for history view
+    val chatHistory = chatRepository.getAllMessages()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = emptyList()
+        )
+
+    // Flag to track if we're in history view mode
+    private val _isHistoryViewActive = MutableStateFlow(false)
+    val isHistoryViewActive: StateFlow<Boolean> = _isHistoryViewActive.asStateFlow()
 
     fun sendMessage(message: String) {
         if (message.isBlank()) return
@@ -33,6 +54,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             userInput = ""
         )
 
+        // Save user message to database
+        viewModelScope.launch {
+            chatRepository.saveMessage(userMessage)
+        }
+
         // Get AI response
         viewModelScope.launch {
             try {
@@ -46,6 +72,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     messages = _chatState.value.messages + botMessage,
                     isProcessing = false
                 )
+
+                // Save bot message to database
+                chatRepository.saveMessage(botMessage)
             } catch (e: Exception) {
                 // Handle errors gracefully
                 val errorMessage = ChatMessage(
@@ -56,6 +85,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     messages = _chatState.value.messages + errorMessage,
                     isProcessing = false
                 )
+
+                // Save error message to database
+                chatRepository.saveMessage(errorMessage)
             }
         }
     }
@@ -65,7 +97,18 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun toggleChatVisibility() {
-        _chatState.value = _chatState.value.copy(isChatVisible = !_chatState.value.isChatVisible)
+        _chatState.value = _chatState.value.copy(
+            isChatVisible = !_chatState.value.isChatVisible,
+            // Reset history view when toggling chat visibility
+            isHistoryView = false
+        )
+
+        // Reset history view active state
+        _isHistoryViewActive.value = false
+    }
+
+    fun toggleHistoryView() {
+        _isHistoryViewActive.value = !_isHistoryViewActive.value
     }
 
     fun clearChat() {
@@ -73,11 +116,33 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         // Also clear conversation history in the AI service
         aiService.clearConversationHistory()
     }
+
+    fun clearChatHistory() {
+        viewModelScope.launch {
+            chatRepository.clearAllMessages()
+        }
+    }
+
+    fun deleteMessage(messageId: String) {
+        viewModelScope.launch {
+            chatRepository.deleteMessage(messageId)
+        }
+    }
+
+    /**
+     * Format a timestamp for display
+     */
+    fun formatTimestamp(timestamp: Long): String {
+        val date = Date(timestamp)
+        val format = SimpleDateFormat("MMM d, yyyy hh:mm a", Locale.getDefault())
+        return format.format(date)
+    }
 }
 
 data class ChatState(
     val messages: List<ChatMessage> = emptyList(),
     val userInput: String = "",
     val isProcessing: Boolean = false,
-    val isChatVisible: Boolean = false
+    val isChatVisible: Boolean = false,
+    val isHistoryView: Boolean = false
 )
