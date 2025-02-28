@@ -359,7 +359,7 @@ fun AddEventScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    //Spacer(modifier = Modifier.weight(0.5f))
 
                     // Action Buttons with accessible styling
                     Button(
@@ -419,6 +419,8 @@ fun AddEventScreen(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(70.dp))
 
         if (showLanguageSelector) {
             LanguageSelector(

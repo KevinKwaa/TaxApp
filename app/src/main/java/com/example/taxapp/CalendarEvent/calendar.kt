@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,10 +26,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -580,12 +585,18 @@ fun SelectedDateEvents(
     onAddEventClick: () -> Unit,
     currentLanguageCode: String
 ) {
+    val accessibleColors = LocalThemeColors.current
+    val isDarkMode = LocalDarkMode.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(4.dp),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = accessibleColors.cardBackground
+        )
     ) {
         Column(
             modifier = Modifier
@@ -602,46 +613,109 @@ fun SelectedDateEvents(
             val dateFormat = DateTimeFormatter.ofPattern("MMMM d, yyyy", locale)
             val formattedDate = selectedDate.format(dateFormat)
 
-            Text(
-                text = stringResource(id = R.string.events_for, formattedDate),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            // Header row with date
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CalendarToday,
+                    contentDescription = null,
+                    tint = accessibleColors.selectedDay,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .padding(end = 8.dp)
+                )
 
+                Text(
+                    text = stringResource(id = R.string.events_for, formattedDate),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Content
             if (events.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(100.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (isDarkMode)
+                                accessibleColors.cardBackground.copy(alpha = 0.5f)
+                            else
+                                accessibleColors.calendarBorder.copy(alpha = 0.1f)
+                        )
                         .padding(vertical = 24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = stringResource(id = R.string.no_events),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.EventNote,
+                            contentDescription = null,
+                            tint = accessibleColors.calendarText.copy(alpha = 0.5f),
+                            modifier = Modifier.size(32.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = stringResource(id = R.string.no_events),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = accessibleColors.calendarText.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             } else {
-                LazyColumn(
+                // Event list with fixed height container
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f, false)
+                        // Set a max height for the list container to prevent it from growing too large
+                        .heightIn(max = 320.dp)
                 ) {
-                    items(events) { event ->
-                        EventListItem(event = event, onClick = { onEventClick(event) })
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(events) { event ->
+                            EventListItem(event = event, onClick = { onEventClick(event) })
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Add event button
             Button(
                 onClick = onAddEventClick,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accessibleColors.buttonBackground,
+                    contentColor = accessibleColors.buttonText
+                )
             ) {
-                Text(stringResource(id = R.string.add_new_event))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(stringResource(id = R.string.add_new_event))
+                }
             }
         }
     }
@@ -656,8 +730,6 @@ fun EventListItem(
     val isDarkMode = LocalDarkMode.current
     val accessibleColors = LocalThemeColors.current
     val isHighContrast = LocalHighContrastMode.current
-
-    // Capture TTS manager reference BEFORE the lambda
     val ttsManager = LocalTtsManager.current
 
     // Add a description for TTS
@@ -676,8 +748,8 @@ fun EventListItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
+            .height(80.dp) // Fixed height to prevent varying heights
             .clickable {
-                // Use the captured ttsManager variable
                 ttsManager?.speak(eventDescription)
                 onClick()
             },
@@ -698,9 +770,7 @@ fun EventListItem(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Time indicator with colored accent
@@ -708,12 +778,12 @@ fun EventListItem(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .width(60.dp)
+                    .width(80.dp)
+                    .fillMaxHeight()
                     .background(
-                        accessibleColors.selectedDay.copy(alpha = 0.15f),
-                        RoundedCornerShape(8.dp)
+                        accessibleColors.selectedDay.copy(alpha = 0.15f)
                     )
-                    .padding(vertical = 8.dp, horizontal = 4.dp)
+                    .padding(horizontal = 8.dp)
             ) {
                 Text(
                     text = event.startTime,
@@ -741,50 +811,59 @@ fun EventListItem(
 
             // Event content
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.Center
             ) {
-                SpeakableContent(text = eventDescription) {
-                    Text(
-                        text = event.title,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = accessibleColors.calendarText,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
+                Text(
+                    text = event.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = accessibleColors.calendarText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                    // Show description preview if available
-                    if (event.description.isNotBlank()) {
-                        Text(
-                            text = event.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = accessibleColors.calendarText.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                // Only show description if it's not blank
+                if (event.description.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = event.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = accessibleColors.calendarText.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
 
-            // Reminder indicator
-            if (event.hasReminder) {
+            // Right section with reminder indicator and chevron
+            Row(
+                modifier = Modifier
+                    .padding(end = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Reminder indicator
+                if (event.hasReminder) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Reminder set",
+                        tint = accessibleColors.selectedDay,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Add subtle chevron indicator
                 Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Reminder set",
-                    tint = accessibleColors.selectedDay,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .padding(start = 4.dp)
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = accessibleColors.calendarText.copy(alpha = 0.5f),
+                    modifier = Modifier.size(24.dp)
                 )
             }
-
-            // Add subtle chevron indicator
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = accessibleColors.calendarText.copy(alpha = 0.5f),
-                modifier = Modifier.size(20.dp)
-            )
         }
     }
 }
