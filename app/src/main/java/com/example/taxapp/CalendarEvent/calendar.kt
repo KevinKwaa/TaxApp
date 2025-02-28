@@ -1,4 +1,4 @@
-package com.example.taxapp
+package com.example.taxapp.CalendarEvent
 
 import android.os.Build
 import android.speech.tts.TextToSpeech
@@ -19,15 +19,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -55,12 +59,12 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
 import com.example.taxapp.accessibility.AccessibilityState
-import com.example.taxapp.accessibility.AccessibilityThemeProvider
-import com.example.taxapp.accessibility.FontSizeProvider
 import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalFontSizeAdjustment
 import com.example.taxapp.accessibility.LocalHighContrastMode
@@ -648,21 +652,10 @@ fun EventListItem(
     event: Event,
     onClick: () -> Unit
 ) {
-    // Your existing code for basic styling
     val fontSizeAdjustment = LocalFontSizeAdjustment.current
-    val isDarkMode = LocalContentColor.current == MaterialTheme.colorScheme.onSurface
-    val isHighContrast = false
-
-    val backgroundColor = when {
-        isDarkMode -> Color.DarkGray
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val textColor = when {
-        isHighContrast && isDarkMode -> Color.White
-        isHighContrast -> Color.Black
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    val isDarkMode = LocalDarkMode.current
+    val accessibleColors = LocalThemeColors.current
+    val isHighContrast = LocalHighContrastMode.current
 
     // Capture TTS manager reference BEFORE the lambda
     val ttsManager = LocalTtsManager.current
@@ -682,60 +675,116 @@ fun EventListItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 6.dp)
             .clickable {
                 // Use the captured ttsManager variable
                 ttsManager?.speak(eventDescription)
                 onClick()
             },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isDarkMode) 6.dp else 2.dp
+        ),
         colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
+            containerColor = if (isDarkMode)
+                accessibleColors.cardBackground.copy(alpha = 0.8f)
+            else
+                accessibleColors.cardBackground
+        ),
+        border = BorderStroke(
+            width = if (isHighContrast) 1.5.dp else 0.5.dp,
+            color = accessibleColors.cardBorder.copy(alpha = 0.5f)
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                SpeakableContent(text = eventDescription) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = event.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = textColor,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        // Add speak button
-                        SpeakButton(
-                            text = eventDescription,
-                            modifier = Modifier.size(36.dp),
-                            tint = textColor.copy(alpha = 0.7f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "${event.startTime} - ${event.endTime}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = textColor.copy(alpha = 0.8f)
+            // Time indicator with colored accent
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .width(60.dp)
+                    .background(
+                        accessibleColors.selectedDay.copy(alpha = 0.15f),
+                        RoundedCornerShape(8.dp)
                     )
+                    .padding(vertical = 8.dp, horizontal = 4.dp)
+            ) {
+                Text(
+                    text = event.startTime,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = accessibleColors.selectedDay
+                )
+
+                Text(
+                    text = "to",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = accessibleColors.calendarText.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
+
+                Text(
+                    text = event.endTime,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = accessibleColors.selectedDay
+                )
+            }
+
+            // Event content
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                SpeakableContent(text = eventDescription) {
+                    Text(
+                        text = event.title,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = accessibleColors.calendarText,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    // Show description preview if available
                     if (event.description.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = event.description,
                             style = MaterialTheme.typography.bodySmall,
-                            color = textColor.copy(alpha = 0.7f),
-                            maxLines = 2
+                            color = accessibleColors.calendarText.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
+
+            // Reminder indicator
+            if (event.hasReminder) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Reminder set",
+                    tint = accessibleColors.selectedDay,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .padding(start = 4.dp)
+                )
+            }
+
+            // Add subtle chevron indicator
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = accessibleColors.calendarText.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

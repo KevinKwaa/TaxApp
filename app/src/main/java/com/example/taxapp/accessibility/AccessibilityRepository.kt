@@ -5,7 +5,9 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -26,8 +28,11 @@ class AccessibilityRepository(private val context: Context) {
         private val FONT_SIZE = intPreferencesKey("font_size")
         private val TEXT_TO_SPEECH = booleanPreferencesKey("text_to_speech")
         private val COLOR_BLIND_MODE = booleanPreferencesKey("color_blind_mode")
+        private val COLOR_BLINDNESS_TYPE = stringPreferencesKey("color_blindness_type")
         private val HIGH_CONTRAST_MODE = booleanPreferencesKey("high_contrast_mode")
         private val DARK_MODE = booleanPreferencesKey("dark_mode")
+        private val TTS_SPEECH_RATE = floatPreferencesKey("tts_speech_rate")
+        private val TTS_PITCH = floatPreferencesKey("tts_pitch")
 
         // Singleton pattern
         @Volatile
@@ -49,8 +54,17 @@ class AccessibilityRepository(private val context: Context) {
                 fontSize = preferences[FONT_SIZE] ?: 10,
                 textToSpeech = preferences[TEXT_TO_SPEECH] ?: false,
                 colorBlindMode = preferences[COLOR_BLIND_MODE] ?: false,
+                colorBlindnessType = preferences[COLOR_BLINDNESS_TYPE]?.let {
+                    try {
+                        ColorBlindnessType.valueOf(it)
+                    } catch (e: IllegalArgumentException) {
+                        ColorBlindnessType.NONE
+                    }
+                } ?: ColorBlindnessType.NONE,
                 highContrastMode = preferences[HIGH_CONTRAST_MODE] ?: false,
-                darkMode = preferences[DARK_MODE] ?: false
+                darkMode = preferences[DARK_MODE] ?: false,
+                ttsSpeechRate = preferences[TTS_SPEECH_RATE] ?: 1.0f,
+                ttsPitch = preferences[TTS_PITCH] ?: 1.0f
             )
         }
 
@@ -60,8 +74,11 @@ class AccessibilityRepository(private val context: Context) {
             preferences[FONT_SIZE] = accessibilityState.fontSize
             preferences[TEXT_TO_SPEECH] = accessibilityState.textToSpeech
             preferences[COLOR_BLIND_MODE] = accessibilityState.colorBlindMode
+            preferences[COLOR_BLINDNESS_TYPE] = accessibilityState.colorBlindnessType.name
             preferences[HIGH_CONTRAST_MODE] = accessibilityState.highContrastMode
             preferences[DARK_MODE] = accessibilityState.darkMode
+            preferences[TTS_SPEECH_RATE] = accessibilityState.ttsSpeechRate
+            preferences[TTS_PITCH] = accessibilityState.ttsPitch
         }
     }
 }

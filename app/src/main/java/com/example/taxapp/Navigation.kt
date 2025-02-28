@@ -6,9 +6,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -17,9 +22,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.taxapp.CalendarEvent.AddEventScreen
+import com.example.taxapp.CalendarEvent.CalendarScreen
+import com.example.taxapp.CalendarEvent.Event
+import com.example.taxapp.CalendarEvent.EventDetailScreen
+import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.chatbot.ChatFAB
 import com.example.taxapp.chatbot.ChatViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -28,10 +39,19 @@ import java.time.format.DateTimeFormatter
 fun SchedulerApp() {
     val navController = rememberNavController()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
-    // Store events in a mutable state map
-    val eventsMap = remember {
-        mutableStateMapOf<LocalDate, MutableList<Event>>()
+    // Initialize the event repository
+    val eventRepository = remember { EventRepository.getInstance() }
+
+    // Collect events from Firestore as a state
+    val eventsMap = remember { mutableStateMapOf<LocalDate, MutableList<Event>>() }
+    val eventsFlow by eventRepository.getAllEvents().collectAsState(initial = mapOf())
+
+    // Update the events map when the flow emits new data
+    LaunchedEffect(eventsFlow) {
+        eventsMap.clear()
+        eventsMap.putAll(eventsFlow)
     }
 
     // Get the TTS manager from the composition
@@ -39,6 +59,11 @@ fun SchedulerApp() {
 
     // Current event for editing/viewing
     val currentEvent = remember { mutableStateOf<Event?>(null) }
+
+    // Status feedback state
+    var showStatusFeedback by remember { mutableStateOf(false) }
+    var statusMessage by remember { mutableStateOf("") }
+    var operationStatus by remember { mutableStateOf(OperationStatus.SUCCESS) }
 
     // Shared ChatViewModel
     val chatViewModel: ChatViewModel = viewModel()
@@ -73,8 +98,21 @@ fun SchedulerApp() {
         }
     }
 
-    // Wrap the NavHost with a Box to allow overlay of the chat button
+    // Wrap the NavHost with a Box to allow overlay of the chat button and status feedback
     Box(modifier = Modifier.fillMaxSize()) {
+        // Status feedback
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            StatusSnackbar(
+                visible = showStatusFeedback,
+                message = statusMessage,
+                status = operationStatus,
+                onDismiss = { showStatusFeedback = false }
+            )
+        }
+
         NavHost(navController = navController, startDestination = "calendar") {
             // Calendar Screen
             composable("calendar") {
@@ -120,14 +158,33 @@ fun SchedulerApp() {
                         navController.popBackStack()
                     },
                     onEventSaved = { event ->
-                        // Add new event to the map
-                        val dateEvents = eventsMap.getOrPut(event.date) { mutableListOf() }
-                        dateEvents.add(event)
+                        // Show loading status
+                        statusMessage = "Saving event..."
+                        operationStatus = OperationStatus.LOADING
+                        showStatusFeedback = true
 
-                        // Announce successful event creation
-                        ttsManager?.speak("Event saved: ${event.title}")
+                        // Save event to Firebase
+                        coroutineScope.launch {
+                            val result = eventRepository.addEvent(event)
+                            if (result) {
+                                // Update status to success
+                                statusMessage = "Event saved successfully!"
+                                operationStatus = OperationStatus.SUCCESS
+                                showStatusFeedback = true
 
-                        navController.popBackStack()
+                                // Announce successful event creation
+                                ttsManager?.speak("Event saved: ${event.title}")
+                                navController.popBackStack()
+                            } else {
+                                // Update status to error
+                                statusMessage = "Failed to save event. Please try again."
+                                operationStatus = OperationStatus.ERROR
+                                showStatusFeedback = true
+
+                                // Announce failure
+                                ttsManager?.speak("Failed to save event. Please try again.")
+                            }
+                        }
                     }
                 )
             }
@@ -144,33 +201,63 @@ fun SchedulerApp() {
                             navController.popBackStack()
                         },
                         onEditEvent = { updatedEvent ->
-                            // Update the event in the map
-                            val dateEvents = eventsMap[updatedEvent.date]
-                            dateEvents?.let { list ->
-                                val index = list.indexOfFirst { it == event }
-                                if (index != -1) {
-                                    list[index] = updatedEvent
+                            // Show loading status
+                            statusMessage = "Updating event..."
+                            operationStatus = OperationStatus.LOADING
+                            showStatusFeedback = true
+
+                            // Update the event in Firebase
+                            coroutineScope.launch {
+                                val result = eventRepository.updateEvent(updatedEvent)
+                                if (result) {
+                                    // Update status to success
+                                    statusMessage = "Event updated successfully!"
+                                    operationStatus = OperationStatus.SUCCESS
+                                    showStatusFeedback = true
+
+                                    // Announce successful update
+                                    ttsManager?.speak("Event updated: ${updatedEvent.title}")
                                     currentEvent.value = updatedEvent
+                                    navController.popBackStack()
+                                } else {
+                                    // Update status to error
+                                    statusMessage = "Failed to update event. Please try again."
+                                    operationStatus = OperationStatus.ERROR
+                                    showStatusFeedback = true
+
+                                    // Announce failure
+                                    ttsManager?.speak("Failed to update event. Please try again.")
                                 }
                             }
-
-                            // Announce successful update
-                            ttsManager?.speak("Event updated: ${updatedEvent.title}")
-
-                            navController.popBackStack()
                         },
                         onDeleteEvent = { eventToDelete ->
-                            // Remove the event from the map
-                            val dateEvents = eventsMap[eventToDelete.date]
-                            dateEvents?.remove(eventToDelete)
-                            if (dateEvents?.isEmpty() == true) {
-                                eventsMap.remove(eventToDelete.date)
+                            // Show loading status
+                            statusMessage = "Deleting event..."
+                            operationStatus = OperationStatus.LOADING
+                            showStatusFeedback = true
+
+                            // Delete the event from Firebase
+                            coroutineScope.launch {
+                                val result = eventRepository.deleteEvent(eventToDelete)
+                                if (result) {
+                                    // Update status to success
+                                    statusMessage = "Event deleted successfully!"
+                                    operationStatus = OperationStatus.SUCCESS
+                                    showStatusFeedback = true
+
+                                    // Announce deletion
+                                    ttsManager?.speak("Event deleted")
+                                    navController.popBackStack()
+                                } else {
+                                    // Update status to error
+                                    statusMessage = "Failed to delete event. Please try again."
+                                    operationStatus = OperationStatus.ERROR
+                                    showStatusFeedback = true
+
+                                    // Announce failure
+                                    ttsManager?.speak("Failed to delete event. Please try again.")
+                                }
                             }
-
-                            // Announce deletion
-                            ttsManager?.speak("Event deleted")
-
-                            navController.popBackStack()
                         }
                     )
                 }
@@ -179,7 +266,6 @@ fun SchedulerApp() {
 
         // Add ChatFAB to overlay on all screens
         ChatFAB(
-            //chatViewModel = chatViewModel,
             modifier = Modifier.fillMaxSize()
         )
     }

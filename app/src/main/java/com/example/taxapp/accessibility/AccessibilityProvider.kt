@@ -310,33 +310,129 @@ private fun createAccessibleColors(
 fun adjustForColorBlindness(color: Color, type: ColorBlindnessType): Color {
     return when (type) {
         ColorBlindnessType.DEUTERANOPIA -> {
-            // Convert reds/greens to blues/yellows
+            // Deuteranopia (red-green color blindness, affects ~6% of males)
+            // Convert red/green colors to colors that are more distinguishable
             when {
-                // If color is in red spectrum
+                // If the color is in red spectrum
                 color.red > 0.7f && color.green < 0.5f && color.blue < 0.5f ->
                     Color(0.1f, 0.5f, 0.9f) // Convert to blue
-                // If color is in green spectrum
+                // If the color is in green spectrum
                 color.red < 0.5f && color.green > 0.7f && color.blue < 0.5f ->
                     Color(0.9f, 0.8f, 0.2f) // Convert to yellow
+                // If the color is a mixed red-green that might be challenging
+                color.red > 0.6f && color.green > 0.6f && color.blue < 0.5f ->
+                    Color(0.2f, 0.6f, 0.8f) // Convert to teal/blue
                 else -> color
             }
         }
         ColorBlindnessType.PROTANOPIA -> {
-            // Similar conversions for protanopia
-            // ...
-            color
+            // Protanopia (red-green color blindness, affects ~1% of males)
+            // Similar to deuteranopia but with different red perception
+            when {
+                // If the color is in red spectrum
+                color.red > 0.7f && color.green < 0.5f && color.blue < 0.5f ->
+                    Color(0.2f, 0.6f, 0.9f) // Convert to blue-teal
+                // If the color is in green spectrum
+                color.red < 0.5f && color.green > 0.7f && color.blue < 0.5f ->
+                    Color(0.95f, 0.9f, 0.25f) // Convert to bright yellow
+                // Mixed colors
+                color.red > 0.6f && color.green > 0.6f && color.blue < 0.5f ->
+                    Color(0.1f, 0.7f, 0.9f) // Convert to bright blue
+                else -> color
+            }
         }
         ColorBlindnessType.TRITANOPIA -> {
-            // Similar conversions for tritanopia
-            // ...
-            color
+            // Tritanopia (blue-yellow color blindness, rare)
+            when {
+                // If the color is in blue spectrum
+                color.red < 0.5f && color.green < 0.5f && color.blue > 0.7f ->
+                    Color(0.8f, 0.2f, 0.8f) // Convert to purple
+                // If the color is in yellow spectrum
+                color.red > 0.7f && color.green > 0.7f && color.blue < 0.3f ->
+                    Color(0.9f, 0.4f, 0.1f) // Convert to orange
+                // Teal colors can be problematic
+                color.red < 0.5f && color.green > 0.6f && color.blue > 0.6f ->
+                    Color(0.3f, 0.3f, 0.9f) // Convert to more blue
+                else -> color
+            }
+        }
+        ColorBlindnessType.ACHROMATOPSIA -> {
+            // Complete color blindness - convert to grayscale
+            val luminance = color.luminance()
+            Color(luminance, luminance, luminance)
         }
         ColorBlindnessType.NONE -> color
     }
 }
 
+fun createColorBlindPalette(baseScheme: ColorScheme, type: ColorBlindnessType): ColorScheme {
+    return when (type) {
+        ColorBlindnessType.DEUTERANOPIA -> {
+            // Deuteranopia-friendly palette - focus on blue/yellow contrast
+            baseScheme.copy(
+                primary = Color(0x0072B2), // Blue
+                secondary = Color(0xE69F00), // Yellow/Orange
+                error = Color(0x0092E0), // Blue for errors instead of red
+                tertiary = Color(0x56B4E9), // Light blue
+                primaryContainer = Color(0xB5E1F7),
+                secondaryContainer = Color(0xF7E3B5)
+            )
+        }
+        ColorBlindnessType.PROTANOPIA -> {
+            // Protanopia-friendly palette
+            baseScheme.copy(
+                primary = Color(0x0080B3), // Blue
+                secondary = Color(0xF0E442), // Yellow
+                error = Color(0x56B4E9), // Light blue for errors
+                tertiary = Color(0xCC79A7), // Pink/Purple
+                primaryContainer = Color(0xBFE6F2),
+                secondaryContainer = Color(0xFAF3AA)
+            )
+        }
+        ColorBlindnessType.TRITANOPIA -> {
+            // Tritanopia-friendly palette - focus on red/green contrast
+            baseScheme.copy(
+                primary = Color(0xD55E00), // Orange/Red
+                secondary = Color(0x009E73), // Green
+                error = Color(0xCC79A7), // Purple for errors
+                tertiary = Color(0xF0E442), // Yellow
+                primaryContainer = Color(0xFABD9B),
+                secondaryContainer = Color(0x99D8C2)
+            )
+        }
+        ColorBlindnessType.ACHROMATOPSIA -> {
+            // Achromatopsia (monochromacy) - use high contrast grayscale
+            val darkGray = Color(0x333333)
+            val lightGray = Color(0xDDDDDD)
+            val mediumGray = Color(0x777777)
+            val veryLightGray = Color(0xF5F5F5)
+
+            baseScheme.copy(
+                primary = darkGray,
+                onPrimary = veryLightGray,
+                primaryContainer = mediumGray,
+                onPrimaryContainer = veryLightGray,
+                secondary = mediumGray,
+                onSecondary = veryLightGray,
+                secondaryContainer = lightGray,
+                onSecondaryContainer = darkGray,
+                error = darkGray,
+                background = veryLightGray,
+                onBackground = darkGray,
+                surface = veryLightGray,
+                onSurface = darkGray
+            )
+        }
+        ColorBlindnessType.NONE -> baseScheme
+    }
+}
+
 enum class ColorBlindnessType {
-    NONE, DEUTERANOPIA, PROTANOPIA, TRITANOPIA
+    NONE,
+    DEUTERANOPIA,  // Most common (red-green)
+    PROTANOPIA,    // Also red-green but different perception
+    TRITANOPIA,    // Blue-yellow color blindness (rare)
+    ACHROMATOPSIA  // Complete color blindness (very rare)
 }
 
 // Helper extension to check if a color scheme is light or dark

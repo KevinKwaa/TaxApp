@@ -1,4 +1,4 @@
-package com.example.taxapp
+package com.example.taxapp.CalendarEvent
 
 import android.os.Build
 import android.speech.tts.TextToSpeech
@@ -24,11 +24,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
 import com.example.taxapp.accessibility.AccessibilityState
-import com.example.taxapp.accessibility.AccessibilityThemeProvider
-import com.example.taxapp.accessibility.FontSizeProvider
 import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
