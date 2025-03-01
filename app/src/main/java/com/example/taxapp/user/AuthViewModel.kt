@@ -17,41 +17,54 @@ class AuthViewModel : ViewModel() {
     private val firestore = FirebaseManager.getAuthFirestore()
 
     fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+        Log.d(TAG, "Attempting login for email: $email")
+
         auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    onResult(true, null)
-                } else {
-                    onResult(false, it.exception?.localizedMessage)
-                }
+            .addOnSuccessListener {
+                Log.d(TAG, "Login successful for email: $email")
+                onResult(true, null)
+            }
+            .addOnFailureListener { exception ->
+                Log.e(TAG, "Login failed for email: $email", exception)
+                onResult(false, exception.localizedMessage)
             }
     }
 
-    fun register(email : String, password : String, onResult : (Boolean,String?) -> Unit){
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener{
-                if(it.isSuccessful){
-                    var userId = it.result?.user?.uid
+    fun register(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+        Log.d(TAG, "Attempting registration for email: $email")
 
-                    val userModel = UserModel(email, userId!!)
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnSuccessListener { authResult ->
+                val userId = authResult.user?.uid
+                Log.d(TAG, "Registration successful, creating user document for ID: $userId")
+
+                if (userId != null) {
+                    val userModel = UserModel(email, userId)
                     firestore.collection("users").document(userId)
                         .set(userModel)
-                        .addOnCompleteListener { dbTask->
-                            if (dbTask.isSuccessful){
-                                onResult(true, null)
-                            }else{
-                                onResult(false, "Something Went Wrong...")
-                            }
+                        .addOnSuccessListener {
+                            Log.d(TAG, "User document created successfully")
+                            onResult(true, null)
                         }
-
-                }else {
-                    onResult(false, it.exception?.localizedMessage)
+                        .addOnFailureListener { exception ->
+                            Log.e(TAG, "Failed to create user document", exception)
+                            onResult(false, "Registration successful but failed to create profile: ${exception.localizedMessage}")
+                        }
+                } else {
+                    Log.e(TAG, "Registration successful but user ID is null")
+                    onResult(false, "Registration successful but failed to get user ID")
                 }
+            }
+            .addOnFailureListener { exception ->
+                Log.e(TAG, "Registration failed", exception)
+                onResult(false, exception.localizedMessage)
             }
     }
 
-    fun userProfile(name: String, phone: String, dob: String, income: String, onResult: (Boolean, String?) -> Unit){
-        val userId = auth.currentUser?.uid
+    fun userProfile(name: String, phone: String, dob: String, income: String, onResult: (Boolean, String?) -> Unit) {
+        val userId = FirebaseManager.getCurrentUserId()
+        Log.d(TAG, "Updating profile for user ID: $userId")
+
         if (userId != null) {
             val userDetails = hashMapOf(
                 "name" to name,
@@ -62,15 +75,32 @@ class AuthViewModel : ViewModel() {
 
             firestore.collection("users").document(userId)
                 .update(userDetails as Map<String, Any>)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        onResult(true, null)
+                .addOnSuccessListener {
+                    Log.d(TAG, "Profile updated successfully")
+                    onResult(true, null)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e(TAG, "Error updating user profile", exception)
+
+                    // If the error is because the document doesn't exist, try to create it
+                    if (exception.message?.contains("NOT_FOUND") == true) {
+                        Log.d(TAG, "Document not found, trying to create it")
+                        firestore.collection("users").document(userId)
+                            .set(userDetails)
+                            .addOnSuccessListener {
+                                Log.d(TAG, "Created new user profile")
+                                onResult(true, null)
+                            }
+                            .addOnFailureListener { setException ->
+                                Log.e(TAG, "Failed to create new user profile", setException)
+                                onResult(false, setException.localizedMessage)
+                            }
                     } else {
-                        onResult(false, task.exception?.localizedMessage)
-                        Log.e("AuthViewModel", "Error updating user profile", task.exception)
+                        onResult(false, exception.localizedMessage)
                     }
                 }
         } else {
+            Log.e(TAG, "userProfile failed: User not logged in")
             onResult(false, "User not logged in")
         }
     }

@@ -91,8 +91,7 @@ data class Event(
     val date: LocalDate,
     val startTime: String,
     val endTime: String,
-    var hasReminder: Boolean = false,
-    var userId: String? = null  // Added userId field to track event ownership
+    var hasReminder: Boolean = false
 )
 
 @RequiresApi(Build.VERSION_CODES.O)

@@ -32,12 +32,7 @@ import com.example.taxapp.R
 
 
 @Composable
-fun LoginScreen(
-    modifier: Modifier = Modifier,
-    navController: NavHostController,
-    authViewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit = {}
-) {
+fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
     var email by remember {
         mutableStateOf("")
     }
@@ -122,11 +117,13 @@ fun LoginScreen(
             onClick = {
                 isLoading = true
                 authViewModel.login(email, password) { success, errorMessage ->
-                    isLoading = false
                     if(success) {
-                        // Call the onLoginSuccess callback instead of navigating directly
-                        onLoginSuccess()
+                        isLoading = false
+                        navController.navigate("home") {
+                            popUpTo("auth") { inclusive = true }
+                        }
                     } else {
+                        isLoading = false
                         AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
                     }
                 }

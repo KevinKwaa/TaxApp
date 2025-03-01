@@ -28,7 +28,6 @@ import com.example.taxapp.CalendarEvent.AddEventScreen
 import com.example.taxapp.CalendarEvent.CalendarScreen
 import com.example.taxapp.CalendarEvent.Event
 import com.example.taxapp.CalendarEvent.EventDetailScreen
-import com.example.taxapp.CalendarEvent.EventMigrationUtil
 import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.chatbot.ChatFAB
@@ -47,6 +46,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.example.taxapp.firebase.FirebaseManager
+import kotlinx.coroutines.delay
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -61,26 +61,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
     // Initialize the event repository
     val eventRepository = remember { EventRepository.getInstance() }
-    val eventMigrationUtil = remember { EventMigrationUtil.getInstance() }
-
-    // Flag to track if migration has been attempted
-    var migrationAttempted by remember { mutableStateOf(false) }
-
-    // Perform event migration when logged in
-    LaunchedEffect(Unit) {
-        if (Firebase.auth.currentUser != null && !migrationAttempted) {
-            // Launch in a coroutine to avoid blocking UI
-            coroutineScope.launch {
-                try {
-                    eventMigrationUtil.migrateEvents()
-                } catch (e: Exception) {
-                    Log.e("AppNavigation", "Error during event migration", e)
-                } finally {
-                    migrationAttempted = true
-                }
-            }
-        }
-    }
 
     // Collect events from Firestore as a state
     val eventsMap = remember { mutableStateMapOf<LocalDate, MutableList<Event>>() }
@@ -152,23 +132,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
     }
 
-    // Success effect for login/registration to trigger event migration
-    fun onAuthSuccess() {
-        // Reset migration flag when a new user logs in
-        migrationAttempted = false
-
-        // Trigger migration in background
-        coroutineScope.launch {
-            try {
-                eventMigrationUtil.migrateEvents()
-            } catch (e: Exception) {
-                Log.e("AppNavigation", "Error during event migration after login", e)
-            } finally {
-                migrationAttempted = true
-            }
-        }
-    }
-
     // Wrap the NavHost with a Box to allow overlay of the chat button and status feedback
     Box(modifier = Modifier.fillMaxSize()) {
         // Status feedback
@@ -191,31 +154,11 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             composable("login") {
-                LoginScreen(
-                    modifier = modifier,
-                    navController = navController,
-                    authViewModel = authViewModel,
-                    onLoginSuccess = {
-                        onAuthSuccess()
-                        navController.navigate("home") {
-                            popUpTo("auth") { inclusive = true }
-                        }
-                    }
-                )
+                LoginScreen(modifier, navController, authViewModel)
             }
 
             composable("register") {
-                RegisterScreen(
-                    modifier = modifier,
-                    navController = navController,
-                    authViewModel = authViewModel,
-                    onRegistrationSuccess = {
-                        onAuthSuccess()
-                        navController.navigate("profile") {
-                            popUpTo("auth") { inclusive = true }
-                        }
-                    }
-                )
+                RegisterScreen(modifier, navController, authViewModel)
             }
 
             composable("profile") {
@@ -271,7 +214,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     onNavigateBack = {
                         // Announce navigation back
                         ttsManager?.speak("Returning to calendar")
-
                         navController.popBackStack()
                     },
                     onEventSaved = { event ->
@@ -280,26 +222,36 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         operationStatus = OperationStatus.LOADING
                         showStatusFeedback = true
 
-                        // Save event to Firebase
+                        // Use lifecycleScope instead of a general coroutineScope
                         coroutineScope.launch {
-                            val result = eventRepository.addEvent(event)
-                            if (result) {
-                                // Update status to success
-                                statusMessage = "Event saved successfully!"
-                                operationStatus = OperationStatus.SUCCESS
-                                showStatusFeedback = true
+                            try {
+                                val result = eventRepository.addEvent(event)
+                                if (result) {
+                                    // Update status to success
+                                    statusMessage = "Event saved successfully!"
+                                    operationStatus = OperationStatus.SUCCESS
 
-                                // Announce successful event creation
-                                ttsManager?.speak("Event saved: ${event.title}")
-                                navController.popBackStack()
-                            } else {
-                                // Update status to error
-                                statusMessage = "Failed to save event. Please try again."
+                                    // Announce successful event creation
+                                    ttsManager?.speak("Event saved: ${event.title}")
+
+                                    // IMPORTANT: Use a small delay to ensure the status message is visible
+                                    // before navigating back
+                                    delay(500)
+                                    navController.popBackStack()
+                                } else {
+                                    // Update status to error
+                                    statusMessage = "Failed to save event. Please try again."
+                                    operationStatus = OperationStatus.ERROR
+
+                                    // Announce failure
+                                    ttsManager?.speak("Failed to save event. Please try again.")
+                                }
+                            } catch (e: Exception) {
+                                Log.e("AppNavigation", "Error saving event", e)
+                                statusMessage = "Error: ${e.localizedMessage ?: "Unknown error"}"
                                 operationStatus = OperationStatus.ERROR
+                            } finally {
                                 showStatusFeedback = true
-
-                                // Announce failure
-                                ttsManager?.speak("Failed to save event. Please try again.")
                             }
                         }
                     }

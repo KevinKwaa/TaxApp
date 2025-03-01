@@ -19,7 +19,6 @@ class TaxApp : Application() {
         super.onCreate()
         Log.d(TAG, "TaxApp: onCreate")
 
-        // Initialize Firebase apps first - VERY IMPORTANT
         try {
             Log.d(TAG, "Initializing Firebase Manager")
             FirebaseManager.initialize(this)
@@ -28,6 +27,7 @@ class TaxApp : Application() {
         } catch (e: Exception) {
             Log.e(TAG, "Error initializing Firebase", e)
         }
+
 
         // Initialize language manager
         val languageManager = AppLanguageManager.getInstance(this)
