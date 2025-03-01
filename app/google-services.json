@@ -1,13 +1,35 @@
 {
   "project_info": {
-    "project_number": "433079357401",
-    "project_id": "taxapp-583c6",
-    "storage_bucket": "taxapp-583c6.firebasestorage.app"
+    "project_number": "174963480472",
+    "project_id": "smarttaxver1",
+    "storage_bucket": "smarttaxver1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:433079357401:android:1e1e4eb69997b5959313c8",
+        "mobilesdk_app_id": "1:174963480472:android:b66a24180ffc5eea943ded",
+        "android_client_info": {
+          "package_name": "com.example.smarttax_ver1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoBYOMePopcoYW-SpIDHkfDmuPEzYEf1A"
+        },
+        {
+          "current_key": "AIzaSyABk2zQ1v4hxx16kV8-pOtXdM_33gjxDYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:174963480472:android:4a6f143d47cf8dc8943ded",
         "android_client_info": {
           "package_name": "com.example.taxapp"
         }
@@ -15,7 +37,10 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAFtnn4tLpOv3QnwKAtjBbRZ4E8CerMkws"
+          "current_key": "AIzaSyDoBYOMePopcoYW-SpIDHkfDmuPEzYEf1A"
+        },
+        {
+          "current_key": "AIzaSyABk2zQ1v4hxx16kV8-pOtXdM_33gjxDYA"
         }
       ],
       "services": {

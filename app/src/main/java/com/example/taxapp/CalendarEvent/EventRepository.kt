@@ -6,8 +6,6 @@ import androidx.annotation.RequiresApi
 import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -21,7 +19,8 @@ import java.util.Date
  */
 class EventRepository private constructor() {
     private val TAG = "EventRepository"
-    private val db: FirebaseFirestore = FirebaseManager.getFirestore()
+    // Change to use getCalendarFirestore() instead of getFirestore()
+    private val db: FirebaseFirestore = FirebaseManager.getCalendarFirestore()
 
     private fun getCurrentUserId(): String? = FirebaseManager.getCurrentUserId()
 
@@ -114,6 +113,7 @@ class EventRepository private constructor() {
             return@callbackFlow
         }
 
+        // This query ensures only events created by the current user are returned
         val listener = userEventsCollection
             .whereEqualTo("userId", userId)
             .addSnapshotListener { snapshot, error ->
@@ -133,7 +133,7 @@ class EventRepository private constructor() {
                     }
                 }
 
-                Log.d(TAG, "Fetched ${eventsMap.size} unique dates with events")
+                Log.d(TAG, "Fetched ${eventsMap.size} unique dates with events for user $userId")
                 trySend(eventsMap)
             }
 
@@ -169,7 +169,7 @@ fun Timestamp.toLocalDate(): LocalDate {
 // Convert Event to Map for Firestore
 @RequiresApi(Build.VERSION_CODES.O)
 fun Event.toMap(): Map<String, Any> {
-    return mapOf(
+    val map = mutableMapOf(
         "title" to title,
         "description" to description,
         "dateTimestamp" to date.toTimestamp(),
@@ -177,6 +177,11 @@ fun Event.toMap(): Map<String, Any> {
         "endTime" to endTime,
         "hasReminder" to hasReminder
     )
+
+    // Include userId if available
+    userId?.let { map["userId"] = it }
+
+    return map
 }
 
 // Convert Firestore Document to Event
@@ -189,6 +194,7 @@ fun com.google.firebase.firestore.DocumentSnapshot.toEvent(): Event {
     val startTime = getString("startTime") ?: "00:00"
     val endTime = getString("endTime") ?: "00:00"
     val hasReminder = getBoolean("hasReminder") ?: false
+    val userId = getString("userId")
 
     return Event(
         title = title,
@@ -196,6 +202,7 @@ fun com.google.firebase.firestore.DocumentSnapshot.toEvent(): Event {
         date = date,
         startTime = startTime,
         endTime = endTime,
-        hasReminder = hasReminder
+        hasReminder = hasReminder,
+        userId = userId
     )
 }
