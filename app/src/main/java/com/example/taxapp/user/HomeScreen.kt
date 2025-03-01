@@ -73,17 +73,17 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController) 
                         Icon(Icons.Filled.Home, contentDescription = "Localized description")
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    //Spacer(modifier = Modifier.weight(1f))
 
-                    //upload receipt
-                    IconButton(onClick = { navController.navigate("uploadReceipt") }) {
-                        Icon(
-                            Icons.Filled.AddCircle,
-                            contentDescription = "Localized description",
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
+//                    //upload receipt
+//                    IconButton(onClick = { navController.navigate("uploadReceipt") }) {
+//                        Icon(
+//                            Icons.Filled.AddCircle,
+//                            contentDescription = "Localized description",
+//                        )
+//                    }
+//
+//                    Spacer(modifier = Modifier.weight(1f))
 
                     //profile
                     IconButton(onClick = { navController.navigate("editProfile") }) {

@@ -2,6 +2,7 @@ package com.example.taxapp
 
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import com.example.taxapp.CalendarEvent.AddEventScreen
 import com.example.taxapp.CalendarEvent.CalendarScreen
 import com.example.taxapp.CalendarEvent.Event
 import com.example.taxapp.CalendarEvent.EventDetailScreen
+import com.example.taxapp.CalendarEvent.EventMigrationUtil
 import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.chatbot.ChatFAB
@@ -59,6 +61,26 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
     // Initialize the event repository
     val eventRepository = remember { EventRepository.getInstance() }
+    val eventMigrationUtil = remember { EventMigrationUtil.getInstance() }
+
+    // Flag to track if migration has been attempted
+    var migrationAttempted by remember { mutableStateOf(false) }
+
+    // Perform event migration when logged in
+    LaunchedEffect(Unit) {
+        if (Firebase.auth.currentUser != null && !migrationAttempted) {
+            // Launch in a coroutine to avoid blocking UI
+            coroutineScope.launch {
+                try {
+                    eventMigrationUtil.migrateEvents()
+                } catch (e: Exception) {
+                    Log.e("AppNavigation", "Error during event migration", e)
+                } finally {
+                    migrationAttempted = true
+                }
+            }
+        }
+    }
 
     // Collect events from Firestore as a state
     val eventsMap = remember { mutableStateMapOf<LocalDate, MutableList<Event>>() }
@@ -130,6 +152,23 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
     }
 
+    // Success effect for login/registration to trigger event migration
+    fun onAuthSuccess() {
+        // Reset migration flag when a new user logs in
+        migrationAttempted = false
+
+        // Trigger migration in background
+        coroutineScope.launch {
+            try {
+                eventMigrationUtil.migrateEvents()
+            } catch (e: Exception) {
+                Log.e("AppNavigation", "Error during event migration after login", e)
+            } finally {
+                migrationAttempted = true
+            }
+        }
+    }
+
     // Wrap the NavHost with a Box to allow overlay of the chat button and status feedback
     Box(modifier = Modifier.fillMaxSize()) {
         // Status feedback
@@ -152,11 +191,31 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             composable("login") {
-                LoginScreen(modifier, navController, authViewModel)
+                LoginScreen(
+                    modifier = modifier,
+                    navController = navController,
+                    authViewModel = authViewModel,
+                    onLoginSuccess = {
+                        onAuthSuccess()
+                        navController.navigate("home") {
+                            popUpTo("auth") { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable("register") {
-                RegisterScreen(modifier, navController, authViewModel)
+                RegisterScreen(
+                    modifier = modifier,
+                    navController = navController,
+                    authViewModel = authViewModel,
+                    onRegistrationSuccess = {
+                        onAuthSuccess()
+                        navController.navigate("profile") {
+                            popUpTo("auth") { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable("profile") {

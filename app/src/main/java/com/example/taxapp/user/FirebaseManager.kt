@@ -2,6 +2,7 @@
 package com.example.taxapp.firebase
 
 import android.content.Context
+import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -14,6 +15,7 @@ object FirebaseManager {
     // Constants for app names
     private const val AUTH_APP = "auth_app"
     private const val CALENDAR_APP = "calendar_app"
+    private const val TAG = "FirebaseManager"
 
     private var isInitialized = false
 
@@ -21,11 +23,16 @@ object FirebaseManager {
         if (isInitialized) return
 
         try {
-            // Initialize the auth Firebase app first (main app stays as DEFAULT)
-            // Try to initialize AUTH_APP - this is for user authentication
+            Log.d(TAG, "Initializing Firebase Manager")
+
+            // First, make sure the default Firebase app is initialized
+            if (FirebaseApp.getApps(context).isEmpty()) {
+                FirebaseApp.initializeApp(context)
+                Log.d(TAG, "Default Firebase app initialized")
+            }
+
+            // Initialize AUTH_APP - this is for user authentication
             if (FirebaseApp.getApps(context).none { it.name == AUTH_APP }) {
-                // Just use the default Firebase app for auth
-                // This ensures we have a Firebase app named AUTH_APP
                 try {
                     val options = FirebaseOptions.Builder()
                         .setApiKey("AIzaSyDoBYOMePopcoYW-SpIDHkfDmuPEzYEf1A")  // from smarttaxver1
@@ -34,12 +41,13 @@ object FirebaseManager {
                         .build()
 
                     FirebaseApp.initializeApp(context, options, AUTH_APP)
+                    Log.d(TAG, "AUTH_APP Firebase app initialized")
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Log.e(TAG, "Error initializing AUTH_APP", e)
                 }
             }
 
-            // Initialize calendar app
+            // Initialize CALENDAR_APP
             if (FirebaseApp.getApps(context).none { it.name == CALENDAR_APP }) {
                 try {
                     val options = FirebaseOptions.Builder()
@@ -49,24 +57,32 @@ object FirebaseManager {
                         .build()
 
                     FirebaseApp.initializeApp(context, options, CALENDAR_APP)
+                    Log.d(TAG, "CALENDAR_APP Firebase app initialized")
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Log.e(TAG, "Error initializing CALENDAR_APP", e)
                 }
             }
 
+            // Log all initialized Firebase apps
+            val appsList = FirebaseApp.getApps(context).map { it.name }
+            Log.d(TAG, "Initialized Firebase apps: $appsList")
+
             isInitialized = true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error in Firebase initialization", e)
         }
     }
 
-    // Get Auth instance from the default app for authentication
+    // Get Auth instance from the auth app for authentication
     fun getAuthInstance(): FirebaseAuth {
         return try {
-            // Try to get the auth app first
-            FirebaseAuth.getInstance(FirebaseApp.getInstance(AUTH_APP))
+            val authApp = FirebaseApp.getInstance(AUTH_APP)
+            FirebaseAuth.getInstance(authApp).also {
+                Log.d(TAG, "Retrieved FirebaseAuth from AUTH_APP")
+            }
         } catch (e: Exception) {
-            // Fall back to the default app if auth_app isn't initialized
+            Log.e(TAG, "Error getting AUTH_APP instance, falling back to default", e)
+            // Fall back to the default app
             FirebaseAuth.getInstance()
         }
     }
@@ -74,8 +90,12 @@ object FirebaseManager {
     // Get Firestore instance for auth/user data
     fun getAuthFirestore(): FirebaseFirestore {
         return try {
-            FirebaseFirestore.getInstance(FirebaseApp.getInstance(AUTH_APP))
+            val authApp = FirebaseApp.getInstance(AUTH_APP)
+            FirebaseFirestore.getInstance(authApp).also {
+                Log.d(TAG, "Retrieved Firestore from AUTH_APP")
+            }
         } catch (e: Exception) {
+            Log.e(TAG, "Error getting AUTH_APP Firestore, falling back to default", e)
             // Fall back to the default app
             FirebaseFirestore.getInstance()
         }
@@ -83,6 +103,21 @@ object FirebaseManager {
 
     // Get Firestore instance from the calendar project
     fun getCalendarFirestore(): FirebaseFirestore {
-        return FirebaseFirestore.getInstance(FirebaseApp.getInstance(CALENDAR_APP))
+        return try {
+            val calendarApp = FirebaseApp.getInstance(CALENDAR_APP)
+            FirebaseFirestore.getInstance(calendarApp).also {
+                Log.d(TAG, "Retrieved Firestore from CALENDAR_APP")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting CALENDAR_APP Firestore", e)
+            throw e
+        }
+    }
+
+    // Get the current authenticated user ID
+    fun getCurrentUserId(): String? {
+        val userId = getAuthInstance().currentUser?.uid
+        Log.d(TAG, "Current user ID: $userId")
+        return userId
     }
 }

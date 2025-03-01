@@ -31,7 +31,12 @@ import androidx.navigation.NavHostController
 import com.example.taxapp.R
 
 @Composable
-fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
+fun RegisterScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    onRegistrationSuccess: () -> Unit = {}
+) {
     var email by remember {
         mutableStateOf("")
     }
@@ -116,13 +121,11 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
             onClick = {
                 isLoading = true
                 authViewModel.register(email, password) { success, errorMessage ->
+                    isLoading = false
                     if (success) {
-                        isLoading = false
-                        navController.navigate("profile") {
-                            popUpTo("auth") { inclusive = true }
-                        }
+                        // Call the onRegistrationSuccess callback instead of navigating directly
+                        onRegistrationSuccess()
                     } else {
-                        isLoading = false
                         AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
                     }
                 }
