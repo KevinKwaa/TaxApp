@@ -1,5 +1,6 @@
 package com.example.taxapp
 
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
@@ -30,13 +31,21 @@ import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.chatbot.ChatFAB
 import com.example.taxapp.chatbot.ChatViewModel
+import com.example.taxapp.user.AuthScreen
+import com.example.taxapp.user.EditProfileScreen
+import com.example.taxapp.user.HomeScreen
+import com.example.taxapp.user.LoginScreen
+import com.example.taxapp.user.ProfileScreen
+import com.example.taxapp.user.RegisterScreen
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun SchedulerApp() {
+fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -68,10 +77,17 @@ fun SchedulerApp() {
     // Shared ChatViewModel
     val chatViewModel: ChatViewModel = viewModel()
 
+    // Authentication check for start destination
+    val isLoggedIn = Firebase.auth.currentUser != null
+    val startDestination = if(isLoggedIn) "home" else "auth"
+
     // Track navigation to speak screen changes
     LaunchedEffect(navController) {
         navController.addOnDestinationChangedListener { _, destination, arguments ->
             when (destination.route) {
+                "home" -> {
+                    ttsManager?.speak("Home screen")
+                }
                 "calendar" -> {
                     ttsManager?.speak("Calendar screen, showing your schedule")
                 }
@@ -94,6 +110,12 @@ fun SchedulerApp() {
 
                     ttsManager?.speak("Add new event screen $dateText")
                 }
+                "editProfile" -> {
+                    ttsManager?.speak("Edit profile screen")
+                }
+                "uploadReceipt" -> {
+                    ttsManager?.speak("Upload receipt screen")
+                }
             }
         }
     }
@@ -113,8 +135,34 @@ fun SchedulerApp() {
             )
         }
 
-        NavHost(navController = navController, startDestination = "calendar") {
-            // Calendar Screen
+        NavHost(navController = navController, startDestination = startDestination) {
+            // Authentication routes
+            composable("auth") {
+                AuthScreen(modifier, navController)
+            }
+
+            composable("login") {
+                LoginScreen(modifier, navController)
+            }
+
+            composable("register") {
+                RegisterScreen(modifier, navController)
+            }
+
+            composable("profile") {
+                ProfileScreen(modifier, navController)
+            }
+
+            composable("editProfile") {
+                EditProfileScreen(modifier, navController)
+            }
+
+            // Home Screen (central hub)
+            composable("home") {
+                HomeScreen(modifier, navController)
+            }
+
+            // Calendar Screen (moved from start destination to a route)
             composable("calendar") {
                 CalendarScreen(
                     events = eventsMap,
@@ -262,6 +310,22 @@ fun SchedulerApp() {
                     )
                 }
             }
+
+//            // Category Screen
+//            composable("category") {
+//                CategoryScreen(modifier)
+//            }
+//
+//            // Receipt handling routes
+//            composable("uploadReceipt") {
+//                UploadReceiptScreen(modifier, navController)
+//            }
+//
+//            composable("receiptSummary/{imageUri}") { backStackEntry ->
+//                val imageUriString = backStackEntry.arguments?.getString("imageUri")
+//                val imageUri = if (imageUriString != null) Uri.parse(imageUriString) else Uri.EMPTY
+//                ReceiptSummaryScreen(modifier, navController, imageUri = imageUri)
+//            }
         }
 
         // Add ChatFAB to overlay on all screens

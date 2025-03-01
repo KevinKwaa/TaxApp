@@ -108,6 +108,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
 
     // Desugaring for Java 8 features (like LocalDate) on lower API levels
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")

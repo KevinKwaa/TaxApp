@@ -114,7 +114,7 @@ fun MainScreen() {
         visible = isFirebaseReady,
         durationMillis = 800
     ) {
-        SchedulerApp()
+        AppNavigation()
     }
 }
 
