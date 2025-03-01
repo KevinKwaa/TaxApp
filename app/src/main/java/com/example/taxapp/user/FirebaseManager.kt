@@ -93,6 +93,7 @@ object FirebaseManager {
             val authApp = FirebaseApp.getInstance(AUTH_APP)
             FirebaseFirestore.getInstance(authApp).also {
                 Log.d(TAG, "Retrieved Firestore from AUTH_APP")
+                Log.d(TAG, "Auth Firestore Details: ${it.app.name}")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error getting AUTH_APP Firestore, falling back to default", e)
@@ -107,10 +108,12 @@ object FirebaseManager {
             val calendarApp = FirebaseApp.getInstance(CALENDAR_APP)
             FirebaseFirestore.getInstance(calendarApp).also {
                 Log.d(TAG, "Retrieved Firestore from CALENDAR_APP")
+                Log.d(TAG, "Calendar Firestore Details: ${it.app.name}")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error getting CALENDAR_APP Firestore", e)
-            throw e
+            // If calendar app fails, fall back to default
+            FirebaseFirestore.getInstance()
         }
     }
 

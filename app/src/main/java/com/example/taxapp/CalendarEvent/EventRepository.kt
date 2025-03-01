@@ -4,7 +4,6 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.taxapp.firebase.FirebaseManager
-//import com.example.taxapp.Event
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -20,47 +19,39 @@ import java.util.Date
 /**
  * Repository for managing events with Firebase Firestore
  */
-class EventRepository {
+class EventRepository private constructor() {
     private val TAG = "EventRepository"
-    // Use the calendar project for event data
-    private val db: FirebaseFirestore = FirebaseManager.getCalendarFirestore()
+    private val db: FirebaseFirestore = FirebaseManager.getFirestore()
 
-    // Get the current user ID from the auth app
-    private fun getCurrentUserId(): String? {
-        return FirebaseManager.getCurrentUserId()
-    }
+    private fun getCurrentUserId(): String? = FirebaseManager.getCurrentUserId()
 
-    // Reference to the user's events collection
-    private fun getUserEventsCollection() = db.collection("user_events")
+    private val userEventsCollection
+        get() = db.collection("user_events")
 
-    // Adds a new event to Firestore, associated with the current user
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun addEvent(event: Event): Boolean {
         val userId = getCurrentUserId() ?: return false
 
         return try {
-            // Add userId to the event data
-            val eventMap = event.toMap().toMutableMap()
-            eventMap["userId"] = userId
+            val eventMap = event.toMap().toMutableMap().apply {
+                this["userId"] = userId
+            }
 
-            // Save to Firestore under the user_events collection
-            getUserEventsCollection().add(eventMap).await()
+            userEventsCollection.add(eventMap).await()
             Log.d(TAG, "Event added successfully for user $userId: ${event.title}")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Error adding event for user $userId", e)
+            Log.e(TAG, "Error adding event", e)
             false
         }
     }
 
-    // Updates an existing event in Firestore
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun updateEvent(event: Event): Boolean {
         val userId = getCurrentUserId() ?: return false
 
         return try {
-            // Find the event document for this specific user
-            val query = getUserEventsCollection()
+            val query = userEventsCollection
                 .whereEqualTo("userId", userId)
                 .whereEqualTo("title", event.title)
                 .whereEqualTo("dateTimestamp", event.date.toTimestamp())
@@ -70,31 +61,29 @@ class EventRepository {
 
             if (query.documents.isNotEmpty()) {
                 val documentId = query.documents[0].id
-                // Add userId to ensure it's preserved
-                val eventMap = event.toMap().toMutableMap()
-                eventMap["userId"] = userId
+                val eventMap = event.toMap().toMutableMap().apply {
+                    this["userId"] = userId
+                }
 
-                getUserEventsCollection().document(documentId).set(eventMap).await()
-                Log.d(TAG, "Event updated successfully for user $userId: ${event.title}")
+                userEventsCollection.document(documentId).set(eventMap).await()
+                Log.d(TAG, "Event updated successfully: ${event.title}")
                 true
             } else {
-                Log.w(TAG, "Event not found to update for user $userId: ${event.title}")
+                Log.w(TAG, "Event not found to update")
                 false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating event for user $userId", e)
+            Log.e(TAG, "Error updating event", e)
             false
         }
     }
 
-    // Deletes an event from Firestore
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun deleteEvent(event: Event): Boolean {
         val userId = getCurrentUserId() ?: return false
 
         return try {
-            // Find the event document for this specific user
-            val query = getUserEventsCollection()
+            val query = userEventsCollection
                 .whereEqualTo("userId", userId)
                 .whereEqualTo("title", event.title)
                 .whereEqualTo("dateTimestamp", event.date.toTimestamp())
@@ -104,77 +93,61 @@ class EventRepository {
 
             if (query.documents.isNotEmpty()) {
                 val documentId = query.documents[0].id
-                getUserEventsCollection().document(documentId).delete().await()
-                Log.d(TAG, "Event deleted successfully for user $userId: ${event.title}")
+                userEventsCollection.document(documentId).delete().await()
+                Log.d(TAG, "Event deleted successfully: ${event.title}")
                 true
             } else {
-                Log.w(TAG, "Event not found to delete for user $userId: ${event.title}")
+                Log.w(TAG, "Event not found to delete")
                 false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error deleting event for user $userId", e)
+            Log.e(TAG, "Error deleting event", e)
             false
         }
     }
 
-    // Gets all events for the current user as a Flow for reactivity
     @RequiresApi(Build.VERSION_CODES.O)
     fun getAllEvents(): Flow<Map<LocalDate, MutableList<Event>>> = callbackFlow {
-        val userId = getCurrentUserId()
-
-        if (userId == null) {
-            // If no user is logged in, emit an empty map
+        val userId = getCurrentUserId() ?: run {
             trySend(emptyMap())
-            Log.w(TAG, "No user logged in, returning empty events map")
+            close()
             return@callbackFlow
         }
 
-        // Listen only to events that belong to the current user
-        val subscription = getUserEventsCollection()
+        val listener = userEventsCollection
             .whereEqualTo("userId", userId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Log.e(TAG, "Error listening for events for user $userId", error)
+                    Log.e(TAG, "Error fetching events", error)
+                    trySend(emptyMap())
                     return@addSnapshotListener
                 }
 
-                if (snapshot != null) {
-                    val eventsMap = mutableMapOf<LocalDate, MutableList<Event>>()
-                    for (document in snapshot.documents) {
-                        try {
-                            val event = document.toEvent()
-                            val date = event.date
-                            if (!eventsMap.containsKey(date)) {
-                                eventsMap[date] = mutableListOf()
-                            }
-                            eventsMap[date]?.add(event)
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Error parsing event document: ${document.id}", e)
-                        }
+                val eventsMap = mutableMapOf<LocalDate, MutableList<Event>>()
+                snapshot?.documents?.forEach { document ->
+                    try {
+                        val event = document.toEvent()
+                        eventsMap.getOrPut(event.date) { mutableListOf() }.add(event)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error parsing event", e)
                     }
-                    Log.d(TAG, "Retrieved ${snapshot.size()} events for user $userId")
-                    trySend(eventsMap)
                 }
+
+                Log.d(TAG, "Fetched ${eventsMap.size} unique dates with events")
+                trySend(eventsMap)
             }
 
-        awaitClose {
-            subscription.remove()
-            Log.d(TAG, "Closing events listener for user $userId")
-        }
+        awaitClose { listener.remove() }
     }
 
     companion object {
-        private const val TAG = "EventRepository"
-
-        // Singleton pattern
         @Volatile
         private var INSTANCE: EventRepository? = null
 
-        fun getInstance(): EventRepository {
-            return INSTANCE ?: synchronized(this) {
+        fun getInstance(): EventRepository =
+            INSTANCE ?: synchronized(this) {
                 INSTANCE ?: EventRepository().also { INSTANCE = it }
             }
-        }
     }
 }
 
