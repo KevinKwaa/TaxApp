@@ -29,11 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-//import com.example.smarttax_ver1.AppUtil
-//import com.example.smarttax_ver1.viewmodel.AuthViewModel
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel = viewModel()){
+fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var dob by remember { mutableStateOf("") }
@@ -52,7 +50,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
             .padding(32.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         Text(
             text = "Complete your profile",
             modifier = Modifier
@@ -120,21 +118,21 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(onClick = {
+            isLoading = true
             authViewModel.userProfile(name, phone, dob, income) { success, errormessage ->
-                if(success){
-                    navController.navigate("home"){
-                        popUpTo("auth") {inclusive = true}
+                isLoading = false
+                if (success) {
+                    navController.navigate("home") {
+                        popUpTo("auth") { inclusive = true }
                     }
-                }else{
-                    //isLoading = false
-                    AppUtil.showToast(context, errorMessage?:"Something Went Wrong...")
+                } else {
+                    AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
                 }
             }
-        }) {
-            Text("Save Profile")
+        },
+            enabled = !isLoading,
+            modifier = Modifier.fillMaxWidth()) {
+            Text(if (isLoading) "Saving..." else "Save Profile")
         }
-
-
-
     }
 }

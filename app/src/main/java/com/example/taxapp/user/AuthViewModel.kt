@@ -2,22 +2,25 @@ package com.example.taxapp.user
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.taxapp.firebase.FirebaseManager
 //import com.example.taxapp.model.UserModel
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 
 class AuthViewModel : ViewModel() {
 
-    private val auth = Firebase.auth
-    private val firestore = Firebase.firestore
+    private val auth = FirebaseManager.getAuthInstance()
+    private val firestore = FirebaseManager.getAuthFirestore()
 
-    fun login(email : String, password : String, onResult : (Boolean,String?) -> Unit){
+    fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener {
-                if(it.isSuccessful){
+                if (it.isSuccessful) {
                     onResult(true, null)
-                }else{
+                } else {
                     onResult(false, it.exception?.localizedMessage)
                 }
             }

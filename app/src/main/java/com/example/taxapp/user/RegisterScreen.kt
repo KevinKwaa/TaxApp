@@ -28,13 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-//import com.example.smarttax_ver1.AppUtil
 import com.example.taxapp.R
-//import com.example.smarttax_ver1.viewmodel.AuthViewModel
 
 @Composable
-fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel = viewModel()){
-
+fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
     var email by remember {
         mutableStateOf("")
     }
@@ -55,7 +52,7 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
             .padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         Text(
             text = "Hello there!",
             modifier = Modifier.fillMaxWidth(),
@@ -91,7 +88,7 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
         OutlinedTextField(
             value = email,
             onValueChange = {
-            email = it
+                email = it
             },
             label = {
                 Text(text = "Email address")
@@ -118,17 +115,16 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
         Button(
             onClick = {
                 isLoading = true
-                authViewModel.register(email, password){success, errorMessage->
-                    if(success){
+                authViewModel.register(email, password) { success, errorMessage ->
+                    if (success) {
                         isLoading = false
-                        navController.navigate("profile"){
-                            popUpTo("auth") {inclusive = true}
+                        navController.navigate("profile") {
+                            popUpTo("auth") { inclusive = true }
                         }
-                    }else{
+                    } else {
                         isLoading = false
-                        AppUtil.showToast(context, errorMessage?:"Something Went Wrong...")
+                        AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
                     }
-
                 }
             },
             enabled = !isLoading,
@@ -136,7 +132,7 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                 .fillMaxWidth()
                 .height(60.dp)
         ) {
-            Text(text = if(isLoading) "Creating account" else "Register", fontSize = 22.sp)
+            Text(text = if (isLoading) "Creating account" else "Register", fontSize = 22.sp)
         }
     }
 }

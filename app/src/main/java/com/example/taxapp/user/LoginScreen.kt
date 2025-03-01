@@ -28,12 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-//import com.example.smarttax_ver1.AppUtil
 import com.example.taxapp.R
-//import com.example.smarttax_ver1.viewmodel.AuthViewModel
+
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel = viewModel()){
+fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
     var email by remember {
         mutableStateOf("")
     }
@@ -117,17 +116,16 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
         Button(
             onClick = {
                 isLoading = true
-                authViewModel.login(email, password){success, errorMessage->
-                    if(success){
+                authViewModel.login(email, password) { success, errorMessage ->
+                    if(success) {
                         isLoading = false
-                        navController.navigate("home"){
-                            popUpTo("auth") {inclusive = true}
+                        navController.navigate("home") {
+                            popUpTo("auth") { inclusive = true }
                         }
-                    }else{
+                    } else {
                         isLoading = false
-                        AppUtil.showToast(context, errorMessage?:"Something Went Wrong...")
+                        AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
                     }
-
                 }
             },
             enabled = !isLoading,

@@ -3,6 +3,7 @@ package com.example.taxapp.CalendarEvent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.taxapp.firebase.FirebaseManager
 //import com.example.taxapp.Event
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -20,7 +21,8 @@ import java.util.Date
  * Repository for managing events with Firebase Firestore
  */
 class EventRepository {
-    private val db: FirebaseFirestore = Firebase.firestore
+    // Use the calendar project for event data
+    private val db: FirebaseFirestore = FirebaseManager.getCalendarFirestore()
     private val eventsCollection = db.collection("events")
 
     // Adds a new event to Firestore

@@ -32,7 +32,9 @@ import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.chatbot.ChatFAB
 import com.example.taxapp.chatbot.ChatViewModel
 import com.example.taxapp.user.AuthScreen
+import com.example.taxapp.user.AuthViewModel
 import com.example.taxapp.user.EditProfileScreen
+import com.example.taxapp.user.EditProfileViewModel
 import com.example.taxapp.user.HomeScreen
 import com.example.taxapp.user.LoginScreen
 import com.example.taxapp.user.ProfileScreen
@@ -42,6 +44,7 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import com.example.taxapp.firebase.FirebaseManager
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -49,6 +52,10 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    // ViewModels
+    val authViewModel: AuthViewModel = viewModel()
+    val editProfileViewModel: EditProfileViewModel = viewModel()
 
     // Initialize the event repository
     val eventRepository = remember { EventRepository.getInstance() }
@@ -116,6 +123,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 "uploadReceipt" -> {
                     ttsManager?.speak("Upload receipt screen")
                 }
+                "category" -> {
+                    ttsManager?.speak("Tax categories screen")
+                }
             }
         }
     }
@@ -142,19 +152,19 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             composable("login") {
-                LoginScreen(modifier, navController)
+                LoginScreen(modifier, navController, authViewModel)
             }
 
             composable("register") {
-                RegisterScreen(modifier, navController)
+                RegisterScreen(modifier, navController, authViewModel)
             }
 
             composable("profile") {
-                ProfileScreen(modifier, navController)
+                ProfileScreen(modifier, navController, authViewModel)
             }
 
             composable("editProfile") {
-                EditProfileScreen(modifier, navController)
+                EditProfileScreen(modifier, navController, editProfileViewModel)
             }
 
             // Home Screen (central hub)
@@ -162,7 +172,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 HomeScreen(modifier, navController)
             }
 
-            // Calendar Screen (moved from start destination to a route)
+            // Calendar Screen
             composable("calendar") {
                 CalendarScreen(
                     events = eventsMap,
@@ -313,7 +323,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
 //            // Category Screen
 //            composable("category") {
-//                CategoryScreen(modifier)
+//                CategoryScreen(modifier, navController)
 //            }
 //
 //            // Receipt handling routes
@@ -321,7 +331,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 //                UploadReceiptScreen(modifier, navController)
 //            }
 //
-//            composable("receiptSummary/{imageUri}") { backStackEntry ->
+//            composable(
+//                route = "receiptSummary/{imageUri}",
+//                arguments = listOf(
+//                    navArgument("imageUri") { type = NavType.StringType }
+//                )
+//            ) { backStackEntry ->
 //                val imageUriString = backStackEntry.arguments?.getString("imageUri")
 //                val imageUri = if (imageUriString != null) Uri.parse(imageUriString) else Uri.EMPTY
 //                ReceiptSummaryScreen(modifier, navController, imageUri = imageUri)
