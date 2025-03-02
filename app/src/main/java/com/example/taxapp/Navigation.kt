@@ -411,9 +411,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 //            }
         }
 
-        // Add ChatFAB to overlay on all screens
-        ChatFAB(
-            modifier = Modifier.fillMaxSize()
-        )
+        // Only show ChatFAB on specific routes
+        val routesWithChatbot = listOf("home", "calendar", "event_details", "add_event/{date}")
+        val currentDestination = navController.currentDestination?.route
+
+        if (routesWithChatbot.any { it.contains(currentDestination ?: "") }) {
+            ChatFAB(
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
