@@ -97,7 +97,8 @@ data class Event(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalendarScreen(
-    events: MutableMap<LocalDate, MutableList<Event>>,
+    events: Map<LocalDate, List<Event>>,
+    currentUserId: String,
     onNavigateToAddEvent: (LocalDate) -> Unit,
     onNavigateToEventDetails: (Event) -> Unit,
     modifier: Modifier = Modifier
@@ -442,7 +443,7 @@ fun CalendarGrid(
     yearMonth: YearMonth,
     selectedDate: LocalDate,
     events: Map<LocalDate, List<Event>>,
-    onDateSelect: (LocalDate) -> Unit
+    onDateSelect: (LocalDate) -> Unit,
 ) {
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current

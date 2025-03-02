@@ -2,10 +2,12 @@ package com.example.taxapp.user
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.firebase.FirebaseManager
 //import com.example.taxapp.model.UserModel
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore

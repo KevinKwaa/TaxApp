@@ -23,6 +23,7 @@ import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.CalendarEvent.FadeTransition
 import com.example.taxapp.CalendarEvent.LoadingScreen
 import com.example.taxapp.accessibility.AccessibilityRepository
+import com.example.taxapp.firebase.FirebaseManager
 import kotlinx.coroutines.delay
 
 class MainActivity : BaseActivity() {
@@ -62,7 +63,8 @@ fun MainScreen() {
     val eventRepository = remember { EventRepository.getInstance() }
 
     // Collect events from Firestore to check if connection is established
-    val eventsFlow by eventRepository.getAllEvents().collectAsState(initial = null)
+    val currentUserId = FirebaseManager.getCurrentUserId()
+    val eventsFlow by eventRepository.getAllEvents(currentUserId).collectAsState(initial = mapOf())
 
     // Consider Firebase ready once we've received data from Firestore
     // or after a timeout period (to prevent indefinite loading)

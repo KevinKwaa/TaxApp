@@ -12,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -59,18 +60,32 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val authViewModel: AuthViewModel = viewModel()
     val editProfileViewModel: EditProfileViewModel = viewModel()
 
-    // Initialize the event repository
-    val eventRepository = remember { EventRepository.getInstance() }
+    // Key change: Make events state dependent on the current user
+    val currentUserId = FirebaseManager.getCurrentUserId()
 
-    // Collect events from Firestore as a state
-    val eventsMap = remember { mutableStateMapOf<LocalDate, MutableList<Event>>() }
-    val eventsFlow by eventRepository.getAllEvents().collectAsState(initial = mapOf())
+    // Use key to force recomposition when user changes
+    val eventRepository = remember(currentUserId) {
+        EventRepository.getInstance()
+    }
+
+    // Collect events specific to the current user
+    val eventsMap by produceState(
+        initialValue = mapOf<LocalDate, MutableList<Event>>(),
+        key1 = currentUserId
+    ) {
+        eventRepository.getAllEvents(currentUserId)
+            .collect { events ->
+                value = events
+            }
+    }
+
+    //val eventsFlow by eventRepository.getAllEvents(currentUserId).collectAsState(initial = mapOf())
 
     // Update the events map when the flow emits new data
-    LaunchedEffect(eventsFlow) {
-        eventsMap.clear()
-        eventsMap.putAll(eventsFlow)
-    }
+    //LaunchedEffect(eventsFlow, currentUserId) {
+    //    eventsMap.clear()
+    //    eventsMap.putAll(eventsFlow)
+    //}
 
     // Get the TTS manager from the composition
     val ttsManager = LocalTtsManager.current
@@ -176,27 +191,30 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             // Calendar Screen
             composable("calendar") {
-                CalendarScreen(
-                    events = eventsMap,
-                    onNavigateToAddEvent = { date ->
-                        // Capture the date for announcement
-                        val dateFormat = DateTimeFormatter.ofPattern("MMMM d")
-                        val formattedDate = date.format(dateFormat)
+                if (currentUserId != null) {
+                    CalendarScreen(
+                        events = eventsMap,
+                        currentUserId = currentUserId,
+                        onNavigateToAddEvent = { date ->
+                            // Capture the date for announcement
+                            val dateFormat = DateTimeFormatter.ofPattern("MMMM d")
+                            val formattedDate = date.format(dateFormat)
 
-                        // Announce navigation
-                        ttsManager?.speak("Adding event for $formattedDate")
+                            // Announce navigation
+                            ttsManager?.speak("Adding event for $formattedDate")
 
-                        navController.navigate("add_event/${date}")
-                    },
-                    onNavigateToEventDetails = { event ->
-                        currentEvent.value = event
+                            navController.navigate("add_event/${date}")
+                        },
+                        onNavigateToEventDetails = { event ->
+                            currentEvent.value = event
 
-                        // Announce navigation with event title
-                        ttsManager?.speak("Opening details for event: ${event.title}")
+                            // Announce navigation with event title
+                            ttsManager?.speak("Opening details for event: ${event.title}")
 
-                        navController.navigate("event_details")
-                    }
-                )
+                            navController.navigate("event_details")
+                        }
+                    )
+                }
             }
 
             // Add Event Screen
