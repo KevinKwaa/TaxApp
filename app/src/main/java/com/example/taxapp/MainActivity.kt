@@ -24,6 +24,8 @@ import com.example.taxapp.CalendarEvent.FadeTransition
 import com.example.taxapp.CalendarEvent.LoadingScreen
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.firebase.FirebaseManager
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.delay
 
 class MainActivity : BaseActivity() {
@@ -44,6 +46,16 @@ class MainActivity : BaseActivity() {
                     }
                 }
             }
+        }
+    }
+    override fun onStart() {
+        super.onStart()
+
+        // Check if user is still authenticated
+        val currentUser = Firebase.auth.currentUser
+        if (currentUser == null) {
+            // If not logged in, make sure event repository is reset
+            EventRepository.resetInstance()
         }
     }
 }

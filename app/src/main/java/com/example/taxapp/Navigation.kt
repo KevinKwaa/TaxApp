@@ -60,11 +60,23 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val authViewModel: AuthViewModel = viewModel()
     val editProfileViewModel: EditProfileViewModel = viewModel()
 
-    // Key change: Make events state dependent on the current user
-    val currentUserId = FirebaseManager.getCurrentUserId()
+    // Collect user ID from FirebaseManager's StateFlow
+    val currentUserId by FirebaseManager.currentUserFlow.collectAsState()
 
-    // Use key to force recomposition when user changes
+    // Log user change for debugging
+    LaunchedEffect(currentUserId) {
+        Log.d("AppNavigation", "User changed to: $currentUserId")
+
+        // Reset event repository on user change
+        if (currentUserId == null) {
+            EventRepository.resetInstance()
+        }
+    }
+
+    // Now we use the StateFlow value instead of calling getCurrentUserId directly
     val eventRepository = remember(currentUserId) {
+        // Force reset and get fresh instance for new user
+        EventRepository.resetInstance()
         EventRepository.getInstance()
     }
 
@@ -73,10 +85,16 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         initialValue = mapOf<LocalDate, MutableList<Event>>(),
         key1 = currentUserId
     ) {
-        eventRepository.getAllEvents(currentUserId)
-            .collect { events ->
-                value = events
-            }
+        // Only collect events if there's a user logged in
+        if (currentUserId != null) {
+            eventRepository.getAllEvents(currentUserId)
+                .collect { events ->
+                    value = events
+                }
+        } else {
+            // Empty map when no user is logged in
+            value = emptyMap()
+        }
     }
 
     //val eventsFlow by eventRepository.getAllEvents(currentUserId).collectAsState(initial = mapOf())
@@ -181,12 +199,23 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
 
             composable("editProfile") {
-                EditProfileScreen(modifier, navController, editProfileViewModel)
+                val authViewModel: AuthViewModel = viewModel()
+                EditProfileScreen(
+                    modifier = modifier,
+                    navController = navController,
+                    editProfileViewModel = editProfileViewModel,
+                    authViewModel = authViewModel
+                )
             }
 
             // Home Screen (central hub)
             composable("home") {
-                HomeScreen(modifier, navController)
+                val authViewModel: AuthViewModel = viewModel()
+                HomeScreen(
+                    modifier = modifier,
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
             }
 
             // Calendar Screen
@@ -194,7 +223,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 if (currentUserId != null) {
                     CalendarScreen(
                         events = eventsMap,
-                        currentUserId = currentUserId,
+                        currentUserId = currentUserId!!,
                         onNavigateToAddEvent = { date ->
                             // Capture the date for announcement
                             val dateFormat = DateTimeFormatter.ofPattern("MMMM d")
@@ -212,6 +241,16 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             ttsManager?.speak("Opening details for event: ${event.title}")
 
                             navController.navigate("event_details")
+                        },
+                        // Add the back navigation callback
+                        onNavigateBack = {
+                            // Announce navigation back to home
+                            ttsManager?.speak("Going back to home screen")
+
+                            navController.navigate("home") {
+                                // Pop up to home to avoid building up back stack
+                                popUpTo("home") { inclusive = false }
+                            }
                         }
                     )
                 }

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EventNote
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
@@ -37,6 +38,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -101,6 +103,7 @@ fun CalendarScreen(
     currentUserId: String,
     onNavigateToAddEvent: (LocalDate) -> Unit,
     onNavigateToEventDetails: (Event) -> Unit,
+    onNavigateBack: () -> Unit, // Added new callback for back navigation
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -153,18 +156,26 @@ fun CalendarScreen(
                 .background(accessibleColors.calendarBackground)
                 .padding(16.dp)
         ) {
-            // App Header with enhanced styling
-            SpeakableContent(text = stringResource(id = R.string.scheduler)) {
-                Text(
-                    text = stringResource(id = R.string.scheduler),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    ),
-                    color = accessibleColors.headerText,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
+            // App Header with enhanced styling and back button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Title
+                SpeakableContent(text = stringResource(id = R.string.scheduler)) {
+                    Text(
+                        text = stringResource(id = R.string.scheduler),
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = accessibleColors.headerText
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -223,6 +234,34 @@ fun CalendarScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                // Back button
+                IconButton(
+                    onClick = {
+                        ttsManager?.speak("Going back to home")
+                        onNavigateBack()
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                            CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accessibleColors.calendarBorder,
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Back to home",
+                        tint = accessibleColors.buttonText,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                //Spacer(modifier = Modifier.width(16.dp))
+
                 if (isDarkMode) {
                     Text(
                         text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
@@ -232,6 +271,7 @@ fun CalendarScreen(
                 }
             }
 
+            // Rest of your Calendar UI remains the same
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -253,7 +293,7 @@ fun CalendarScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-
+                    // Continue with existing calendar code...
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -401,7 +441,6 @@ fun CalendarScreen(
                     },
                     currentLanguageCode = currentLanguageCode
                 )
-
             }
         }
 

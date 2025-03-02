@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.user.AppUtil
 //import com.example.smarttax_ver1.viewmodel.EditProfileViewModel
 import com.google.firebase.Firebase
@@ -57,7 +58,8 @@ import com.google.firebase.auth.auth
 fun EditProfileScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    editProfileViewModel: EditProfileViewModel = viewModel()
+    editProfileViewModel: EditProfileViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ){
     Scaffold(
         topBar = {
@@ -128,7 +130,8 @@ fun EditProfileScreen(
 fun EditProfileScreenContent(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    editProfileViewModel: EditProfileViewModel
+    editProfileViewModel: EditProfileViewModel,
+    authViewModel: AuthViewModel = viewModel()
 ){
     // Use collectAsState to properly observe viewModel state
     val email = editProfileViewModel.email
@@ -274,12 +277,15 @@ fun EditProfileScreenContent(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Also update in EditProfileScreen.kt
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                Firebase.auth.signOut()
-                navController.navigate("auth"){
-                    popUpTo("home"){inclusive = true}
+                // Use authViewModel for logout with proper cleanup
+                authViewModel.logout {
+                    navController.navigate("auth"){
+                        popUpTo("home"){inclusive = true}
+                    }
                 }
             }
         ) {

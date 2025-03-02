@@ -37,13 +37,19 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.taxapp.CalendarEvent.EventRepository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -105,7 +111,11 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavHostController) 
 }
 
 @Composable
-fun HomeScreenContent(modifier: Modifier = Modifier, navController: NavHostController) {
+fun HomeScreenContent(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -152,9 +162,11 @@ fun HomeScreenContent(modifier: Modifier = Modifier, navController: NavHostContr
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                Firebase.auth.signOut()
-                navController.navigate("auth"){
-                    popUpTo("home"){inclusive = true}
+                // Use authViewModel for logout with proper cleanup
+                authViewModel.logout {
+                    navController.navigate("auth"){
+                        popUpTo("home"){inclusive = true}
+                    }
                 }
             }
         ) {

@@ -6,6 +6,7 @@ import androidx.annotation.RequiresApi
 import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.channels.awaitClose
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -23,6 +24,9 @@ import java.util.Date
 class EventRepository {
     private val db: FirebaseFirestore = Firebase.firestore
     private val _eventsCache = MutableStateFlow<Map<LocalDate, MutableList<Event>>>(emptyMap())
+
+    // Track active listeners to ensure proper cleanup
+    private var activeListenerRegistration: ListenerRegistration? = null
 
     fun clearEvents() {
         _eventsCache.value = emptyMap()
@@ -120,46 +124,22 @@ class EventRepository {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getAllEvents(userId: String?): Flow<Map<LocalDate, MutableList<Event>>> = callbackFlow {
-        // Get the current user ID
-        val userId = FirebaseManager.getCurrentUserId()
+        // First, clean up any existing listeners
+        cleanupListener()
 
-        // Immediately close if no user
+        // If no user is provided, return empty map and close the flow
         if (userId == null) {
+            Log.d(TAG, "No user ID provided, returning empty events")
             trySend(emptyMap())
             close()
             return@callbackFlow
         }
 
-//        // Listen to the user's events subcollection
-//        val subscription = getUserEventsCollection(userId)
-//            .addSnapshotListener { snapshot, error ->
-//                if (error != null) {
-//                    Log.e(TAG, "Error listening for events", error)
-//                    return@addSnapshotListener
-//                }
-//
-//                if (snapshot != null) {
-//                    val eventsMap = mutableMapOf<LocalDate, MutableList<Event>>()
-//                    for (document in snapshot.documents) {
-//                        try {
-//                            val event = document.toEvent()
-//                            val date = event.date
-//                            if (!eventsMap.containsKey(date)) {
-//                                eventsMap[date] = mutableListOf()
-//                            }
-//                            eventsMap[date]?.add(event)
-//                        } catch (e: Exception) {
-//                            Log.e(TAG, "Error parsing event document: ${document.id}", e)
-//                        }
-//                    }
-//                    trySend(eventsMap)
-//                }
-//            }
-//
-//        awaitClose { subscription.remove() }
+        Log.d(TAG, "Setting up events listener for user: $userId")
+
         // Use a fresh listener each time
         val query = getUserEventsCollection(userId)
-        val listenerRegistration = query.addSnapshotListener { snapshot, error ->
+        activeListenerRegistration = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.e(TAG, "Error listening for events", error)
                 close(error)
@@ -167,6 +147,7 @@ class EventRepository {
             }
 
             if (snapshot != null) {
+                Log.d(TAG, "Received ${snapshot.documents.size} events for user: $userId")
                 val eventsMap = mutableMapOf<LocalDate, MutableList<Event>>()
                 for (document in snapshot.documents) {
                     try {
@@ -183,8 +164,25 @@ class EventRepository {
 
         // Ensure listener is removed when flow is cancelled
         awaitClose {
-            listenerRegistration.remove()
+            Log.d(TAG, "Closing events listener for user: $userId")
+            cleanupListener()
         }
+    }
+
+    // Helper method to clean up the active listener
+    private fun cleanupListener() {
+        activeListenerRegistration?.let {
+            Log.d(TAG, "Removing existing event listener")
+            it.remove()
+        }
+        activeListenerRegistration = null
+    }
+
+    // Method to reset the repository when a user logs out
+    fun reset() {
+        Log.d(TAG, "Resetting EventRepository")
+        cleanupListener()
+        _eventsCache.value = emptyMap()
     }
 
     companion object {
@@ -196,6 +194,13 @@ class EventRepository {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: EventRepository().also { INSTANCE = it }
             }
+        }
+
+        // Method to reset the singleton instance when a user logs out
+        fun resetInstance() {
+            Log.d(TAG, "Resetting EventRepository instance")
+            INSTANCE?.reset()
+            INSTANCE = null
         }
     }
 }

@@ -4,13 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.firebase.FirebaseManager
-//import com.example.taxapp.model.UserModel
 import com.google.firebase.Firebase
-import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
 
 class AuthViewModel : ViewModel() {
     private val TAG = "AuthViewModel"
@@ -21,9 +17,16 @@ class AuthViewModel : ViewModel() {
     fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         Log.d(TAG, "Attempting login for email: $email")
 
+        // First, ensure we're starting fresh
+        EventRepository.resetInstance()
+
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener {
                 Log.d(TAG, "Login successful for email: $email")
+
+                // Force refresh the user ID in FirebaseManager
+                FirebaseManager.refreshCurrentUser()
+
                 onResult(true, null)
             }
             .addOnFailureListener { exception ->
@@ -39,6 +42,9 @@ class AuthViewModel : ViewModel() {
             .addOnSuccessListener { authResult ->
                 val userId = authResult.user?.uid
                 Log.d(TAG, "Registration successful, creating user document for ID: $userId")
+
+                // Force refresh the user ID in FirebaseManager
+                FirebaseManager.refreshCurrentUser()
 
                 if (userId != null) {
                     val userModel = UserModel(email, userId)
@@ -105,5 +111,22 @@ class AuthViewModel : ViewModel() {
             Log.e(TAG, "userProfile failed: User not logged in")
             onResult(false, "User not logged in")
         }
+    }
+
+    // Add a logout function to handle cleanup properly
+    fun logout(onComplete: () -> Unit) {
+        Log.d(TAG, "Performing logout with cleanup")
+
+        // First reset any repositories that depend on user data
+        EventRepository.resetInstance()
+
+        // Then sign out from Firebase
+        auth.signOut()
+
+        // Force refresh the user ID state
+        FirebaseManager.refreshCurrentUser()
+
+        // Callback
+        onComplete()
     }
 }
