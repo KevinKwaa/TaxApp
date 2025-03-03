@@ -1,6 +1,7 @@
 package com.example.taxapp.chatbot
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -71,11 +72,82 @@ import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
 import kotlinx.coroutines.delay
 
+//@Composable
+//fun ChatFAB(
+//    modifier: Modifier = Modifier
+//) {
+//    // Get the ViewModel using the viewModel() function with the LocalContext.current as the ViewModelStoreOwner
+//    val context = LocalContext.current
+//    val chatViewModel: ChatViewModel = viewModel(
+//        factory = ViewModelFactory(context.applicationContext as Application)
+//    )
+//
+//    val chatState by chatViewModel.chatState.collectAsState()
+//    val isHistoryViewActive by chatViewModel.isHistoryViewActive.collectAsState()
+//    val accessibleColors = LocalThemeColors.current
+//    val ttsManager = LocalTtsManager.current
+//
+//    // Get message count for badge
+//    val chatHistory by chatViewModel.chatHistory.collectAsState()
+//    val messageCount = chatHistory.size
+//
+//    Box(modifier = modifier) {
+//        // Chat FAB with badge
+//        BadgedBox(
+//            badge = {
+//                if (messageCount > 0) {
+//                    Badge {
+//                        val displayCount = if (messageCount > 99) "99+" else messageCount.toString()
+//                        Text(text = displayCount)
+//                    }
+//                }
+//            },
+//            modifier = Modifier
+//                .align(Alignment.BottomEnd)
+//                .padding(16.dp)
+//        ) {
+//            FloatingActionButton(
+//                onClick = {
+//                    chatViewModel.toggleChatVisibility()
+//                    ttsManager?.speak("Opening chat assistant")
+//                },
+//                modifier = Modifier.semantics {
+//                    contentDescription = "Open AI chat assistant"
+//                },
+//                containerColor = accessibleColors.buttonBackground,
+//                contentColor = accessibleColors.buttonText
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Filled.ChatBubble,
+//                    contentDescription = null
+//                )
+//            }
+//        }
+//
+//        // Chat Dialog
+//        if (chatState.isChatVisible) {
+//            if (isHistoryViewActive) {
+//                ChatHistoryScreen(
+//                    chatViewModel = chatViewModel,
+//                    onClose = { chatViewModel.toggleHistoryView() }
+//                )
+//            } else {
+//                ChatDialog(
+//                    chatViewModel = chatViewModel,
+//                    isProcessing = chatState.isProcessing
+//                )
+//            }
+//        }
+//    }
+//}
+
 @Composable
 fun ChatFAB(
     modifier: Modifier = Modifier
 ) {
-    // Get the ViewModel using the viewModel() function with the LocalContext.current as the ViewModelStoreOwner
+    Log.d("ChatFAB", "Rendering ChatFAB")
+
+    // Get the ViewModel using the viewModel() function
     val context = LocalContext.current
     val chatViewModel: ChatViewModel = viewModel(
         factory = ViewModelFactory(context.applicationContext as Application)
@@ -90,40 +162,39 @@ fun ChatFAB(
     val chatHistory by chatViewModel.chatHistory.collectAsState()
     val messageCount = chatHistory.size
 
-    Box(modifier = modifier) {
-        // Chat FAB with badge
-        BadgedBox(
-            badge = {
-                if (messageCount > 0) {
-                    Badge {
-                        val displayCount = if (messageCount > 99) "99+" else messageCount.toString()
-                        Text(text = displayCount)
+    Box(modifier = modifier.fillMaxSize()) {
+        // Just the draggable FAB with the badge
+        SimpleDraggableBox {
+            BadgedBox(
+                badge = {
+                    if (messageCount > 0) {
+                        Badge {
+                            val displayCount = if (messageCount > 99) "99+" else messageCount.toString()
+                            Text(text = displayCount)
+                        }
                     }
                 }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            FloatingActionButton(
-                onClick = {
-                    chatViewModel.toggleChatVisibility()
-                    ttsManager?.speak("Opening chat assistant")
-                },
-                modifier = Modifier.semantics {
-                    contentDescription = "Open AI chat assistant"
-                },
-                containerColor = accessibleColors.buttonBackground,
-                contentColor = accessibleColors.buttonText
             ) {
-                Icon(
-                    imageVector = Icons.Filled.ChatBubble,
-                    contentDescription = null
-                )
+                FloatingActionButton(
+                    onClick = {
+                        chatViewModel.toggleChatVisibility()
+                        ttsManager?.speak("Opening chat assistant")
+                    },
+                    modifier = Modifier.semantics {
+                        contentDescription = "Open AI chat assistant"
+                    },
+                    containerColor = accessibleColors.buttonBackground,
+                    contentColor = accessibleColors.buttonText
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ChatBubble,
+                        contentDescription = null
+                    )
+                }
             }
         }
 
-        // Chat Dialog
+        // Chat Dialog - positioned separately
         if (chatState.isChatVisible) {
             if (isHistoryViewActive) {
                 ChatHistoryScreen(

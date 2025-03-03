@@ -79,7 +79,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
             modifier = Modifier.fillMaxWidth()
                 .height(60.dp)
         ) {
-            Text(text = "Resgiter", fontSize = 22.sp)
+            Text(text = "Register", fontSize = 22.sp)
         }
     }
 }

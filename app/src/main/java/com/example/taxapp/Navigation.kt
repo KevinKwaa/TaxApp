@@ -165,7 +165,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
     }
 
-    // Wrap the NavHost with a Box to allow overlay of the chat button and status feedback
     Box(modifier = Modifier.fillMaxSize()) {
         // Status feedback
         Box(
@@ -411,14 +410,27 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 //            }
         }
 
-        // Only show ChatFAB on specific routes
-        val routesWithChatbot = listOf("home", "calendar", "event_details", "add_event/{date}")
-        val currentDestination = navController.currentDestination?.route
+        // 1. First, collect the user state as a state object that will trigger recomposition
+        val currentUserState by FirebaseManager.currentUserFlow.collectAsState()
 
-        if (routesWithChatbot.any { it.contains(currentDestination ?: "") }) {
-            ChatFAB(
-                modifier = Modifier.fillMaxSize()
-            )
+        // 2. Log the user state to help diagnose issues
+        LaunchedEffect(currentUserState) {
+            Log.d("Navigation", "User state changed: ${currentUserState != null}")
+        }
+
+        // 3. Define routes with chatbot using the state variable
+        val routesWithChatbot = listOf("home", "calendar", "event_details")
+        val currentRoute = navController.currentDestination?.route
+        val showChatbot = (currentRoute in routesWithChatbot ||
+                currentRoute?.startsWith("add_event/") == true) &&
+                currentUserState != null  // Use the state variable here
+
+        // 4. Log the chatbot visibility decision
+        Log.d("Navigation", "ChatFAB visibility: $showChatbot (route: $currentRoute, user: ${currentUserState != null})")
+
+        // 5. Show the chatbot based on the state
+        if (showChatbot) {
+            ChatFAB()
         }
     }
 }
