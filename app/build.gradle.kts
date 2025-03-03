@@ -97,6 +97,8 @@ dependencies {
     //implementation("com.google.ai.client.generativeai:generativeai:0.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.firestore.ktx)
 
     // Room Database dependencies - fixed to use KSP
     val roomVersion = "2.6.1"
@@ -107,7 +109,7 @@ dependencies {
     // Firebase dependencies
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-analytics-ktx")
-    implementation("com.google.firebase:firebase-firestore-ktx")
+
     implementation("com.google.firebase:firebase-auth-ktx")
 
     // Desugaring for Java 8 features (like LocalDate) on lower API levels

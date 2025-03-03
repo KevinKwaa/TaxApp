@@ -8,6 +8,7 @@ import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -200,5 +201,18 @@ object FirebaseManager {
         // Update cache
         lastCheckedUserId = userId
         lastCheckedTimestamp = System.currentTimeMillis()
+    }
+
+    fun getStorageInstance(): FirebaseStorage {
+        return try {
+            val authApp = FirebaseApp.getInstance(AUTH_APP)
+            FirebaseStorage.getInstance(authApp).also {
+                Log.d(TAG, "Retrieved FirebaseStorage from AUTH_APP")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting AUTH_APP Storage, falling back to default", e)
+            // Fall back to the default app
+            FirebaseStorage.getInstance()
+        }
     }
 }

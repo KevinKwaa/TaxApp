@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,6 +48,9 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.example.taxapp.firebase.FirebaseManager
+import com.example.taxapp.receiptcategory.CategoryScreen
+import com.example.taxapp.receiptcategory.ReceiptSummaryScreen
+import com.example.taxapp.receiptcategory.UploadReceiptScreen
 import kotlinx.coroutines.delay
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -388,26 +392,37 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 }
             }
 
-//            // Category Screen
-//            composable("category") {
-//                CategoryScreen(modifier, navController)
-//            }
-//
-//            // Receipt handling routes
-//            composable("uploadReceipt") {
-//                UploadReceiptScreen(modifier, navController)
-//            }
-//
-//            composable(
-//                route = "receiptSummary/{imageUri}",
-//                arguments = listOf(
-//                    navArgument("imageUri") { type = NavType.StringType }
-//                )
-//            ) { backStackEntry ->
-//                val imageUriString = backStackEntry.arguments?.getString("imageUri")
-//                val imageUri = if (imageUriString != null) Uri.parse(imageUriString) else Uri.EMPTY
-//                ReceiptSummaryScreen(modifier, navController, imageUri = imageUri)
-//            }
+            // Receipt screens
+            composable("uploadReceipt") {
+                UploadReceiptScreen(
+                    modifier = modifier,
+                    navController = navController
+                )
+            }
+
+            composable("receiptSummary") {
+                ReceiptSummaryScreen(
+                    modifier = modifier,
+                    navController = navController
+                )
+            }
+
+            // Categories screen
+            composable("category") {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    CategoryScreen(
+                        modifier = modifier,
+                        navController = navController
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("This feature requires Android N or higher")
+                    }
+                }
+            }
         }
 
         // 1. First, collect the user state as a state object that will trigger recomposition

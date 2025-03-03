@@ -139,23 +139,23 @@ fun HomeScreenContent(
             Text(text = "Tax Calendar")
         }
 
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        Button(
-//            modifier = Modifier.fillMaxWidth(),
-//            onClick = { navController.navigate("uploadReceipt") }
-//        ) {
-//            Text(text = "Upload Receipt")
-//        }
+        Spacer(modifier = Modifier.height(16.dp))
 
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        Button(
-//            modifier = Modifier.fillMaxWidth(),
-//            onClick = { navController.navigate("category") }
-//        ) {
-//            Text(text = "Categories")
-//        }
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { navController.navigate("uploadReceipt") }
+        ) {
+            Text(text = "Upload Receipt")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { navController.navigate("category") }
+        ) {
+            Text(text = "Tax Categories")
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
