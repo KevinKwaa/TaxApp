@@ -5,8 +5,11 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.auth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -31,6 +34,10 @@ class EventRepository {
     fun clearEvents() {
         _eventsCache.value = emptyMap()
     }
+
+    //added these two
+    //private val auth = FirebaseManager.getAuthInstance()
+    //private val db = FirebaseManager.getAuthFirestore()
 
     // Get the user-specific events collection
     private fun getUserEventsCollection(userId: String) =

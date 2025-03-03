@@ -1,7 +1,12 @@
 package com.example.taxapp.receiptcategory
 
+import android.os.Build
+import android.speech.tts.TextToSpeech
+import androidx.activity.ComponentActivity
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -53,9 +59,13 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -65,10 +75,25 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.taxapp.R
+import com.example.taxapp.accessibility.AccessibilityRepository
+import com.example.taxapp.accessibility.AccessibilitySettings
+import com.example.taxapp.accessibility.AccessibilityState
+import com.example.taxapp.accessibility.LocalDarkMode
+import com.example.taxapp.accessibility.LocalThemeColors
+import com.example.taxapp.accessibility.LocalTtsManager
+import com.example.taxapp.accessibility.ScreenReader
+import com.example.taxapp.multiLanguage.AppLanguageManager
+import com.example.taxapp.multiLanguage.LanguageProvider
+import com.example.taxapp.multiLanguage.LanguageSelector
 import com.example.taxapp.user.AppUtil
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiptSummaryScreen(
@@ -87,7 +112,7 @@ fun ReceiptSummaryScreen(
                 ),
                 title = {
                     Text(
-                        text = "Receipt Summary",
+                        text = stringResource(id = R.string.receipt_summary),
                         style = TextStyle(
                             fontSize = 24.sp,
                             fontFamily = FontFamily.SansSerif,
@@ -111,6 +136,7 @@ fun ReceiptSummaryScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ReceiptSummaryContent(
     modifier: Modifier = Modifier,
@@ -118,132 +144,263 @@ fun ReceiptSummaryContent(
     receiptViewModel: ReceiptViewModel
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
 
-    // Error message
-    receiptViewModel.errorMessage?.let { error ->
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+    // Access shared repositories
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+
+    // Observe the current language
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
+    }
+
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
+    // Clean up TTS when not needed
+    DisposableEffect(accessibilityState.textToSpeech) {
+        onDispose {
+            tts?.shutdown()
+        }
+    }
+
+    // Get the custom colors
+    val accessibleColors = LocalThemeColors.current
+    val isDarkMode = LocalDarkMode.current
+    ScreenReader("Home Screen")
+    val ttsManager = LocalTtsManager.current
+    LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(16.dp)
+            // Language button with improved styling
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                        CircleShape
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = accessibleColors.calendarBorder,
+                        shape = CircleShape
+                    )
+                    .clip(CircleShape)
+                    .clickable { showLanguageSelector = true }
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Error: $error",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.error
+                    "🌐",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = accessibleColors.buttonText
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { navController.navigateUp() }) {
-                    Text("Go Back")
-                }
+            }
+
+            // Accessibility button with improved styling
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                        CircleShape
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = accessibleColors.calendarBorder,
+                        shape = CircleShape
+                    )
+                    .clip(CircleShape)
+                    .clickable { showAccessibilitySettings = true }
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "⚙️",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = accessibleColors.buttonText
+                )
             }
         }
-        return
-    }
 
-    // Loading indicator
-    if (receiptViewModel.isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(48.dp),
-                color = MaterialTheme.colorScheme.primary,
-                strokeWidth = 4.dp
-            )
+        receiptViewModel.errorMessage?.let { error ->
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.error, error),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = {
+                        ttsManager?.speak("Going Back")
+                        navController.navigateUp() }
+                    ) {
+                        Text(text = stringResource(id = R.string.back),)
+                    }
+                }
+            }
+            return@LanguageProvider
         }
-        return
-    }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Receipt image
-        item {
-            receiptViewModel.currentReceiptUri?.let { uri ->
-                Card(
+        // Loading indicator
+        if (receiptViewModel.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 4.dp
+                )
+            }
+            return@LanguageProvider
+        }
+
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Receipt image
+            item {
+                receiptViewModel.currentReceiptUri?.let { uri ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(uri),
+                            contentDescription = "Receipt Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+            }
+
+            // Receipt details
+            item {
+                ReceiptDetailsSection(receiptViewModel)
+            }
+
+            // Expense items
+            item {
+                Text(
+                    text = stringResource(id = R.string.expense_items),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+
+            // List of expense items
+            items(receiptViewModel.expenseItems) { item ->
+                EditableExpenseItemCard(
+                    item = item,
+                    availableCategories = receiptViewModel.availableCategories,
+                    onCategoryChange = { newCategory ->
+                        // Update the category for this item
+                        receiptViewModel.updateExpenseItemCategory(item, newCategory)
+                    },
+                    onNameChange = { newName ->
+                        // Update the name/description of this item
+                        receiptViewModel.updateExpenseItemName(item, newName)
+                    },
+                    onAmountChange = { newAmount ->
+                        // Update the amount of this item
+                        receiptViewModel.updateExpenseItemAmount(item, newAmount)
+                    },
+                    onDeleteItem = { expenseItem ->
+                        // Delete this expense item
+                        receiptViewModel.deleteExpenseItem(expenseItem)
+                    }
+                )
+            }
+
+            // Save button
+            item {
+                Button(
+                    onClick = {
+                        ttsManager?.speak("Saving Receipt")
+                        receiptViewModel.saveReceipt(
+                            onSuccess = { receiptId ->
+                                AppUtil.showToast(context, "Receipt saved successfully")
+                                navController.navigate("home") {
+                                    popUpTo("home") { inclusive = false }
+                                }
+                            },
+                            onError = { error ->
+                                AppUtil.showToast(context, error)
+                            }
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .padding(vertical = 16.dp)
+                        .height(56.dp)
                 ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(uri),
-                        contentDescription = "Receipt Image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Fit
-                    )
+                    Text(text = stringResource(id = R.string.confirm_save), fontSize = 18.sp)
                 }
             }
         }
 
-        // Receipt details
-        item {
-            ReceiptDetailsSection(receiptViewModel)
-        }
-
-        // Expense items
-        item {
+        if (isDarkMode) {
             Text(
-                text = "Expense Items",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(vertical = 8.dp)
+                text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                style = MaterialTheme.typography.bodyMedium,
+                color = accessibleColors.calendarText.copy(alpha = 0.7f)
             )
         }
 
-        // List of expense items
-        items(receiptViewModel.expenseItems) { item ->
-            EditableExpenseItemCard(
-                item = item,
-                availableCategories = receiptViewModel.availableCategories,
-                onCategoryChange = { newCategory ->
-                    // Update the category for this item
-                    receiptViewModel.updateExpenseItemCategory(item, newCategory)
+        if (showLanguageSelector) {
+            LanguageSelector(
+                currentLanguageCode = currentLanguageCode,
+                onLanguageSelected = { languageCode ->
+                    currentLanguageCode = languageCode
                 },
-                onNameChange = { newName ->
-                    // Update the name/description of this item
-                    receiptViewModel.updateExpenseItemName(item, newName)
-                },
-                onAmountChange = { newAmount ->
-                    // Update the amount of this item
-                    receiptViewModel.updateExpenseItemAmount(item, newAmount)
-                },
-                onDeleteItem = { expenseItem ->
-                    // Delete this expense item
-                    receiptViewModel.deleteExpenseItem(expenseItem)
-                }
+                onDismiss = { showLanguageSelector = false },
+                activity = activity  // Pass the activity
             )
         }
 
-        // Save button
-        item {
-            Button(
-                onClick = {
-                    receiptViewModel.saveReceipt(
-                        onSuccess = { receiptId ->
-                            AppUtil.showToast(context, "Receipt saved successfully")
-                            navController.navigate("home") {
-                                popUpTo("home") { inclusive = false }
-                            }
-                        },
-                        onError = { error ->
-                            AppUtil.showToast(context, error)
-                        }
-                    )
+        if (showAccessibilitySettings) {
+            AccessibilitySettings(
+                currentSettings = accessibilityState,
+                onSettingsChanged = { newSettings ->
+                    coroutineScope.launch {
+                        accessibilityRepository.updateSettings(newSettings)
+                    }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-                    .height(56.dp)
-            ) {
-                Text("Confirm and Save", fontSize = 18.sp)
-            }
+                onDismiss = { showAccessibilitySettings = false }
+            )
         }
     }
 }
@@ -269,7 +426,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Receipt Details",
+                text = stringResource(id = R.string.receipt_details),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -294,7 +451,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                     OutlinedTextField(
                         value = receiptViewModel.merchantName,
                         onValueChange = { receiptViewModel.merchantName = it },
-                        label = { Text("Merchant Name") },
+                        label = { Text(text = stringResource(id = R.string.merchant_name),) },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -307,7 +464,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                     }
                 } else {
                     Text(
-                        text = "Merchant: ${receiptViewModel.merchantName}",
+                        text = stringResource(id = R.string.merchant_colon, receiptViewModel.merchantName),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.weight(1f)
                     )
@@ -340,7 +497,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                     OutlinedTextField(
                         value = receiptViewModel.date,
                         onValueChange = { receiptViewModel.date = it },
-                        label = { Text("Date (DD/MM/YYYY)") },
+                        label = { Text(text = stringResource(id = R.string.date),) },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -353,7 +510,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                     }
                 } else {
                     Text(
-                        text = "Date: ${receiptViewModel.date}",
+                        text = stringResource(id = R.string.date_colon,receiptViewModel.date),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.weight(1f)
                     )
@@ -374,7 +531,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "RM",
+                    text = stringResource(id = R.string.rm),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(end = 8.dp)
                 )
@@ -383,7 +540,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                     OutlinedTextField(
                         value = receiptViewModel.total,
                         onValueChange = { receiptViewModel.total = it },
-                        label = { Text("Total Amount") },
+                        label = { Text(text = stringResource(id = R.string.total_amount),) },
                         modifier = Modifier.weight(1f),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
@@ -397,7 +554,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                     }
                 } else {
                     Text(
-                        text = "Total: ${receiptViewModel.total}",
+                        text = stringResource(id = R.string.total_colon, receiptViewModel.total),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
@@ -423,7 +580,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                         OutlinedTextField(
                             value = receiptViewModel.category,
                             onValueChange = {},
-                            label = { Text("Category") },
+                            label = { Text(text = stringResource(id = R.string.category),) },
                             modifier = Modifier.fillMaxWidth(),
                             readOnly = true,
                             trailingIcon = {
@@ -450,7 +607,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                         }
                     } else {
                         Text(
-                            text = "Category: ${receiptViewModel.category}",
+                            text = stringResource(id = R.string.cate,receiptViewModel.category),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -466,7 +623,7 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
                     }
                 } else {
                     IconButton(onClick = { isEditingCategory = false }) {
-                        Text("Done")
+                        Text(text = stringResource(id = R.string.done),)
                     }
                 }
             }
@@ -541,8 +698,8 @@ fun EditableExpenseItemCard(
             if (showDeleteConfirmation) {
                 AlertDialog(
                     onDismissRequest = { showDeleteConfirmation = false },
-                    title = { Text("Delete Item") },
-                    text = { Text("Are you sure you want to delete this expense item?") },
+                    title = { Text(text = stringResource(id = R.string.delete_item),) },
+                    text = { Text(text = stringResource(id = R.string.delete_confirmation),) },
                     confirmButton = {
                         Button(
                             onClick = {
@@ -553,14 +710,14 @@ fun EditableExpenseItemCard(
                                 containerColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text("Delete")
+                            Text(text = stringResource(id = R.string.delete),)
                         }
                     },
                     dismissButton = {
                         OutlinedButton(
                             onClick = { showDeleteConfirmation = false }
                         ) {
-                            Text("Cancel")
+                            Text(text = stringResource(id = R.string.cancel),)
                         }
                     }
                 )
@@ -571,7 +728,7 @@ fun EditableExpenseItemCard(
                 OutlinedTextField(
                     value = editedName,
                     onValueChange = { editedName = it },
-                    label = { Text("Item Description") },
+                    label = { Text(text = stringResource(id = R.string.item_description),) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
@@ -583,7 +740,7 @@ fun EditableExpenseItemCard(
                         editedAmount = it
                         isValidAmount = it.toDoubleOrNull() != null
                     },
-                    label = { Text("Amount (RM)") },
+                    label = { Text(text = stringResource(id = R.string.amount),) },
                     isError = !isValidAmount,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier
@@ -593,7 +750,7 @@ fun EditableExpenseItemCard(
 
                 if (!isValidAmount) {
                     Text(
-                        text = "Please enter a valid amount",
+                        text = stringResource(id = R.string.valid_amount), //please enter a valid amount
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -605,7 +762,7 @@ fun EditableExpenseItemCard(
                     .padding(vertical = 4.dp)
                 ) {
                     Text(
-                        text = "Category: ${item.category}",
+                        text = stringResource(id = R.string.cate,item.category),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable { categoryMenuExpanded = true }
@@ -641,13 +798,13 @@ fun EditableExpenseItemCard(
                         .align(Alignment.End)
                         .padding(top = 8.dp)
                 ) {
-                    Text("Save Changes")
+                    Text(text = stringResource(id = R.string.save_changes),)
                 }
             } else {
                 // Display mode - show item details
                 Box {
                     Text(
-                        text = "Category: ${item.category}",
+                        text = stringResource(id = R.string.cate,item.category),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable { categoryMenuExpanded = true }
@@ -677,7 +834,7 @@ fun EditableExpenseItemCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Subtotal",
+                        text = stringResource(id = R.string.subtotal),
                         style = MaterialTheme.typography.bodyMedium
                     )
 

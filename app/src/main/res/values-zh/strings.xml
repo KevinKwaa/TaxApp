@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Calendar Screen -->
-    <string name="app_name">税务应用程序</string>
+    <string name="app_name">智能税务处理应用程序</string>
     <string name="scheduler">日程安排</string>
     <string name="current_language">当前语言：</string>
     <string name="select_language">选择语言：</string>
@@ -55,4 +55,94 @@
     <string name="type_your_question">输入您的问题...</string>
     <string name="send_message">发送消息</string>
     <string name="close_chat">关闭聊天</string>
+
+    <!-- General app strings -->
+    <string name="welcome_message">欢迎使用智能税务处理程序</string>
+    <string name="tax_calendar">税务日历</string>
+    <string name="upload_receipt">上传收据</string>
+    <string name="tax_categories">税务类别</string>
+    <string name="tax_plan">税务规划</string>
+    <string name="logout">退出登录</string>
+    <string name="welcome_description">一款人工智能集成应用程序，帮助您进行纳税申报</string>
+
+    <!-- Auth screens -->
+    <string name="login">登录</string>
+    <string name="register">注册</string>
+    <string name="email">电子邮箱</string>
+    <string name="password">密码</string>
+    <string name="sign_in">登录</string>
+    <string name="sign_up">注册</string>
+    <string name="welcome_back">欢迎回来</string>
+    <string name="create_account">创建账户</string>
+    <string name="sign_in_to_account">登录您的账户</string>
+    <string name="hello">你好呀！</string>
+
+    <!-- Profile screens -->
+    <string name="profile">个人资料</string>
+    <string name="edit_profile">编辑个人资料</string>
+    <string name="save_profile">保存个人资料</string>
+    <string name="name">姓名</string>
+    <string name="phone">电话号码</string>
+    <string name="date_of_birth">出生日期</string>
+    <string name="total_income">总收入</string>
+    <string name="complete_profile">完成您的个人资料</string>
+
+    <!-- Receipt Upload -->
+    <string name="receipt_upload">上传收据</string>
+    <string name="take_photo">拍照</string>
+    <string name="from_gallery">从相册选取</string>
+    <string name="receipt_processing">处理收据中...</string>
+    <string name="capture_receipt">使用相机拍摄收据</string>
+    <string name="select_from_gallery">从相册选择收据</string>
+
+    <!-- Receipt Details -->
+    <string name="receipt_details">收据详情</string>
+    <string name="merchant_name">商家名称</string>
+    <string name="receipt_date">日期</string>
+    <string name="receipt_total">总金额</string>
+    <string name="receipt_category">类别</string>
+    <string name="expense_items">支出项目</string>
+    <string name="confirm_save">确认并保存</string>
+
+    <!-- Categories -->
+    <string name="categories">类别</string>
+    <string name="categories_summary">类别摘要</string>
+    <string name="total_expenses">总支出：%1$s</string>
+    <string name="number_of_categories">类别数量：%1$d</string>
+    <string name="number_of_receipts">收据数量：%1$d</string>
+
+    <!-- Tax Plan -->
+    <string name="tax_plan_title">税务规划</string>
+    <string name="tax_savings">潜在税务节省</string>
+    <string name="tax_category_analysis">税务类别分析</string>
+    <string name="analyze_receipts">分析收据</string>
+    <string name="tax_optimization">税务优化建议</string>
+    <string name="no_data">没有可用数据</string>
+    <string name="loading_data">加载数据中...</string>
+
+    <string name="error_message">错误信息</string>
+    <string name="retry">重试</string>
+    <string name="add_receipt">添加收据</string>
+    <string name="category">类别</string>
+    <string name="no_item">该类别中没有商品</string>
+    <string name="from">从:</string>
+    <string name="edit_receipt">编辑收据</string>
+    <string name="date">日期（日/月/年）</string>
+    <string name="total_amount">总金额</string>
+    <string name="items">物品</string>
+    <string name="no_item_add">没有添加任何物品</string>
+    <string name="amount">金额</string>
+    <string name="cate">类别: %1$s</string>
+    <string name="subtotal">小计</string>
+    <string name="item_description">物品描述</string>
+    <string name="valid_amount">请输入有效金额。</string>
+    <string name="delete_item">删除物品</string>
+    <string name="done">完毕</string>
+    <string name="total_colon">总额: %1$s</string>
+    <string name="rm">RM</string>
+    <string name="merchant_colon">商人: %1$s</string>
+    <string name="back">后退</string>
+    <string name="error">错误</string>
+    <string name="receipt_summary">收据摘要</string>
+    <string name="receipt_add">您想如何添加收据？</string>
 </resources>

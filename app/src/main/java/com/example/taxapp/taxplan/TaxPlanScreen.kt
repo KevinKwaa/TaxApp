@@ -1,6 +1,9 @@
 package com.example.taxapp.taxplan
 
 import android.os.Build
+import android.speech.tts.TextToSpeech
+import androidx.activity.ComponentActivity
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -52,9 +55,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,9 +75,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.taxapp.accessibility.AccessibilityRepository
+import com.example.taxapp.accessibility.AccessibilitySettings
+import com.example.taxapp.accessibility.AccessibilityState
+import com.example.taxapp.accessibility.LocalDarkMode
+import com.example.taxapp.accessibility.LocalThemeColors
+import com.example.taxapp.accessibility.LocalTtsManager
+import com.example.taxapp.accessibility.ScreenReader
 import com.example.taxapp.firebase.FirebaseManager
+import com.example.taxapp.multiLanguage.AppLanguageManager
+import com.example.taxapp.multiLanguage.LanguageProvider
+import com.example.taxapp.multiLanguage.LanguageSelector
 import com.example.taxapp.user.AppUtil
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaxPlanScreen(
@@ -204,6 +224,7 @@ fun TaxPlanScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TaxPlanListScreen(
     modifier: Modifier = Modifier,
@@ -216,133 +237,275 @@ fun TaxPlanListScreen(
     val taxPlans = viewModel.taxPlans
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // UI content based on state
-        when {
-            isLoading -> {
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+    // Access shared repositories
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+
+    // Observe the current language
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
+    }
+
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
+    // Clean up TTS when not needed
+    DisposableEffect(accessibilityState.textToSpeech) {
+        onDispose {
+            tts?.shutdown()
+        }
+    }
+
+    // Get the custom colors
+    val accessibleColors = LocalThemeColors.current
+    val isDarkMode = LocalDarkMode.current
+    ScreenReader("Home Screen")
+    val ttsManager = LocalTtsManager.current
+    LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                // Language button with improved styling
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                            CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accessibleColors.calendarBorder,
+                            shape = CircleShape
+                        )
+                        .clip(CircleShape)
+                        .clickable { showLanguageSelector = true }
+                        .padding(8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(48.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-
-            errorMessage != null && taxPlans.isEmpty() -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
                     Text(
-                        text = errorMessage,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.error
+                        "🌐",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = accessibleColors.buttonText
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { viewModel.loadTaxPlans() }
-                    ) {
-                        Text("Retry")
-                    }
                 }
-            }
 
-            else -> {
+                // Accessibility button with improved styling
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                        .padding(16.dp)
+                        .size(48.dp)
+                        .background(
+                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                            CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accessibleColors.calendarBorder,
+                            shape = CircleShape
+                        )
+                        .clip(CircleShape)
+                        .clickable { showAccessibilitySettings = true }
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    if (taxPlans.isEmpty()) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                    Text(
+                        "⚙️",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = accessibleColors.buttonText
+                    )
+                }
+            }
+
+            // UI content based on state
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                errorMessage != null && taxPlans.isEmpty() -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.error
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                ttsManager?.speak("Reloading")
+                                viewModel.loadTaxPlans()
+                            }
                         ) {
-                            Text(
-                                text = "No tax plans yet",
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "Generate a tax plan to get started",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                            )
+                            Text("Retry")
                         }
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(scrollState),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // List of tax plans
-                            taxPlans.forEach { plan ->
-                                TaxPlanItem(
-                                    taxPlan = plan,
-                                    onView = { viewModel.viewTaxPlan(plan.id) },
-                                    onDelete = { viewModel.confirmDeleteTaxPlan(plan) },
-                                    formatCurrency = { viewModel.formatCurrency(it) }
+                    }
+                }
+
+                else -> {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(
+                                Color.LightGray.copy(alpha = 0.3f),
+                                RoundedCornerShape(16.dp)
+                            )
+                            .padding(16.dp)
+                    ) {
+                        if (taxPlans.isEmpty()) {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "No tax plans yet",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center
                                 )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    text = "Generate a tax plan to get started",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                        } else {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(scrollState),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // List of tax plans
+                                taxPlans.forEach { plan ->
+                                    TaxPlanItem(
+                                        taxPlan = plan,
+                                        onView = { viewModel.viewTaxPlan(plan.id) },
+                                        onDelete = { viewModel.confirmDeleteTaxPlan(plan) },
+                                        formatCurrency = { viewModel.formatCurrency(it) }
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                // Generate button
-                Button(
-                    onClick = {
-                        if (FirebaseManager.getCurrentUserId() == null) {
-                            AppUtil.showToast(context, "Please log in first")
-                            navController.navigate("auth")
-                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            viewModel.generateTaxPlan(
-                                context = context,
-                                onSuccess = { AppUtil.showToast(context, "Tax plan generated successfully") },
-                                onError = { error ->
-                                    AppUtil.showToast(context, error) }
-                            )
-                        } else {
-                            AppUtil.showToast(context, "This feature requires Android N or higher")
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !isLoading
-                ) {
-                    Text(
-                        text = "Generate Tax Plan",
-                        fontSize = 18.sp
-                    )
+                    // Generate button
+                    Button(
+                        onClick = {
+                            ttsManager?.speak("Generating Tax Plan")
+                            if (FirebaseManager.getCurrentUserId() == null) {
+                                AppUtil.showToast(context, "Please log in first")
+                                navController.navigate("auth")
+                            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                viewModel.generateTaxPlan(
+                                    context = context,
+                                    onSuccess = {
+                                        AppUtil.showToast(
+                                            context,
+                                            "Tax plan generated successfully"
+                                        )
+                                    },
+                                    onError = { error ->
+                                        AppUtil.showToast(context, error)
+                                    }
+                                )
+                            } else {
+                                AppUtil.showToast(
+                                    context,
+                                    "This feature requires Android N or higher"
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Black,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = !isLoading
+                    ) {
+                        Text(
+                            text = "Generate Tax Plan",
+                            fontSize = 18.sp
+                        )
+                    }
                 }
             }
+            if (isDarkMode) {
+                Text(
+                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
+                )
+            }
+        }
+        if (showLanguageSelector) {
+            LanguageSelector(
+                currentLanguageCode = currentLanguageCode,
+                onLanguageSelected = { languageCode ->
+                    currentLanguageCode = languageCode
+                },
+                onDismiss = { showLanguageSelector = false },
+                activity = activity  // Pass the activity
+            )
+        }
+
+        if (showAccessibilitySettings) {
+            AccessibilitySettings(
+                currentSettings = accessibilityState,
+                onSettingsChanged = { newSettings ->
+                    coroutineScope.launch {
+                        accessibilityRepository.updateSettings(newSettings)
+                    }
+                },
+                onDismiss = { showAccessibilitySettings = false }
+            )
         }
     }
 }

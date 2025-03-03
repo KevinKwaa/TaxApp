@@ -69,6 +69,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -80,6 +81,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.taxapp.R
 import com.example.taxapp.user.AppUtil
 
 @RequiresApi(Build.VERSION_CODES.N)
@@ -101,7 +103,7 @@ fun CategoryScreen(
                 ),
                 title = {
                     Text(
-                        text = "Categories",
+                        text = stringResource(id = R.string.categories),
                         style = TextStyle(
                             fontSize = 24.sp,
                             fontFamily = FontFamily.SansSerif,
@@ -163,6 +165,8 @@ fun CategoryScreen(
             navController = navController
         )
     }
+
+
 
     // Delete confirmation dialog
     if (categoryViewModel.showDeleteConfirmation) {
@@ -243,7 +247,7 @@ fun CategoryScreenContent(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = errorMessage,
+                    text = stringResource(id = R.string.error_message),
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.error
@@ -254,7 +258,7 @@ fun CategoryScreenContent(
                 ElevatedButton(
                     onClick = { categoryViewModel.loadCategoryData() }
                 ) {
-                    Text("Retry")
+                    Text(text = stringResource(id = R.string.retry),)
                 }
 
                 if (navController != null) {
@@ -269,7 +273,7 @@ fun CategoryScreenContent(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add Receipt")
+                        Text(text = stringResource(id = R.string.add_receipt),)
                     }
                 }
             }
@@ -296,7 +300,7 @@ fun CategoryScreenContent(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "Categories Summary",
+                            text = stringResource(id = R.string.categories_summary),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -304,21 +308,23 @@ fun CategoryScreenContent(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Total Expenses: ${categoryViewModel.formatCurrency(categorySummary.values.sum())}",
+                            text = stringResource(
+                                id = R.string.categories_summary,
+                                categoryViewModel.formatCurrency(categorySummary.values.sum())),
                             style = MaterialTheme.typography.titleMedium
                         )
 
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "Number of Categories: ${categoryData.size}",
+                            text = stringResource(id = R.string.number_of_categories, categoryData.size),
                             style = MaterialTheme.typography.bodyMedium
                         )
 
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "Number of Receipts: ${categoryData.values.sumOf { it.size }}",
+                            text = stringResource(id = R.string.number_of_receipts,categoryData.values.sumOf { it.size }),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -380,7 +386,7 @@ fun CategoryItemsSection(
                 // Category name and count
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = category,
+                        text = stringResource(id = R.string.category),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -427,7 +433,7 @@ fun CategoryItemsSection(
 
                     if (expenseItems.isEmpty()) {
                         Text(
-                            text = "No items in this category",
+                            text = stringResource(id = R.string.no_item),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
@@ -491,7 +497,7 @@ fun ExpenseItemCard(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Text(
-                            text = "From: ${receipt.merchantName}",
+                            text = stringResource(id = R.string.from ,receipt.merchantName),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                             maxLines = 1,
@@ -543,7 +549,7 @@ fun DeleteConfirmationDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "Confirm Deletion")
+            Text(text = stringResource(id = R.string.delete_confirmation),)
         },
         text = {
             Text(
@@ -560,12 +566,12 @@ fun DeleteConfirmationDialog(
                     containerColor = MaterialTheme.colorScheme.error
                 )
             ) {
-                Text("Delete")
+                Text(text = stringResource(id = R.string.delete),)
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(text = stringResource(id = R.string.cancel),)
             }
         }
     )
@@ -601,7 +607,7 @@ fun EditReceiptDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Edit Receipt",
+                        text = stringResource(id = R.string.edit_receipt),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -620,7 +626,7 @@ fun EditReceiptDialog(
                 OutlinedTextField(
                     value = categoryViewModel.editMerchantName,
                     onValueChange = { categoryViewModel.editMerchantName = it },
-                    label = { Text("Merchant Name") },
+                    label = { Text(text = stringResource(id = R.string.merchant_name),) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -630,7 +636,7 @@ fun EditReceiptDialog(
                 OutlinedTextField(
                     value = categoryViewModel.editDate,
                     onValueChange = { categoryViewModel.editDate = it },
-                    label = { Text("Date (DD/MM/YYYY)") },
+                    label = { Text(text = stringResource(id = R.string.date),) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -640,7 +646,7 @@ fun EditReceiptDialog(
                 OutlinedTextField(
                     value = categoryViewModel.editTotal,
                     onValueChange = { categoryViewModel.editTotal = it },
-                    label = { Text("Total Amount") },
+                    label = { Text(text = stringResource(id = R.string.total_amount),) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -653,7 +659,7 @@ fun EditReceiptDialog(
                 OutlinedTextField(
                     value = categoryViewModel.editCategory,
                     onValueChange = { },
-                    label = { Text("Category") },
+                    label = { Text(text = stringResource(id = R.string.category),) },
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { categoryMenuExpanded = true }) {
@@ -685,7 +691,7 @@ fun EditReceiptDialog(
 
                 // Items section
                 Text(
-                    text = "Items",
+                    text = stringResource(id = R.string.items),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -697,7 +703,7 @@ fun EditReceiptDialog(
 
                 if (expenses.isEmpty()) {
                     Text(
-                        text = "No items added",
+                        text = stringResource(id = R.string.no_item_add),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.outline,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -738,7 +744,7 @@ fun EditReceiptDialog(
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 ) {
-                    Text("Save Changes")
+                    Text(text = stringResource(id = R.string.save_changes),)
                 }
             }
         }
@@ -773,7 +779,7 @@ fun ExpenseItemRow(
                     name = it
                     onNameChange(it)
                 },
-                label = { Text("Description") },
+                label = { Text(text = stringResource(id = R.string.description),) },
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = MaterialTheme.typography.bodySmall
             )
@@ -789,7 +795,7 @@ fun ExpenseItemRow(
                         onAmountChange(validAmount)
                     }
                 },
-                label = { Text("Amount") },
+                label = { Text(text = stringResource(id = R.string.amount),) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = MaterialTheme.typography.bodySmall
@@ -803,7 +809,7 @@ fun ExpenseItemRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Category: ${item.category}",
+                    text = stringResource(id = R.string.cate, item.category),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .weight(1f)

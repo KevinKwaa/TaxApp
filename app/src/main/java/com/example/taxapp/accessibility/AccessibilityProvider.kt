@@ -43,6 +43,41 @@ class AccessibleColors(
     val headerText: Color
 )
 
+data class AccessibleThemeColors(
+    // Background colors
+    val lightBackground: Color = Color.White,
+    val darkBackground: Color = Color(0xFF121212), // Dark mode standard background
+
+    // Text colors - with high contrast for readability
+    val lightText: Color = Color(0xFF000000),
+    val darkText: Color = Color(0xFFEEEEEE),
+
+    // Button colors with improved contrast
+    val buttonBackground: Color = Color(0xFF0D47A1), // Deep blue with good contrast
+    val buttonText: Color = Color.White,
+
+    // Primary button with good contrast
+    val primaryButtonBackground: Color = Color(0xFF2E7D32), // Green with sufficient contrast
+    val primaryButtonText: Color = Color.White,
+
+    // Secondary button
+    val secondaryButtonBackground: Color = Color(0xFFD32F2F), // Red with good contrast
+    val secondaryButtonText: Color = Color.White,
+
+    // Calendar colors
+    val calendarBackground: Color = Color(0xFFF5F5F5),
+    val calendarDarkBackground: Color = Color(0xFF262626),
+    val calendarText: Color = Color(0xFF212121),
+    val calendarDarkText: Color = Color(0xFFEEEEEE),
+    val calendarHighlight: Color = Color(0xFF1976D2),
+    val calendarBorder: Color = Color(0xFFBDBDBD),
+
+    // Error and success colors with good contrast for color blindness
+    val errorColor: Color = Color(0xFFB71C1C), // Deep red
+    val successColor: Color = Color(0xFF2E7D32), // Deep green
+    val warningColor: Color = Color(0xFFE65100)  // Deep orange
+)
+
 @Composable
 fun AccessibilityThemeProvider(
     accessibilityState: AccessibilityState,

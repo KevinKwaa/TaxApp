@@ -12,7 +12,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class ReceiptRepository {
-    private val firestore: FirebaseFirestore = FirebaseManager.getAuthFirestore() //changed this only
+    private val firestore = Firebase.firestore //changed this only
     private val storage = Firebase.storage
     private val storageRef = storage.reference
     private val auth = Firebase.auth

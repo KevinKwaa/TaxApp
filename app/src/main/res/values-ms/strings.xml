@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Calendar Screen -->
-    <string name="app_name">AppCukai</string>
+    <string name="app_name">App Pengendali Cukai Pintar</string>
     <string name="scheduler">Penjadual</string>
     <string name="current_language">Bahasa Semasa:</string>
     <string name="select_language">Pilih Bahasa:</string>
@@ -55,4 +55,95 @@
     <string name="type_your_question">Taip soalan anda...</string>
     <string name="send_message">Hantar mesej</string>
     <string name="close_chat">Tutup chat</string>
+
+    <!-- General app strings -->
+    <string name="welcome_message">Selamat datang ke Pengendali Cukai Pintar</string>
+    <string name="tax_calendar">Kalendar Cukai</string>
+    <string name="upload_receipt">Muat Naik Resit</string>
+    <string name="tax_categories">Kategori Cukai</string>
+    <string name="tax_plan">Perancangan Cukai</string>
+    <string name="logout">Log Keluar</string>
+    <string name="welcome_description">Aplikasi bersepadu AI untuk membantu anda dalam pengisytiharan cukai</string>
+
+    <!-- Auth screens -->
+    <string name="login">Log Masuk</string>
+    <string name="register">Daftar</string>
+    <string name="email">E-mel</string>
+    <string name="password">Kata Laluan</string>
+    <string name="sign_in">Log Masuk</string>
+    <string name="sign_up">Daftar</string>
+    <string name="welcome_back">Selamat kembali</string>
+    <string name="create_account">Buat akaun</string>
+    <string name="sign_in_to_account">Log masuk ke akaun anda</string>
+    <string name="hello">Hello!</string>
+
+    <!-- Profile screens -->
+    <string name="profile">Profil</string>
+    <string name="edit_profile">Edit Profil</string>
+    <string name="save_profile">Simpan Profil</string>
+    <string name="name">Nama</string>
+    <string name="phone">Nombor Telefon</string>
+    <string name="date_of_birth">Tarikh Lahir</string>
+    <string name="total_income">Jumlah Pendapatan</string>
+    <string name="complete_profile">Lengkapkan profil anda</string>
+
+    <!-- Receipt Upload -->
+    <string name="receipt_upload">Muat Naik Resit</string>
+    <string name="take_photo">Ambil Gambar</string>
+    <string name="from_gallery">Dari Galeri</string>
+    <string name="receipt_processing">Memproses resit...</string>
+    <string name="capture_receipt">Tangkap resit menggunakan kamera</string>
+    <string name="select_from_gallery">Pilih resit dari galeri</string>
+
+    <!-- Receipt Details -->
+    <string name="receipt_details">Butiran Resit</string>
+    <string name="merchant_name">Nama Peniaga</string>
+    <string name="receipt_date">Tarikh</string>
+    <string name="receipt_total">Jumlah</string>
+    <string name="receipt_category">Kategori</string>
+    <string name="expense_items">Item Perbelanjaan</string>
+    <string name="confirm_save">Sahkan dan Simpan</string>
+
+    <!-- Categories -->
+    <string name="categories">Kategori</string>
+    <string name="categories_summary">Ringkasan Kategori</string>
+    <string name="total_expenses">Jumlah Perbelanjaan: %1$s</string>
+    <string name="number_of_categories">Bilangan Kategori: %1$d</string>
+    <string name="number_of_receipts">Bilangan Resit: %1$d</string>
+
+    <!-- Tax Plan -->
+    <string name="tax_plan_title">Perancangan Cukai</string>
+    <string name="tax_savings">Potensi Penjimatan Cukai</string>
+    <string name="tax_category_analysis">Analisis Kategori Cukai</string>
+    <string name="analyze_receipts">Analisis Resit</string>
+    <string name="tax_optimization">Cadangan Pengoptimuman Cukai</string>
+    <string name="no_data">Tiada data tersedia</string>
+    <string name="loading_data">Memuatkan data...</string>
+
+    <string name="error_message">Mesej Ralat</string>
+    <string name="retry">Cuba semula</string>
+    <string name="add_receipt">Tambah resit</string>
+    <string name="category">Kategori</string>
+    <string name="no_item">Tiada item dalam kategori ini</string>
+    <string name="from">Dari:</string>
+    <string name="edit_receipt">Edit resit</string>
+    <string name="date">Tarikh (DD/MM/YYYY)</string>
+    <string name="total_amount">Jumlah</string>
+    <string name="items">Barang</string>
+    <string name="no_item_add">Tiada item ditambah</string>
+    <string name="amount">Jumlah</string>
+    <string name="cate">Kategori: %1$s</string>
+
+    <string name="subtotal">Jumlah kecil</string>
+    <string name="valid_amount">Sila masukkan jumlah yang sah.</string>
+    <string name="item_description">Penerangan item</string>
+    <string name="delete_item">Padamkan item</string>
+    <string name="done">Selesai</string>
+    <string name="total_colon">Jumlah: %1$s</string>
+    <string name="rm">RM</string>
+    <string name="merchant_colon">Saudagar: %1$s</string>
+    <string name="back">Balik</string>
+    <string name="error">Ralat</string>
+    <string name="receipt_summary">Ringkasan resit</string>
+    <string name="receipt_add">Bagaimanakah anda ingin menambah resit anda?</string>
 </resources>

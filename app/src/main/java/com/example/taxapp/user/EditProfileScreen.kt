@@ -1,14 +1,24 @@
 package com.example.taxapp.user
 
+import android.os.Build
+import android.speech.tts.TextToSpeech
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
@@ -29,7 +39,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,8 +49,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -48,11 +62,26 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.taxapp.CalendarEvent.EventRepository
+import com.example.taxapp.R
+import com.example.taxapp.accessibility.AccessibilityRepository
+import com.example.taxapp.accessibility.AccessibilitySettings
+import com.example.taxapp.accessibility.AccessibilityState
+import com.example.taxapp.accessibility.LocalDarkMode
+import com.example.taxapp.accessibility.LocalThemeColors
+import com.example.taxapp.accessibility.LocalTtsManager
+import com.example.taxapp.accessibility.ScreenReader
+import com.example.taxapp.multiLanguage.AppLanguageManager
+import com.example.taxapp.multiLanguage.LanguageProvider
+import com.example.taxapp.multiLanguage.LanguageSelector
 import com.example.taxapp.user.AppUtil
 //import com.example.smarttax_ver1.viewmodel.EditProfileViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
@@ -70,7 +99,7 @@ fun EditProfileScreen(
                 ),
                 title = {
                     Text(
-                        text = "Profile",
+                        text = stringResource(id = R.string.profile),
 
                         style = TextStyle(
                             fontSize = 24.sp,
@@ -126,6 +155,7 @@ fun EditProfileScreen(
 
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EditProfileScreenContent(
     modifier: Modifier = Modifier,
@@ -156,142 +186,274 @@ fun EditProfileScreenContent(
         }
     }
 
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+    // Access shared repositories
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
 
+    // Observe the current language
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
+    }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        if (isLoading) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(20.dp))
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
+    // Clean up TTS when not needed
+    DisposableEffect(accessibilityState.textToSpeech) {
+        onDispose {
+            tts?.shutdown()
         }
+    }
 
-        errorMessage?.let {
-            Text(text = it, color = Color.Red)
-            Spacer(modifier = Modifier.height(10.dp))
-        }
+    // Get the custom colors
+    val accessibleColors = LocalThemeColors.current
+    val isDarkMode = LocalDarkMode.current
+    ScreenReader("Home Screen")
+    val ttsManager = LocalTtsManager.current
+    LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = {
-                editProfileViewModel.email = it
-            },
-            label = {
-                Text(text = "Email address")
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = false,  // This disables the field
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f)
-            )
-        )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                // Language button with improved styling
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                            CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accessibleColors.calendarBorder,
+                            shape = CircleShape
+                        )
+                        .clip(CircleShape)
+                        .clickable { showLanguageSelector = true }
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "🌐",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = accessibleColors.buttonText
+                    )
+                }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = {
-                editProfileViewModel.name = it
-            },
-            label = {
-                Text(text = "Name")
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        OutlinedTextField(
-            value = phone,
-            onValueChange = {
-                editProfileViewModel.phone = it
-            },
-            label = {
-                Text(text = "Phone Number")
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        OutlinedTextField(
-            value = dob,
-            onValueChange = {
-                editProfileViewModel.dob = it
-            },
-            label = {
-                Text(text = "Date Of Birth")
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        OutlinedTextField(
-            value =income,
-            onValueChange = {
-                editProfileViewModel.income = it
-            },
-            label = {
-                Text(text = "Total Income")
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                //
-                editProfileViewModel.updateUserProfile { success, error ->
-                    if (success) {
-                        updateSuccess = true
-                        //Toast.makeText(LocalContext.current, "Profile Updated", Toast.LENGTH_SHORT).show()
-                    } else {
-                        AppUtil.showToast(context, errorMessage?:"Something Went Wrong...")
-                    }
+                // Accessibility button with improved styling
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                            CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accessibleColors.calendarBorder,
+                            shape = CircleShape
+                        )
+                        .clip(CircleShape)
+                        .clickable { showAccessibilitySettings = true }
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "⚙️",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = accessibleColors.buttonText
+                    )
                 }
             }
-        ) {
+
             if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text(text = "Save Profile")
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(20.dp))
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
+            errorMessage?.let {
+                Text(text = it, color = Color.Red)
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
-        // Also update in EditProfileScreen.kt
-        OutlinedButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                // Use authViewModel for logout with proper cleanup
-                authViewModel.logout {
-                    navController.navigate("auth"){
-                        popUpTo("home"){inclusive = true}
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    editProfileViewModel.email = it
+                },
+                label = {
+                    Text(text = stringResource(id = R.string.email))
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = false,  // This disables the field
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f)
+                )
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = {
+                    ttsManager?.speak("Changing Name")
+                    editProfileViewModel.name = it
+                },
+                label = {
+                    Text(text = stringResource(id = R.string.name),)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            OutlinedTextField(
+                value = phone,
+                onValueChange = {
+                    ttsManager?.speak("Changing phone number")
+                    editProfileViewModel.phone = it
+                },
+                label = {
+                    Text(text = stringResource(id = R.string.phone),)
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            OutlinedTextField(
+                value = dob,
+                onValueChange = {
+                    ttsManager?.speak("Changing Date of Birth")
+                    editProfileViewModel.dob = it
+                },
+                label = {
+                    Text(text = stringResource(id = R.string.date_of_birth),)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            OutlinedTextField(
+                value = income,
+                onValueChange = {
+                    ttsManager?.speak("Changing income")
+                    editProfileViewModel.income = it
+                },
+                label = {
+                    Text(text = stringResource(id = R.string.total_income),)
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    //
+                    ttsManager?.speak("Saving Profile")
+                    editProfileViewModel.updateUserProfile { success, error ->
+                        if (success) {
+                            updateSuccess = true
+                            //Toast.makeText(LocalContext.current, "Profile Updated", Toast.LENGTH_SHORT).show()
+                        } else {
+                            AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
+                        }
                     }
                 }
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(text = stringResource(id = R.string.save_profile),)
+                }
             }
-        ) {
-            Text(text = "Logout")
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Also update in EditProfileScreen.kt
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    ttsManager?.speak("Login out")
+                    // Use authViewModel for logout with proper cleanup
+                    authViewModel.logout {
+                        navController.navigate("auth") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    }
+                }
+            ) {
+                Text(text = stringResource(id = R.string.logout),)
+            }
+
+            if (isDarkMode) {
+                Text(
+                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
+                )
+            }
         }
 
+        if (showLanguageSelector) {
+            LanguageSelector(
+                currentLanguageCode = currentLanguageCode,
+                onLanguageSelected = { languageCode ->
+                    currentLanguageCode = languageCode
+                },
+                onDismiss = { showLanguageSelector = false },
+                activity = activity  // Pass the activity
+            )
+        }
+
+        if (showAccessibilitySettings) {
+            AccessibilitySettings(
+                currentSettings = accessibilityState,
+                onSettingsChanged = { newSettings ->
+                    coroutineScope.launch {
+                        accessibilityRepository.updateSettings(newSettings)
+                    }
+                },
+                onDismiss = { showAccessibilitySettings = false }
+            )
+        }
     }
 
 }
