@@ -157,6 +157,15 @@ fun HomeScreenContent(
             Text(text = "Tax Categories")
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { navController.navigate("taxPlan") }
+        ) {
+            Text(text = "Tax Plan")
+        }
+
         Spacer(modifier = Modifier.weight(1f))
 
         OutlinedButton(

@@ -51,6 +51,7 @@ import com.example.taxapp.firebase.FirebaseManager
 import com.example.taxapp.receiptcategory.CategoryScreen
 import com.example.taxapp.receiptcategory.ReceiptSummaryScreen
 import com.example.taxapp.receiptcategory.UploadReceiptScreen
+import com.example.taxapp.taxplan.TaxPlanScreen
 import kotlinx.coroutines.delay
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -257,6 +258,13 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         }
                     )
                 }
+            }
+
+            composable("taxPlan") {
+                TaxPlanScreen(
+                    modifier = modifier,
+                    navController = navController
+                )
             }
 
             // Add Event Screen

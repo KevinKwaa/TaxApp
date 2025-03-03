@@ -2,15 +2,17 @@ package com.example.taxapp.receiptcategory
 
 import android.net.Uri
 import android.util.Log
+import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class ReceiptRepository {
-    private val firestore = Firebase.firestore
+    private val firestore: FirebaseFirestore = FirebaseManager.getAuthFirestore() //changed this only
     private val storage = Firebase.storage
     private val storageRef = storage.reference
     private val auth = Firebase.auth
