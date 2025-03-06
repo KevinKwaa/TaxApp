@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -64,12 +65,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -82,6 +80,7 @@ import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.accessibility.ScreenReader
+import com.example.taxapp.accessibility.scaledSp
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
@@ -108,11 +107,10 @@ fun UploadReceiptScreen(
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 title = {
+                    // Using MaterialTheme typography for proper scaling
                     Text(
                         text = stringResource(id = R.string.upload_receipt),
-                        style = TextStyle(
-                            fontSize = 24.sp,
-                            fontFamily = FontFamily.SansSerif,
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
                     )
@@ -189,23 +187,40 @@ fun UploadReceiptContent(
     // State for showing loading indicator
     var isLoading by remember { mutableStateOf(false) }
 
+    // Add debug logging
+    LaunchedEffect(Unit) {
+        Log.d("UploadReceiptContent", "Starting receipt upload screen with viewModel: $receiptViewModel")
+        // Reset view model state when navigating to this screen
+        receiptViewModel.resetState()
+    }
+
     // Create a launcher for content selection (gallery)
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
+            Log.d("UploadReceiptContent", "Image selected from gallery: $uri")
             selectedImageUri = uri
             isLoading = true
 
-            // Process the receipt image using the ViewModel
+            // Store the URI in the ViewModel for later reference
+            receiptViewModel.currentReceiptUri = uri
+
+            // Process the receipt image using the ViewModel - don't navigate here yet
             receiptViewModel.processReceiptImage(
                 uri = uri,
                 context = context,
                 onSuccess = {
+                    // Log success before navigation
+                    Log.d("UploadReceiptContent", "Receipt processing successful")
+                    Log.d("UploadReceiptContent", "Extracted data: merchantName=${receiptViewModel.merchantName}, total=${receiptViewModel.total}")
+
                     isLoading = false
+                    // Only navigate when processing is complete and successful
                     navController.navigate("receiptSummary")
                 },
                 onError = { errorMessage ->
+                    Log.e("UploadReceiptContent", "Receipt processing error: $errorMessage")
                     isLoading = false
                     AppUtil.showToast(context, errorMessage)
                 }
@@ -218,17 +233,27 @@ fun UploadReceiptContent(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && selectedImageUri != null) {
+            Log.d("UploadReceiptContent", "Image captured from camera: $selectedImageUri")
             isLoading = true
 
-            // Process the receipt image using the ViewModel
+            // Store the URI in the ViewModel for later reference
+            receiptViewModel.currentReceiptUri = selectedImageUri
+
+            // Process the receipt image using the ViewModel - don't navigate here yet
             receiptViewModel.processReceiptImage(
                 uri = selectedImageUri!!,
                 context = context,
                 onSuccess = {
+                    // Log success before navigation
+                    Log.d("UploadReceiptContent", "Receipt processing successful")
+                    Log.d("UploadReceiptContent", "Extracted data: merchantName=${receiptViewModel.merchantName}, total=${receiptViewModel.total}")
+
                     isLoading = false
+                    // Only navigate when processing is complete and successful
                     navController.navigate("receiptSummary")
                 },
                 onError = { errorMessage ->
+                    Log.e("UploadReceiptContent", "Receipt processing error: $errorMessage")
                     isLoading = false
                     AppUtil.showToast(context, errorMessage)
                 }
@@ -299,7 +324,7 @@ fun UploadReceiptContent(
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Home Screen")
+    ScreenReader("Upload Receipt Screen")
     val ttsManager = LocalTtsManager.current
 
     // Reset the ViewModel state when navigating to this screen
@@ -384,10 +409,10 @@ fun UploadReceiptContent(
                     style = MaterialTheme.typography.bodyLarge
                 )
             } else {
+                // Using MaterialTheme typography for proper scaling
                 Text(
-                    text = stringResource(id = R.string.receipt_add), //How would you like to add your receipt?
-                    style = TextStyle(
-                        fontSize = 20.sp,
+                    text = stringResource(id = R.string.receipt_add),
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     ),
@@ -535,24 +560,21 @@ fun UploadOption(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Using scaledSp() for proper font scaling
             Text(
                 text = title,
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                fontSize = scaledSp(16),
+                fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            // Using scaledSp() for proper font scaling
             Text(
                 text = description,
-                style = TextStyle(
-                    fontSize = 12.sp
-                ),
+                fontSize = scaledSp(12),
                 textAlign = TextAlign.Center
             )
         }
     }
 }
-

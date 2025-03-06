@@ -3,7 +3,6 @@ package com.example.taxapp.taxplan
 import android.os.Build
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -82,16 +81,13 @@ import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.accessibility.ScreenReader
-import com.example.taxapp.firebase.FirebaseManager
+import com.example.taxapp.accessibility.scaledSp
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
 import com.example.taxapp.user.AppUtil
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaxPlanScreen(
@@ -224,7 +220,6 @@ fun TaxPlanScreen(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TaxPlanListScreen(
     modifier: Modifier = Modifier,
@@ -241,6 +236,7 @@ fun TaxPlanListScreen(
     val activity = context as? ComponentActivity
     var showLanguageSelector by remember { mutableStateOf(false) }
     var showAccessibilitySettings by remember { mutableStateOf(false) }
+
     // Access shared repositories
     val languageManager = remember { AppLanguageManager.getInstance(context) }
     val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
@@ -274,13 +270,17 @@ fun TaxPlanListScreen(
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Home Screen")
+    ScreenReader("Tax Plan Screen")
     val ttsManager = LocalTtsManager.current
+
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .background(accessibleColors.calendarBackground)
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -337,7 +337,6 @@ fun TaxPlanListScreen(
                     )
                 }
             }
-
             // UI content based on state
             when {
                 isLoading -> {
@@ -370,10 +369,7 @@ fun TaxPlanListScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
-                            onClick = {
-                                ttsManager?.speak("Reloading")
-                                viewModel.loadTaxPlans()
-                            }
+                            onClick = { viewModel.loadTaxPlans() }
                         ) {
                             Text("Retry")
                         }
@@ -436,11 +432,7 @@ fun TaxPlanListScreen(
                     // Generate button
                     Button(
                         onClick = {
-                            ttsManager?.speak("Generating Tax Plan")
-                            if (FirebaseManager.getCurrentUserId() == null) {
-                                AppUtil.showToast(context, "Please log in first")
-                                navController.navigate("auth")
-                            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                 viewModel.generateTaxPlan(
                                     context = context,
                                     onSuccess = {
@@ -462,7 +454,12 @@ fun TaxPlanListScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(56.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.White,
+                                shape = RoundedCornerShape(12.dp)
+                            ),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Black,
                             contentColor = Color.White
@@ -472,19 +469,14 @@ fun TaxPlanListScreen(
                     ) {
                         Text(
                             text = "Generate Tax Plan",
-                            fontSize = 18.sp
+                            fontSize = scaledSp(18),
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
             }
-            if (isDarkMode) {
-                Text(
-                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
-                )
-            }
         }
+
         if (showLanguageSelector) {
             LanguageSelector(
                 currentLanguageCode = currentLanguageCode,

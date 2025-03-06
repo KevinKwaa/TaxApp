@@ -1,24 +1,34 @@
 package com.example.taxapp.user
 
+import android.app.Application
+import android.os.Build
 import android.util.Log
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.get
+import androidx.lifecycle.viewModelScope
+import com.example.taxapp.CalendarEvent.TaxDeadlineHelper
 import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
-import kotlin.io.path.exists
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class EditProfileViewModel : ViewModel() {
     private val TAG = "EditProfileViewModel"
 
-    // Use FirebaseManager to get the auth and firestore instances
-    private val auth = FirebaseManager.getAuthInstance()
-    private val firestore = FirebaseManager.getAuthFirestore()
+    // Use default Firebase instances
+    private val auth = Firebase.auth
+    private val firestore = Firebase.firestore
+
+    // Auth state listener to detect user changes
+    private var authStateListener: FirebaseAuth.AuthStateListener? = null
+
+    // Add this new variable for radio option
+    var employment by mutableStateOf("employee")
 
     var email by mutableStateOf("")
     var name by mutableStateOf("")
@@ -30,6 +40,53 @@ class EditProfileViewModel : ViewModel() {
 
     init {
         Log.d(TAG, "Initializing EditProfileViewModel")
+        setupAuthStateListener()
+    }
+
+    private fun setupAuthStateListener() {
+        // Remove any existing listener
+        authStateListener?.let { auth.removeAuthStateListener(it) }
+
+        // Create new listener
+        authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            Log.d(TAG, "Auth state changed, current user: ${firebaseAuth.currentUser?.uid}")
+
+            // Clear previous data when user changes
+            if (firebaseAuth.currentUser?.uid != null) {
+                // Give Firebase a moment to fully process the auth state change
+                viewModelScope.launch {
+                    delay(500) // Short delay to ensure auth state is fully updated
+                    getUserData()
+                }
+            } else {
+                // Reset data when logged out
+                resetData()
+            }
+        }
+
+        // Add the listener
+        auth.addAuthStateListener(authStateListener!!)
+
+        // Also try to get data immediately if user is already logged in
+        if (auth.currentUser != null) {
+            viewModelScope.launch {
+                delay(500) // Short delay to ensure auth state is fully updated
+                getUserData()
+            }
+        }
+    }
+
+    private fun resetData() {
+        email = ""
+        name = ""
+        phone = ""
+        dob = ""
+        income = ""
+        errorMessage = null
+    }
+
+    // Public method to force refresh data (call this from UI when needed)
+    fun refreshData() {
         getUserData()
     }
 
@@ -58,6 +115,10 @@ class EditProfileViewModel : ViewModel() {
                     phone = document.getString("phone") ?: ""
                     dob = document.getString("dob") ?: ""
                     income = document.getString("income") ?: ""
+
+                    // Get tax filing preference with default value "self"
+                    employment = document.getString("employment") ?: "employee"
+
                 } else {
                     // Document doesn't exist yet
                     Log.w(TAG, "User document does not exist for ID: $userId")
@@ -86,7 +147,8 @@ class EditProfileViewModel : ViewModel() {
                 "name" to name,
                 "phone" to phone,
                 "dob" to dob,
-                "income" to income
+                "income" to income,
+                "employment" to employment // Add this field to the map
             )
 
             isLoading = true
@@ -97,6 +159,16 @@ class EditProfileViewModel : ViewModel() {
                 .set(userDetails) // Using set instead of update to handle new profiles too
                 .addOnSuccessListener {
                     Log.d(TAG, "Profile updated successfully")
+
+                    // Create or update tax deadline events based on preference
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        //val context = getApplication<Application>().applicationContext
+                        TaxDeadlineHelper.updateTaxDeadlineEvents(
+                            employment,
+                            viewModelScope
+                        )
+                    }
+
                     onResult(true, null)
                 }
                 .addOnFailureListener { exception ->
@@ -110,5 +182,11 @@ class EditProfileViewModel : ViewModel() {
             Log.e(TAG, "updateUserProfile failed: User not logged in")
             onResult(false, "User not logged in")
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // Clean up auth listener when view model is destroyed
+        authStateListener?.let { auth.removeAuthStateListener(it) }
     }
 }

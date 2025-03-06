@@ -145,4 +145,11 @@
     <string name="error">错误</string>
     <string name="receipt_summary">收据摘要</string>
     <string name="receipt_add">您想如何添加收据？</string>
+    <string name="logging_in">正在登录</string>
+    <string name="creating_account">创建帐户</string>
+    <string name="no_item_found">没有找到物品！</string>
+    <string name="individual_employ">个人雇员</string>
+    <string name="individual_description">我受雇于一个组织。</string>
+    <string name="self_employed">自雇</string>
+    <string name="self_employed_description">我经营自己的生意，不受雇于别人。</string>
 </resources>

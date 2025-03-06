@@ -7,14 +7,16 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 object FirebaseManager {
-    // Constants for app names
-    private const val AUTH_APP = "auth_app"
+    // Constants for app names - keeping CALENDAR_APP for calendar features
     private const val CALENDAR_APP = "calendar_app"
     private const val TAG = "FirebaseManager"
 
@@ -41,23 +43,7 @@ object FirebaseManager {
                 Log.d(TAG, "Default Firebase app initialized")
             }
 
-            // Initialize AUTH_APP - this is for user authentication
-            if (FirebaseApp.getApps(context).none { it.name == AUTH_APP }) {
-                try {
-                    val options = FirebaseOptions.Builder()
-                        .setApiKey("AIzaSyDoBYOMePopcoYW-SpIDHkfDmuPEzYEf1A")  // from smarttaxver1
-                        .setApplicationId("1:174963480472:android:b66a24180ffc5eea943ded")
-                        .setProjectId("smarttaxver1")
-                        .build()
-
-                    FirebaseApp.initializeApp(context, options, AUTH_APP)
-                    Log.d(TAG, "AUTH_APP Firebase app initialized")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error initializing AUTH_APP", e)
-                }
-            }
-
-            // Initialize CALENDAR_APP
+            // Initialize CALENDAR_APP (keeping this for calendar functionality)
             if (FirebaseApp.getApps(context).none { it.name == CALENDAR_APP }) {
                 try {
                     val options = FirebaseOptions.Builder()
@@ -89,7 +75,8 @@ object FirebaseManager {
     // Set up auth state listener to detect user changes
     private fun setupAuthStateListener() {
         try {
-            val auth = getAuthInstance()
+            // Using default Firebase auth instance to match AuthViewModel
+            val auth = Firebase.auth
             auth.addAuthStateListener { firebaseAuth ->
                 val user = firebaseAuth.currentUser
                 handleUserChange(user)
@@ -119,31 +106,17 @@ object FirebaseManager {
         }
     }
 
-    // Get Auth instance from the auth app for authentication
+    // Get Auth instance - now using DEFAULT Firebase auth instance to match AuthViewModel
     fun getAuthInstance(): FirebaseAuth {
-        return try {
-            val authApp = FirebaseApp.getInstance(AUTH_APP)
-            FirebaseAuth.getInstance(authApp).also {
-                Log.d(TAG, "Retrieved FirebaseAuth from AUTH_APP")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting AUTH_APP instance, falling back to default", e)
-            // Fall back to the default app
-            FirebaseAuth.getInstance()
+        return Firebase.auth.also {
+            Log.d(TAG, "Retrieved DEFAULT FirebaseAuth")
         }
     }
 
-    // Get Firestore instance for auth/user data
+    // Get Firestore instance for auth/user data - using DEFAULT Firestore instance
     fun getAuthFirestore(): FirebaseFirestore {
-        return try {
-            val authApp = FirebaseApp.getInstance(AUTH_APP)
-            FirebaseFirestore.getInstance(authApp).also {
-                Log.d(TAG, "Retrieved Firestore from AUTH_APP")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting AUTH_APP Firestore, falling back to default", e)
-            // Fall back to the default app
-            FirebaseFirestore.getInstance()
+        return Firebase.firestore.also {
+            Log.d(TAG, "Retrieved DEFAULT Firestore")
         }
     }
 
@@ -165,7 +138,8 @@ object FirebaseManager {
         // Check if we need a fresh check (if last check was more than 1 second ago)
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastCheckedTimestamp > 1000) {
-            val userId = getAuthInstance().currentUser?.uid
+            // Using default Firebase auth instance to match AuthViewModel
+            val userId = Firebase.auth.currentUser?.uid
             Log.d(TAG, "Current user ID (fresh check): $userId")
 
             // Cache the result
@@ -189,8 +163,8 @@ object FirebaseManager {
         // Reset cache timestamps to force a fresh check
         lastCheckedTimestamp = 0
 
-        // Get fresh user ID and update flow
-        val userId = getAuthInstance().currentUser?.uid
+        // Get fresh user ID and update flow - using default Firebase auth
+        val userId = Firebase.auth.currentUser?.uid
         Log.d(TAG, "Refreshed current user ID: $userId")
 
         // Only update if changed to avoid unnecessary recompositions
@@ -204,15 +178,8 @@ object FirebaseManager {
     }
 
     fun getStorageInstance(): FirebaseStorage {
-        return try {
-            val authApp = FirebaseApp.getInstance(AUTH_APP)
-            FirebaseStorage.getInstance(authApp).also {
-                Log.d(TAG, "Retrieved FirebaseStorage from AUTH_APP")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting AUTH_APP Storage, falling back to default", e)
-            // Fall back to the default app
-            FirebaseStorage.getInstance()
+        return FirebaseStorage.getInstance().also {
+            Log.d(TAG, "Retrieved DEFAULT FirebaseStorage")
         }
     }
 }

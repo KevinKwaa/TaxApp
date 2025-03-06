@@ -4,6 +4,7 @@ import android.os.Build
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -37,12 +39,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
@@ -52,6 +51,7 @@ import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.accessibility.ScreenReader
+import com.example.taxapp.accessibility.scaledSp
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
@@ -67,6 +67,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
     val activity = context as? ComponentActivity
     var showLanguageSelector by remember { mutableStateOf(false) }
     var showAccessibilitySettings by remember { mutableStateOf(false) }
+
     // Access shared repositories
     val languageManager = remember { AppLanguageManager.getInstance(context) }
     val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
@@ -100,11 +101,14 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Home Screen")
+    ScreenReader("Auth Screen")
     val ttsManager = LocalTtsManager.current
+
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Column(
-            modifier = modifier.fillMaxSize()
+            modifier = modifier
+                .fillMaxSize()
+                .background(accessibleColors.calendarBackground)
                 .padding(32.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -165,33 +169,42 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
                 }
             }
 
+            if (isDarkMode) {
+                Text(
+                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
+                )
+            }
+
             Image(
                 painter = painterResource(id = R.drawable.banner),
                 contentDescription = "banner",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .height(200.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Using MaterialTheme.typography for proper scaling
             Text(
                 text = stringResource(id = R.string.welcome_message),
-                style = TextStyle(
-                    fontSize = 30.sp,
-                    fontFamily = FontFamily.SansSerif,
+                style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
-                )
+                ),
+                color = accessibleColors.headerText
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = stringResource(id = R.string.welcome_description),
-                //text = stringResource(id = R.string.welcome_description),
-                style = TextStyle(
+                style = MaterialTheme.typography.bodyLarge.copy(
                     textAlign = TextAlign.Center
-                )
+                ),
+                color = accessibleColors.calendarText
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -201,12 +214,19 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
                     ttsManager?.speak("Login")
                     navController.navigate("login")
                 },
-                modifier = Modifier.fillMaxWidth()
-                    .height(60.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accessibleColors.buttonBackground,
+                    contentColor = accessibleColors.buttonText
+                )
             ) {
+                // Using scaledSp() for proper scaling in button text
                 Text(
                     text = stringResource(id = R.string.login),
-                    fontSize = 22.sp
+                    fontSize = scaledSp(22),
+                    fontWeight = FontWeight.Medium
                 )
             }
 
@@ -217,20 +237,22 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
                     ttsManager?.speak("Register yourself up")
                     navController.navigate("register")
                 },
-                modifier = Modifier.fillMaxWidth()
-                    .height(60.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = accessibleColors.buttonBackground
+                ),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = accessibleColors.buttonBackground
+                )
             ) {
+                // Using scaledSp() for proper scaling in button text
                 Text(
                     text = stringResource(id = R.string.register),
-                    fontSize = 22.sp
-                )
-            }
-
-            if (isDarkMode) {
-                Text(
-                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
+                    fontSize = scaledSp(22),
+                    fontWeight = FontWeight.Medium
                 )
             }
         }

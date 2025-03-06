@@ -142,4 +142,11 @@
     <string name="error">Error</string>
     <string name="receipt_summary">Receipt Summary</string>
     <string name="receipt_add">How would you like to add your receipt?</string>
+    <string name="logging_in">Logging in</string>
+    <string name="creating_account">Creating account</string>
+    <string name="no_item_found">No item found!</string>
+    <string name="individual_employ">Individual Employee</string>
+    <string name="individual_description">I am employed under an organization.</string>
+    <string name="self_employed">Self-Employed</string>
+    <string name="self_employed_description">I run my own business and not employed by others.</string>
 </resources>

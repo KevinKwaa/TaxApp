@@ -19,9 +19,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.lifecycleScope
 import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.CalendarEvent.FadeTransition
 import com.example.taxapp.CalendarEvent.LoadingScreen
+import com.example.taxapp.CalendarEvent.TaxDeadlineHelper
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
@@ -46,6 +48,10 @@ class MainActivity : BaseActivity() {
                     }
                 }
             }
+        }
+        // Check for upcoming tax deadlines
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            TaxDeadlineHelper.checkUpcomingDeadline(this, lifecycleScope)
         }
     }
     override fun onStart() {

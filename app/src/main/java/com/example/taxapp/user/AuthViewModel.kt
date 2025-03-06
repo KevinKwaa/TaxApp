@@ -1,18 +1,22 @@
 package com.example.taxapp.user
 
+import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.taxapp.CalendarEvent.EventRepository
+import com.example.taxapp.CalendarEvent.TaxDeadlineHelper
 import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 
 class AuthViewModel : ViewModel() {
     private val TAG = "AuthViewModel"
 
-    private val auth = FirebaseManager.getAuthInstance()
-    private val firestore = FirebaseManager.getAuthFirestore()
+    private val auth = Firebase.auth
+    private val firestore = Firebase.firestore
 
     fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         Log.d(TAG, "Attempting login for email: $email")
@@ -69,7 +73,7 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    fun userProfile(name: String, phone: String, dob: String, income: String, onResult: (Boolean, String?) -> Unit) {
+    fun userProfile(name: String, phone: String, dob: String, income: String, employment: String = "employee", onResult: (Boolean, String?) -> Unit) {
         val userId = FirebaseManager.getCurrentUserId()
         Log.d(TAG, "Updating profile for user ID: $userId")
 
@@ -78,13 +82,23 @@ class AuthViewModel : ViewModel() {
                 "name" to name,
                 "phone" to phone,
                 "dob" to dob,
-                "income" to income
+                "income" to income,
+                "employment" to employment // Add this field
             )
 
             firestore.collection("users").document(userId)
                 .update(userDetails as Map<String, Any>)
                 .addOnSuccessListener {
                     Log.d(TAG, "Profile updated successfully")
+
+                    // Create or update tax deadline events based on preference
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        TaxDeadlineHelper.updateTaxDeadlineEvents(
+                            employment,
+                            viewModelScope
+                        )
+                    }
+
                     onResult(true, null)
                 }
                 .addOnFailureListener { exception ->
@@ -97,6 +111,15 @@ class AuthViewModel : ViewModel() {
                             .set(userDetails)
                             .addOnSuccessListener {
                                 Log.d(TAG, "Created new user profile")
+
+                                // Create or update tax deadline events based on preference
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    TaxDeadlineHelper.updateTaxDeadlineEvents(
+                                        employment,
+                                        viewModelScope
+                                    )
+                                }
+
                                 onResult(true, null)
                             }
                             .addOnFailureListener { setException ->

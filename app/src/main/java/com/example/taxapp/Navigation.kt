@@ -50,6 +50,7 @@ import java.time.format.DateTimeFormatter
 import com.example.taxapp.firebase.FirebaseManager
 import com.example.taxapp.receiptcategory.CategoryScreen
 import com.example.taxapp.receiptcategory.ReceiptSummaryScreen
+import com.example.taxapp.receiptcategory.ReceiptViewModel
 import com.example.taxapp.receiptcategory.UploadReceiptScreen
 import com.example.taxapp.taxplan.TaxPlanScreen
 import kotlinx.coroutines.delay
@@ -64,6 +65,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     // ViewModels
     val authViewModel: AuthViewModel = viewModel()
     val editProfileViewModel: EditProfileViewModel = viewModel()
+
+    // IMPORTANT: Create a shared ReceiptViewModel instance
+    val receiptViewModel: ReceiptViewModel = viewModel()
 
     // Collect user ID from FirebaseManager's StateFlow
     val currentUserId by FirebaseManager.currentUserFlow.collectAsState()
@@ -101,14 +105,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             value = emptyMap()
         }
     }
-
-    //val eventsFlow by eventRepository.getAllEvents(currentUserId).collectAsState(initial = mapOf())
-
-    // Update the events map when the flow emits new data
-    //LaunchedEffect(eventsFlow, currentUserId) {
-    //    eventsMap.clear()
-    //    eventsMap.putAll(eventsFlow)
-    //}
 
     // Get the TTS manager from the composition
     val ttsManager = LocalTtsManager.current
@@ -162,6 +158,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 }
                 "uploadReceipt" -> {
                     ttsManager?.speak("Upload receipt screen")
+                }
+                "receiptSummary" -> {
+                    ttsManager?.speak("Receipt summary screen")
                 }
                 "category" -> {
                     ttsManager?.speak("Tax categories screen")
@@ -400,18 +399,20 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 }
             }
 
-            // Receipt screens
+            // Receipt screens - UPDATED TO USE SHARED VIEWMODEL
             composable("uploadReceipt") {
                 UploadReceiptScreen(
                     modifier = modifier,
-                    navController = navController
+                    navController = navController,
+                    receiptViewModel = receiptViewModel // Pass the shared ViewModel
                 )
             }
 
             composable("receiptSummary") {
                 ReceiptSummaryScreen(
                     modifier = modifier,
-                    navController = navController
+                    navController = navController,
+                    receiptViewModel = receiptViewModel // Pass the shared ViewModel
                 )
             }
 

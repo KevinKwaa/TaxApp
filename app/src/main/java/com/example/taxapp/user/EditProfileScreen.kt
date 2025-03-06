@@ -5,6 +5,7 @@ import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,15 +19,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -169,6 +179,7 @@ fun EditProfileScreenContent(
     val phone = editProfileViewModel.phone
     val dob = editProfileViewModel.dob
     val income = editProfileViewModel.income
+    val employment = editProfileViewModel.employment // Get the tax filing preference
     val isLoading = editProfileViewModel.isLoading
     val errorMessage = editProfileViewModel.errorMessage
 
@@ -223,13 +234,15 @@ fun EditProfileScreenContent(
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Home Screen")
+    ScreenReader("Edit Profile Screen")
     val ttsManager = LocalTtsManager.current
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .background(accessibleColors.calendarBackground) // Add this critical line
+                .padding(32.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -291,12 +304,18 @@ fun EditProfileScreenContent(
             }
 
             if (isLoading) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(
+                    color = accessibleColors.selectedDay // Use accessible color
+                )
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
             errorMessage?.let {
-                Text(text = it, color = Color.Red)
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error, // Use theme error color instead of hard-coded Color.Red
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
@@ -328,9 +347,18 @@ fun EditProfileScreenContent(
                     editProfileViewModel.name = it
                 },
                 label = {
-                    Text(text = stringResource(id = R.string.name),)
+                    Text(
+                        text = stringResource(id = R.string.name),
+                        color = accessibleColors.calendarText // Add proper color
+                    )
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = accessibleColors.selectedDay,
+                    unfocusedBorderColor = accessibleColors.calendarBorder,
+                    focusedTextColor = accessibleColors.calendarText,
+                    unfocusedTextColor = accessibleColors.calendarText
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -342,10 +370,17 @@ fun EditProfileScreenContent(
                     editProfileViewModel.phone = it
                 },
                 label = {
-                    Text(text = stringResource(id = R.string.phone),)
+                    Text(text = stringResource(id = R.string.phone),
+                        color = accessibleColors.calendarText)
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = accessibleColors.selectedDay,
+                    unfocusedBorderColor = accessibleColors.calendarBorder,
+                    focusedTextColor = accessibleColors.calendarText,
+                    unfocusedTextColor = accessibleColors.calendarText
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -357,9 +392,16 @@ fun EditProfileScreenContent(
                     editProfileViewModel.dob = it
                 },
                 label = {
-                    Text(text = stringResource(id = R.string.date_of_birth),)
+                    Text(text = stringResource(id = R.string.date_of_birth),
+                        color = accessibleColors.calendarText)
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = accessibleColors.selectedDay,
+                    unfocusedBorderColor = accessibleColors.calendarBorder,
+                    focusedTextColor = accessibleColors.calendarText,
+                    unfocusedTextColor = accessibleColors.calendarText
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -371,11 +413,110 @@ fun EditProfileScreenContent(
                     editProfileViewModel.income = it
                 },
                 label = {
-                    Text(text = stringResource(id = R.string.total_income),)
+                    Text(text = stringResource(id = R.string.total_income),
+                        color = accessibleColors.calendarText)
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = accessibleColors.selectedDay,
+                    unfocusedBorderColor = accessibleColors.calendarBorder,
+                    focusedTextColor = accessibleColors.calendarText,
+                    unfocusedTextColor = accessibleColors.calendarText
+                )
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Add Tax Filing Preference Radio Buttons
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Tax Filing Preference",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // Radio group
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        // Self filing option
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    editProfileViewModel.employment = "employee"
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = employment == "employee",
+                                onClick = {
+                                    editProfileViewModel.employment = "employee"
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = stringResource(id = R.string.individual_employ),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = stringResource(id = R.string.individual_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        // self-employed filing option
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    editProfileViewModel.employment = "self-employed"
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = employment == "self-employed",
+                                onClick = {
+                                    editProfileViewModel.employment = "self-employed"
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = stringResource(id = R.string.self_employed),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = stringResource(id = R.string.self_employed_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -392,12 +533,16 @@ fun EditProfileScreenContent(
                             AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
                         }
                     }
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accessibleColors.buttonBackground,
+                    contentColor = accessibleColors.buttonText
+                )
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.primary,
+                        color = accessibleColors.buttonText,
                         strokeWidth = 2.dp
                     )
                 } else {
@@ -418,17 +563,16 @@ fun EditProfileScreenContent(
                             popUpTo("home") { inclusive = true }
                         }
                     }
-                }
+                },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = accessibleColors.buttonBackground
+                ),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = accessibleColors.buttonBackground
+                )
             ) {
                 Text(text = stringResource(id = R.string.logout),)
-            }
-
-            if (isDarkMode) {
-                Text(
-                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
-                )
             }
         }
 

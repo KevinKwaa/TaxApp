@@ -146,4 +146,11 @@
     <string name="error">Ralat</string>
     <string name="receipt_summary">Ringkasan resit</string>
     <string name="receipt_add">Bagaimanakah anda ingin menambah resit anda?</string>
+    <string name="logging_in">Log masuk</string>
+    <string name="creating_account">Mencipta akaun</string>
+    <string name="no_item_found">Tiada item ditemui!</string>
+    <string name="individual_employ">Pekerja Individu</string>
+    <string name="individual_description">Saya bekerja di bawah sebuah organisasi.</string>
+    <string name="self_employed">Bekerja Sendiri</string>
+    <string name="self_employed_description">Saya menjalankan perniagaan saya sendiri dan tidak bekerja dengan orang lain.</string>
 </resources>

@@ -2,6 +2,7 @@ package com.example.taxapp.receiptcategory
 
 import android.os.Build
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
@@ -60,6 +61,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.clip
@@ -178,11 +180,16 @@ fun ReceiptSummaryContent(
             tts?.shutdown()
         }
     }
+    // Add debug logging to verify data is available
+    LaunchedEffect(Unit) {
+        Log.d("ReceiptSummaryContent", "Starting receipt summary screen with viewModel: $receiptViewModel")
+        Log.d("ReceiptSummaryContent", "Receipt data available: URI=${receiptViewModel.currentReceiptUri}, merchant=${receiptViewModel.merchantName}, total=${receiptViewModel.total}")
+    }
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Home Screen")
+    ScreenReader("Receipt Screen")
     val ttsManager = LocalTtsManager.current
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Row(
@@ -414,219 +421,350 @@ fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
     var isEditingCategory by remember { mutableStateOf(false) }
     var categoryMenuExpanded by remember { mutableStateOf(false) }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
+
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+    // Access shared repositories
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+
+    // Observe the current language
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
+    }
+
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
+    // Clean up TTS when not needed
+    DisposableEffect(accessibilityState.textToSpeech) {
+        onDispose {
+            tts?.shutdown()
+        }
+    }
+
+    // Get the custom colors
+    val accessibleColors = LocalThemeColors.current
+    val isDarkMode = LocalDarkMode.current
+    ScreenReader("Receipt Screen")
+    val ttsManager = LocalTtsManager.current
+
+    LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            Text(
-                text = stringResource(id = R.string.receipt_details),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-            // Merchant Name
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Face,
-                    contentDescription = "Merchant",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                if (isEditingMerchant) {
-                    OutlinedTextField(
-                        value = receiptViewModel.merchantName,
-                        onValueChange = { receiptViewModel.merchantName = it },
-                        label = { Text(text = stringResource(id = R.string.merchant_name),) },
-                        modifier = Modifier.weight(1f)
+            // Language button with improved styling
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                        CircleShape
                     )
-
-                    IconButton(onClick = { isEditingMerchant = false }) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Save",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                } else {
-                    Text(
-                        text = stringResource(id = R.string.merchant_colon, receiptViewModel.merchantName),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f)
+                    .border(
+                        width = 1.dp,
+                        color = accessibleColors.calendarBorder,
+                        shape = CircleShape
                     )
-
-                    IconButton(onClick = { isEditingMerchant = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Merchant",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-
-            // Date
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    contentDescription = "Date",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                if (isEditingDate) {
-                    OutlinedTextField(
-                        value = receiptViewModel.date,
-                        onValueChange = { receiptViewModel.date = it },
-                        label = { Text(text = stringResource(id = R.string.date),) },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    IconButton(onClick = { isEditingDate = false }) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Save",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                } else {
-                    Text(
-                        text = stringResource(id = R.string.date_colon,receiptViewModel.date),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    IconButton(onClick = { isEditingDate = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Date",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-
-            // Total
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                    .clip(CircleShape)
+                    .clickable { showLanguageSelector = true }
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(id = R.string.rm),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(end = 8.dp)
+                    "🌐",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = accessibleColors.buttonText
                 )
-
-                if (isEditingTotal) {
-                    OutlinedTextField(
-                        value = receiptViewModel.total,
-                        onValueChange = { receiptViewModel.total = it },
-                        label = { Text(text = stringResource(id = R.string.total_amount),) },
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-
-                    IconButton(onClick = { isEditingTotal = false }) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Save",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                } else {
-                    Text(
-                        text = stringResource(id = R.string.total_colon, receiptViewModel.total),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    IconButton(onClick = { isEditingTotal = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Total",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
             }
 
-            // Category
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            // Accessibility button with improved styling
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                        CircleShape
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = accessibleColors.calendarBorder,
+                        shape = CircleShape
+                    )
+                    .clip(CircleShape)
+                    .clickable { showAccessibilitySettings = true }
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    if (isEditingCategory) {
+                Text(
+                    "⚙️",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = accessibleColors.buttonText
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.receipt_details),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                // Merchant Name
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Face,
+                        contentDescription = "Merchant",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    if (isEditingMerchant) {
                         OutlinedTextField(
-                            value = receiptViewModel.category,
-                            onValueChange = {},
-                            label = { Text(text = stringResource(id = R.string.category),) },
-                            modifier = Modifier.fillMaxWidth(),
-                            readOnly = true,
-                            trailingIcon = {
-                                IconButton(onClick = { categoryMenuExpanded = true }) {
-                                    Icon(Icons.Default.Edit, "Select Category")
-                                }
-                            }
+                            value = receiptViewModel.merchantName,
+                            onValueChange = { receiptViewModel.merchantName = it },
+                            label = { Text(text = stringResource(id = R.string.merchant_name),) },
+                            modifier = Modifier.weight(1f)
                         )
 
-                        DropdownMenu(
-                            expanded = categoryMenuExpanded,
-                            onDismissRequest = { categoryMenuExpanded = false }
-                        ) {
-                            receiptViewModel.availableCategories.forEach { category ->
-                                DropdownMenuItem(
-                                    text = { Text(category) },
-                                    onClick = {
-                                        receiptViewModel.category = category
-                                        categoryMenuExpanded = false
-                                        isEditingCategory = false
-                                    }
-                                )
-                            }
+                        IconButton(onClick = { isEditingMerchant = false }) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Save",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                         }
                     } else {
                         Text(
-                            text = stringResource(id = R.string.cate,receiptViewModel.category),
-                            style = MaterialTheme.typography.bodyLarge
+                            text = stringResource(
+                                id = R.string.merchant_colon,
+                                receiptViewModel.merchantName
+                            ),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
                         )
+
+                        IconButton(onClick = { isEditingMerchant = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Merchant",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
 
-                if (!isEditingCategory) {
-                    IconButton(onClick = { isEditingCategory = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Category",
-                            tint = MaterialTheme.colorScheme.primary
+                // Date
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = "Date",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    if (isEditingDate) {
+                        OutlinedTextField(
+                            value = receiptViewModel.date,
+                            onValueChange = { receiptViewModel.date = it },
+                            label = { Text(text = stringResource(id = R.string.date),) },
+                            modifier = Modifier.weight(1f)
                         )
+
+                        IconButton(onClick = { isEditingDate = false }) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Save",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(id = R.string.date_colon, receiptViewModel.date),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        IconButton(onClick = { isEditingDate = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Date",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
-                } else {
-                    IconButton(onClick = { isEditingCategory = false }) {
-                        Text(text = stringResource(id = R.string.done),)
+                }
+
+                // Total
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.rm),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+
+                    if (isEditingTotal) {
+                        OutlinedTextField(
+                            value = receiptViewModel.total,
+                            onValueChange = { receiptViewModel.total = it },
+                            label = { Text(text = stringResource(id = R.string.total_amount),) },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        IconButton(onClick = { isEditingTotal = false }) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Save",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(
+                                id = R.string.total_colon,
+                                receiptViewModel.total
+                            ),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        IconButton(onClick = { isEditingTotal = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Total",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+
+                // Category
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (isEditingCategory) {
+                            OutlinedTextField(
+                                value = receiptViewModel.category,
+                                onValueChange = {},
+                                label = { Text(text = stringResource(id = R.string.category),) },
+                                modifier = Modifier.fillMaxWidth(),
+                                readOnly = true,
+                                trailingIcon = {
+                                    IconButton(onClick = { categoryMenuExpanded = true }) {
+                                        Icon(Icons.Default.Edit, "Select Category")
+                                    }
+                                }
+                            )
+
+                            DropdownMenu(
+                                expanded = categoryMenuExpanded,
+                                onDismissRequest = { categoryMenuExpanded = false }
+                            ) {
+                                receiptViewModel.availableCategories.forEach { category ->
+                                    DropdownMenuItem(
+                                        text = { Text(category) },
+                                        onClick = {
+                                            receiptViewModel.category = category
+                                            categoryMenuExpanded = false
+                                            isEditingCategory = false
+                                        }
+                                    )
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = stringResource(
+                                    id = R.string.cate,
+                                    receiptViewModel.category
+                                ),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+
+                    if (!isEditingCategory) {
+                        IconButton(onClick = { isEditingCategory = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Category",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = { isEditingCategory = false }) {
+                            Text(text = stringResource(id = R.string.done),)
+                        }
                     }
                 }
             }
+        }
+        if (showLanguageSelector) {
+            LanguageSelector(
+                currentLanguageCode = currentLanguageCode,
+                onLanguageSelected = { languageCode ->
+                    currentLanguageCode = languageCode
+                },
+                onDismiss = { showLanguageSelector = false },
+                activity = activity  // Pass the activity
+            )
+        }
+
+        if (showAccessibilitySettings) {
+            AccessibilitySettings(
+                currentSettings = accessibilityState,
+                onSettingsChanged = { newSettings ->
+                    coroutineScope.launch {
+                        accessibilityRepository.updateSettings(newSettings)
+                    }
+                },
+                onDismiss = { showAccessibilitySettings = false }
+            )
         }
     }
 }

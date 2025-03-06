@@ -5,14 +5,12 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.channels.awaitClose
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -25,7 +23,10 @@ import java.util.Date
  * Repository for managing events with Firebase Firestore
  */
 class EventRepository {
-    private val db: FirebaseFirestore = Firebase.firestore
+    // Use default Firebase instances to align with AuthViewModel
+    private val auth = Firebase.auth
+    private val db = Firebase.firestore
+
     private val _eventsCache = MutableStateFlow<Map<LocalDate, MutableList<Event>>>(emptyMap())
 
     // Track active listeners to ensure proper cleanup
@@ -35,38 +36,36 @@ class EventRepository {
         _eventsCache.value = emptyMap()
     }
 
-    //added these two
-    //private val auth = FirebaseManager.getAuthInstance()
-    //private val db = FirebaseManager.getAuthFirestore()
-
     // Get the user-specific events collection
     private fun getUserEventsCollection(userId: String) =
         db.collection("users").document(userId).collection("events")
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun addEvent(event: Event): Boolean {
-        // Get the current user ID
-        val userId = FirebaseManager.getCurrentUserId()
+        val userId = auth.currentUser?.uid
         if (userId == null) {
             Log.e(TAG, "Cannot add event: No user logged in")
             return false
         }
 
-        return try {
+        try {
+            Log.d(TAG, "Attempting to add event: ${event.title} for user: $userId")
             val eventMap = event.toMap()
-            getUserEventsCollection(userId).add(eventMap).await()
-            Log.d(TAG, "Event added successfully: ${event.title} for user: $userId")
-            true
+            Log.d(TAG, "Event data: $eventMap")
+
+            val docRef = getUserEventsCollection(userId).add(eventMap).await()
+            Log.d(TAG, "Event added successfully with ID: ${docRef.id}")
+            return true
         } catch (e: Exception) {
             Log.e(TAG, "Error adding event", e)
-            false
+            return false
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun updateEvent(event: Event): Boolean {
-        // Get the current user ID
-        val userId = FirebaseManager.getCurrentUserId()
+        // Get the current user ID directly from Firebase Auth
+        val userId = auth.currentUser?.uid
         if (userId == null) {
             Log.e(TAG, "Cannot update event: No user logged in")
             return false
@@ -98,8 +97,8 @@ class EventRepository {
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun deleteEvent(event: Event): Boolean {
-        // Get the current user ID
-        val userId = FirebaseManager.getCurrentUserId()
+        // Get the current user ID directly from Firebase Auth
+        val userId = auth.currentUser?.uid
         if (userId == null) {
             Log.e(TAG, "Cannot delete event: No user logged in")
             return false

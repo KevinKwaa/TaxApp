@@ -18,14 +18,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -53,10 +57,13 @@ import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
 import com.example.taxapp.accessibility.AccessibilityState
+import com.example.taxapp.accessibility.LocalColorBlindMode
 import com.example.taxapp.accessibility.LocalDarkMode
+import com.example.taxapp.accessibility.LocalHighContrastMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.accessibility.ScreenReader
+import com.example.taxapp.accessibility.scaledSp
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
@@ -119,22 +126,34 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Home Screen")
+    val isColorBlind = LocalColorBlindMode.current
+    val isHighContrast = LocalHighContrastMode.current
     val ttsManager = LocalTtsManager.current
-    LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
 
-        Column(
-            modifier
+    // Screen reader for accessibility
+    ScreenReader("Login Screen")
+
+    LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
+        Box(
+            modifier = modifier
                 .fillMaxSize()
-                .padding(32.dp), Arrangement.Center, Alignment.CenterHorizontally
+                .background(accessibleColors.calendarBackground)
         ) {
-            // Add back button at the top
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.Start
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Add back button at the top
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     IconButton(
                         onClick = {
                             ttsManager?.speak("Returning")
@@ -143,27 +162,28 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                accessibleColors.buttonBackground.copy(alpha = 0.2f),
                                 CircleShape
                             )
                             .border(
                                 width = 1.dp,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                color = accessibleColors.calendarBorder,
                                 shape = CircleShape
                             )
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back to selection screen",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = accessibleColors.calendarText
                         )
                     }
 
+                    // Language button
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                                accessibleColors.buttonBackground.copy(alpha = 0.2f),
                                 CircleShape
                             )
                             .border(
@@ -172,14 +192,17 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                                 shape = CircleShape
                             )
                             .clip(CircleShape)
-                            .clickable { showLanguageSelector = true }
+                            .clickable {
+                                showLanguageSelector = true
+                                ttsManager?.speak("Opening language selector")
+                            }
                             .padding(8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             "🌐",
                             style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.buttonText
+                            color = accessibleColors.calendarText
                         )
                     }
 
@@ -188,7 +211,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                                accessibleColors.buttonBackground.copy(alpha = 0.2f),
                                 CircleShape
                             )
                             .border(
@@ -197,107 +220,148 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                                 shape = CircleShape
                             )
                             .clip(CircleShape)
-                            .clickable { showAccessibilitySettings = true }
+                            .clickable {
+                                showAccessibilitySettings = true
+                                ttsManager?.speak("Opening accessibility settings")
+                            }
                             .padding(8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             "⚙️",
                             style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.buttonText
+                            color = accessibleColors.calendarText
                         )
                     }
-            }
+                }
 
-            Text(
-                text = stringResource(id = R.string.welcome_back),
-                modifier = Modifier.fillMaxWidth(),
-                style = TextStyle(
-                    fontSize = 30.sp,
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = stringResource(id = R.string.sign_in_to_account),
-                modifier = Modifier.fillMaxWidth(),
-                style = TextStyle(
-                    fontSize = 22.sp
-                )
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Image(
-                painter = painterResource(id = R.drawable.login),
-                contentDescription = "login",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                },
-                label = {
-                    Text(text = stringResource(id = R.string.email))
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                },
-                label = {
-                    Text(text = stringResource(id = R.string.password),)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Button(
-                onClick = {
-                    isLoading = true
-                    authViewModel.login(email, password) { success, errorMessage ->
-                        if (success) {
-                            isLoading = false
-                            ttsManager?.speak("Login success")
-                            navController.navigate("home") {
-                                popUpTo("auth") { inclusive = true }
-                            }
-                        } else {
-                            isLoading = false
-                            AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
-                        }
-                    }
-                },
-                enabled = !isLoading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-            ) {
-                Text(text = if (isLoading) "Logging in" else "Login", fontSize = 22.sp)
-            }
-
-            if (isDarkMode) {
                 Text(
-                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
+                    text = stringResource(id = R.string.welcome_back),
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = accessibleColors.headerText
                 )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = stringResource(id = R.string.sign_in_to_account),
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = accessibleColors.calendarText
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Image(
+                    painter = painterResource(id = R.drawable.login),
+                    contentDescription = "login",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = {
+                        Text(
+                            text = stringResource(id = R.string.email),
+                            color = accessibleColors.calendarText.copy(alpha = 0.8f)
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = accessibleColors.selectedDay,
+                        unfocusedBorderColor = accessibleColors.calendarBorder,
+                        focusedTextColor = accessibleColors.calendarText,
+                        unfocusedTextColor = accessibleColors.calendarText,
+                        cursorColor = accessibleColors.selectedDay,
+                        focusedLabelColor = accessibleColors.selectedDay,
+                        unfocusedLabelColor = accessibleColors.calendarText.copy(alpha = 0.7f)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = {
+                        Text(
+                            text = stringResource(id = R.string.password),
+                            color = accessibleColors.calendarText.copy(alpha = 0.8f)
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = PasswordVisualTransformation(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = accessibleColors.selectedDay,
+                        unfocusedBorderColor = accessibleColors.calendarBorder,
+                        focusedTextColor = accessibleColors.calendarText,
+                        unfocusedTextColor = accessibleColors.calendarText,
+                        cursorColor = accessibleColors.selectedDay,
+                        focusedLabelColor = accessibleColors.selectedDay,
+                        unfocusedLabelColor = accessibleColors.calendarText.copy(alpha = 0.7f)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(30.dp))
+
+                Button(
+                    onClick = {
+                        isLoading = true
+                        authViewModel.login(email, password) { success, errorMessage ->
+                            if (success) {
+                                isLoading = false
+                                ttsManager?.speak("Login successful")
+                                navController.navigate("home") {
+                                    popUpTo("auth") { inclusive = true }
+                                }
+                            } else {
+                                isLoading = false
+                                ttsManager?.speak("Login failed. ${errorMessage ?: "Please try again"}")
+                                AppUtil.showToast(context, errorMessage ?: "Something went wrong")
+                            }
+                        }
+                    },
+                    enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = accessibleColors.buttonBackground,
+                        contentColor = accessibleColors.buttonText,
+                        disabledContainerColor = accessibleColors.buttonBackground.copy(alpha = 0.5f),
+                        disabledContentColor = accessibleColors.buttonText.copy(alpha = 0.5f)
+                    )
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = accessibleColors.buttonText,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = if (isLoading) stringResource(id = R.string.logging_in) else stringResource(id = R.string.login),
+                        fontSize = scaledSp(22),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+//                if (isDarkMode) {
+//                    Text(
+//                        text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+//                        style = MaterialTheme.typography.bodyMedium,
+//                        color = accessibleColors.calendarText.copy(alpha = 0.7f)
+//                    )
+//                }
             }
         }
         if (showLanguageSelector) {

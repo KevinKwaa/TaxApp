@@ -1,12 +1,15 @@
 package com.example.taxapp.receiptcategory
 
 import android.os.Build
+import android.speech.tts.TextToSpeech
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,9 +62,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,7 +88,18 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.taxapp.R
+import com.example.taxapp.accessibility.AccessibilityRepository
+import com.example.taxapp.accessibility.AccessibilitySettings
+import com.example.taxapp.accessibility.AccessibilityState
+import com.example.taxapp.accessibility.LocalDarkMode
+import com.example.taxapp.accessibility.LocalThemeColors
+import com.example.taxapp.accessibility.LocalTtsManager
+import com.example.taxapp.accessibility.ScreenReader
+import com.example.taxapp.multiLanguage.AppLanguageManager
+import com.example.taxapp.multiLanguage.LanguageProvider
+import com.example.taxapp.multiLanguage.LanguageSelector
 import com.example.taxapp.user.AppUtil
+import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -166,8 +183,6 @@ fun CategoryScreen(
         )
     }
 
-
-
     // Delete confirmation dialog
     if (categoryViewModel.showDeleteConfirmation) {
         DeleteConfirmationDialog(
@@ -229,128 +244,278 @@ fun CategoryScreenContent(
     // Create scroll state for scrollable content
     val scrollState = rememberScrollState()
 
-    Box(modifier = modifier.fillMaxSize()) {
-        // Show loading indicator
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = MaterialTheme.colorScheme.primary
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+
+    // Access shared repositories
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+
+    // Observe the current language
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
+    }
+
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
+    // Clean up TTS when not needed
+    DisposableEffect(accessibilityState.textToSpeech) {
+        onDispose {
+            tts?.shutdown()
+        }
+    }
+
+    // Get the custom colors
+    val accessibleColors = LocalThemeColors.current
+    val isDarkMode = LocalDarkMode.current
+    ScreenReader("Category Screen")
+    val ttsManager = LocalTtsManager.current
+
+    LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(accessibleColors.calendarBackground)
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                // Language button with improved styling
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                            CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accessibleColors.calendarBorder,
+                            shape = CircleShape
+                        )
+                        .clip(CircleShape)
+                        .clickable { showLanguageSelector = true }
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "🌐",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = accessibleColors.buttonText
+                    )
+                }
+
+                // Accessibility button with improved styling
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
+                            CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accessibleColors.calendarBorder,
+                            shape = CircleShape
+                        )
+                        .clip(CircleShape)
+                        .clickable { showAccessibilitySettings = true }
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "⚙️",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = accessibleColors.buttonText
+                    )
+                }
+            }
+
+            Box(modifier = modifier.fillMaxSize()) {
+                // Show loading indicator
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                // Show error message if any
+                else if (errorMessage != null && categoryData.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.no_item_found),
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.error
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        ElevatedButton(
+                            onClick = { categoryViewModel.loadCategoryData() }
+                        ) {
+                            Text(text = stringResource(id = R.string.retry),)
+                        }
+
+                        if (navController != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            ElevatedButton(
+                                onClick = { navController.navigate("uploadReceipt") }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add Receipt",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(text = stringResource(id = R.string.add_receipt),)
+                            }
+                        }
+                    }
+                }
+                // Show category data
+                else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp)
+                            .verticalScroll(scrollState)
+                    ) {
+                        // Summary Card
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.categories_summary),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.categories_summary,
+                                        categoryViewModel.formatCurrency(categorySummary.values.sum())
+                                    ),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.number_of_categories,
+                                        categoryData.size
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.number_of_receipts,
+                                        categoryData.values.sumOf { it.size }),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+
+                        // Category Items
+                        categoryData.forEach { (category, expenseItems) ->
+                            val isExpanded = expandedCategories.contains(category)
+                            CategoryItemsSection(
+                                category = category,
+                                expenseItems = expenseItems,
+                                totalAmount = categorySummary[category] ?: 0.0,
+                                isExpanded = isExpanded,
+                                onToggleExpand = {
+                                    categoryViewModel.toggleCategoryExpansion(
+                                        category
+                                    )
+                                },
+                                formatDate = { date -> categoryViewModel.formatDate(date) },
+                                formatCurrency = { amount -> categoryViewModel.formatCurrency(amount) },
+                                onEditReceipt = { receipt ->
+                                    categoryViewModel.startEditingReceipt(
+                                        receipt
+                                    )
+                                },
+                                onDeleteReceipt = { receipt ->
+                                    categoryViewModel.confirmDeleteReceipt(
+                                        receipt
+                                    )
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
+                        // Space to ensure bottom items are visible
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
+            }
+        }
+
+        if (showLanguageSelector) {
+            LanguageSelector(
+                currentLanguageCode = currentLanguageCode,
+                onLanguageSelected = { languageCode ->
+                    currentLanguageCode = languageCode
+                },
+                onDismiss = { showLanguageSelector = false },
+                activity = activity  // Pass the activity
             )
         }
-        // Show error message if any
-        else if (errorMessage != null && categoryData.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = stringResource(id = R.string.error_message),
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.error
-                )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                ElevatedButton(
-                    onClick = { categoryViewModel.loadCategoryData() }
-                ) {
-                    Text(text = stringResource(id = R.string.retry),)
-                }
-
-                if (navController != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    ElevatedButton(
-                        onClick = { navController.navigate("uploadReceipt") }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add Receipt",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = stringResource(id = R.string.add_receipt),)
+        if (showAccessibilitySettings) {
+            AccessibilitySettings(
+                currentSettings = accessibilityState,
+                onSettingsChanged = { newSettings ->
+                    coroutineScope.launch {
+                        accessibilityRepository.updateSettings(newSettings)
                     }
-                }
-            }
-        }
-        // Show category data
-        else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-                    .verticalScroll(scrollState)
-            ) {
-                // Summary Card
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.categories_summary),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = stringResource(
-                                id = R.string.categories_summary,
-                                categoryViewModel.formatCurrency(categorySummary.values.sum())),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = stringResource(id = R.string.number_of_categories, categoryData.size),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = stringResource(id = R.string.number_of_receipts,categoryData.values.sumOf { it.size }),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-
-                // Category Items
-                categoryData.forEach { (category, expenseItems) ->
-                    val isExpanded = expandedCategories.contains(category)
-                    CategoryItemsSection(
-                        category = category,
-                        expenseItems = expenseItems,
-                        totalAmount = categorySummary[category] ?: 0.0,
-                        isExpanded = isExpanded,
-                        onToggleExpand = { categoryViewModel.toggleCategoryExpansion(category) },
-                        formatDate = { date -> categoryViewModel.formatDate(date) },
-                        formatCurrency = { amount -> categoryViewModel.formatCurrency(amount) },
-                        onEditReceipt = { receipt -> categoryViewModel.startEditingReceipt(receipt) },
-                        onDeleteReceipt = { receipt -> categoryViewModel.confirmDeleteReceipt(receipt) }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // Space to ensure bottom items are visible
-                Spacer(modifier = Modifier.height(24.dp))
-            }
+                },
+                onDismiss = { showAccessibilitySettings = false }
+            )
         }
     }
 }

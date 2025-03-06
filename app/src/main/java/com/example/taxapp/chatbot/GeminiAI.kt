@@ -177,6 +177,7 @@ class GeminiAIService(private val context: Context) {
 //
 //        return promptBuilder.toString()
 //    }
+
     private fun buildPrompt(userMessage: String): String {
         return StringBuilder().apply {
             append("You are an AI assistant for a tax and scheduling app called TaxApp. ")
