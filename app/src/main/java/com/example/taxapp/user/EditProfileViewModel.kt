@@ -194,13 +194,14 @@ class EditProfileViewModel : ViewModel() {
             val employmentChanged = originalEmployment != employment
             Log.d(TAG, "Employment changed: $employmentChanged (from $originalEmployment to $employment)")
 
-            // Try to update first, if document doesn't exist, set it
+            // TRANSACTION APPROACH: First update user profile, then handle tax events
             firestore.collection("users").document(userId)
                 .set(userDetails) // Using set instead of update to handle new profiles too
                 .addOnSuccessListener {
                     Log.d(TAG, "Profile updated successfully")
 
-                    // Store new employment as original
+                    // Store new employment as original immediately to prevent duplicate updates
+                    val prevEmployment = originalEmployment
                     originalEmployment = employment
 
                     // Set flag for UI to know events need refresh
@@ -212,17 +213,20 @@ class EditProfileViewModel : ViewModel() {
 
                         viewModelScope.launch {
                             try {
-                                Log.d(TAG, "Employment changed - updating tax deadline events")
+                                Log.d(TAG, "Employment changed from $prevEmployment to $employment - updating tax deadline events")
 
-                                // First, force reset the repository to clear cache
+                                // Wait a moment for Firestore to update profile
+                                delay(500)
+
+                                // IMPORTANT: First reset the repository to clear out any cached events
                                 EventRepository.resetInstance()
 
-                                // Wait a moment for Firestore to update
+                                // Wait a bit for cleanup
                                 delay(300)
 
-                                // Update tax deadlines
+                                // Now update the tax deadlines using the helper
                                 TaxDeadlineHelper.updateTaxDeadlineEvents(
-                                    employment,
+                                    employment,  // Use the NEW employment type
                                     viewModelScope
                                 ) { success ->
                                     _taxEventUpdateState.value = if (success) {
@@ -233,15 +237,20 @@ class EditProfileViewModel : ViewModel() {
 
                                     Log.d(TAG, "Tax event update completed: $success")
 
-                                    // CRITICAL: Force reset repository again to ensure fresh data on next load
-                                    val repo = EventRepository.getInstance()
-                                    repo.forceRefresh()
-
-                                    // IMPORTANT: Add this delay to make sure Firestore has time to process changes
+                                    // Allow time for Firestore operations to complete
                                     viewModelScope.launch {
+                                        // Force reset repository to ensure fresh data on next calendar view
+                                        EventRepository.resetInstance()
+                                        delay(300)
+
+                                        // Get a fresh instance to refresh data
+                                        val repo = EventRepository.getInstance()
+                                        repo.forceRefresh()
+
+                                        // Give Firestore time to catch up
                                         delay(500)
 
-                                        // Now we can signal completion - the events should now be refreshed
+                                        // Signal completion only after everything is done
                                         isLoading = false
                                         onResult(true, if (success) null else "Profile saved but tax events may not be updated")
                                     }
@@ -251,6 +260,8 @@ class EditProfileViewModel : ViewModel() {
                                 _taxEventUpdateState.value = TaxEventUpdateState.Failed
 
                                 // Force refresh anyway to ensure UI updates
+                                EventRepository.resetInstance()
+                                delay(300)
                                 EventRepository.getInstance().forceRefresh()
 
                                 isLoading = false
@@ -288,6 +299,7 @@ class EditProfileViewModel : ViewModel() {
                 try {
                     // Make sure repository is fresh
                     EventRepository.resetInstance()
+                    delay(300)
 
                     // Force update events using the helper
                     TaxDeadlineHelper.updateTaxDeadlineEvents(
@@ -301,15 +313,28 @@ class EditProfileViewModel : ViewModel() {
                         }
 
                         // Always force refresh to update UI, even on failure
-                        EventRepository.getInstance().forceRefresh()
+                        viewModelScope.launch {
+                            // Reset for fresh start
+                            EventRepository.resetInstance()
+                            delay(300)
 
-                        isLoading = false
-                        onComplete(success)
+                            // Get a fresh instance to refresh data
+                            val repo = EventRepository.getInstance()
+                            repo.forceRefresh()
+
+                            isLoading = false
+                            onComplete(success)
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in forceUpdateTaxEvents", e)
                     _taxEventUpdateState.value = TaxEventUpdateState.Failed
+
+                    // Reset and refresh even on failure
+                    EventRepository.resetInstance()
+                    delay(300)
                     EventRepository.getInstance().forceRefresh()
+
                     isLoading = false
                     onComplete(false)
                 }

@@ -22,6 +22,7 @@ import java.time.LocalDate
 import java.time.Month
 import java.time.Year
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Helper class to manage tax deadline events in the calendar
@@ -33,6 +34,9 @@ object TaxDeadlineHelper {
     private const val EMPLOYEE_PREFIX = "Tax Filing Deadline (Employee)"
     private const val SELF_EMPLOY_PREFIX = "Tax Filing Deadline (Self-Employed)"
 
+    // Track if update is currently in progress to prevent concurrent operations
+    private val isUpdating = AtomicBoolean(false)
+
     /**
      * Update tax deadline events based on the user's tax filing preference
      * Returns true if the update was successful, false otherwise
@@ -43,38 +47,54 @@ object TaxDeadlineHelper {
         scope: CoroutineScope,
         onComplete: (Boolean) -> Unit = {}
     ) {
-        val userId = FirebaseManager.getCurrentUserId()
-        if (userId == null) {
-            Log.e(TAG, "No user ID available")
+        // Use atomic flag to prevent concurrent updates
+        if (!isUpdating.compareAndSet(false, true)) {
+            Log.d(TAG, "Tax deadline update already in progress, skipping")
             withContext(Dispatchers.Main) {
                 onComplete(false)
             }
             return
         }
 
-        Log.d(TAG, "------------ TAX EVENT UPDATE START ------------")
-        Log.d(TAG, "Starting tax deadline update with employment type: $employment for user: $userId")
-
         try {
+            val userId = FirebaseManager.getCurrentUserId()
+            if (userId == null) {
+                Log.e(TAG, "No user ID available")
+                withContext(Dispatchers.Main) {
+                    onComplete(false)
+                }
+                return
+            }
+
+            Log.d(TAG, "------------ TAX EVENT UPDATE START ------------")
+            Log.d(TAG, "Starting tax deadline update with employment type: $employment for user: $userId")
+
             // First, make sure we have a fresh repository instance and clear events
             Log.d(TAG, "Resetting EventRepository instance")
             EventRepository.resetInstance()
             val eventRepository = EventRepository.getInstance()
 
             // Log current events before deletion for debugging
-            eventRepository.getAllEvents(userId).first().let { events ->
-                Log.d(TAG, "BEFORE UPDATE: Found ${events.size} event dates with a total of ${events.values.sumOf { it.size }} events")
-                val taxEvents = events.values.flatten().filter { it.title.contains("Tax Filing Deadline", ignoreCase = true) }
-                Log.d(TAG, "Tax deadline events BEFORE update: ${taxEvents.size}")
-                taxEvents.forEach { event ->
-                    Log.d(TAG, "  - BEFORE: Tax event: ${event.title} on ${event.date}")
+            try {
+                withTimeout(3000) {
+                    eventRepository.getAllEvents(userId).first().let { events ->
+                        Log.d(TAG, "BEFORE UPDATE: Found ${events.size} event dates with a total of ${events.values.sumOf { it.size }} events")
+                        val taxEvents = events.values.flatten().filter { it.title.contains("Tax Filing Deadline", ignoreCase = true) }
+                        Log.d(TAG, "Tax deadline events BEFORE update: ${taxEvents.size}")
+                        taxEvents.forEach { event ->
+                            Log.d(TAG, "  - BEFORE: Tax event: ${event.title} on ${event.date}")
+                        }
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error logging current events", e)
+                // Continue even if logging fails
             }
 
             // Step 1: Find and delete ALL existing tax deadline events DIRECTLY in Firestore
             Log.d(TAG, "Step 1: Deleting all existing tax deadline events")
-            val success = deleteAllTaxDeadlineEvents(userId)
-            Log.d(TAG, "Direct Firestore deletion of tax events complete, success: $success")
+            val deleteSuccess = deleteAllTaxDeadlineEvents(userId)
+            Log.d(TAG, "Direct Firestore deletion of tax events complete, success: $deleteSuccess")
 
             // Small delay to ensure deletions are processed
             withContext(Dispatchers.IO) {
@@ -104,17 +124,17 @@ object TaxDeadlineHelper {
             // Small delay to ensure creations are processed
             withContext(Dispatchers.IO) {
                 Log.d(TAG, "Waiting for creation to complete...")
-                Thread.sleep(500)
+                Thread.sleep(1000) // Longer delay to ensure Firestore has time to process
             }
 
             // Step 3: CRITICAL - Force refresh the repository to update the UI
             Log.d(TAG, "Step 3: Force refreshing the repository")
             eventRepository.forceRefresh()
 
-            // Log event count after update
+            // Log event count after update - important for debugging
             withContext(Dispatchers.IO) {
                 // Wait a moment for Firestore to catch up
-                Thread.sleep(500)
+                Thread.sleep(1000) // Longer delay
 
                 try {
                     // Try with timeout to avoid blocking indefinitely
@@ -134,7 +154,7 @@ object TaxDeadlineHelper {
             }
 
             // Report final status
-            val finalSuccess = createSuccess && success
+            val finalSuccess = createSuccess && deleteSuccess
             Log.d(TAG, "Tax deadline update completed. Overall success: $finalSuccess")
             Log.d(TAG, "------------ TAX EVENT UPDATE END ------------")
 
@@ -148,6 +168,9 @@ object TaxDeadlineHelper {
             withContext(Dispatchers.Main) {
                 onComplete(false)
             }
+        } finally {
+            // Always reset the updating flag
+            isUpdating.set(false)
         }
     }
 
@@ -175,8 +198,6 @@ object TaxDeadlineHelper {
             Log.d(TAG, "Found ${taxDeadlineEvents.size} tax deadline events to delete")
 
             // Delete each event directly - in BATCHES for better performance
-            var allSuccessful = true
-
             if (taxDeadlineEvents.isNotEmpty()) {
                 // Use batched writes for more efficient deletion
                 val batch = firestore.batch()
@@ -243,13 +264,15 @@ object TaxDeadlineHelper {
                     val firestore = Firebase.firestore
                     val eventMap = event.toMap()
 
-                    // Create directly in Firestore
+                    // Create directly in Firestore with unique ID using event details
+                    val customDocId = "tax_deadline_employee_$year"
                     val docRef = firestore.collection("users").document(userId)
                         .collection("events")
-                        .add(eventMap)
+                        .document(customDocId)  // Use consistent document ID based on year
+                        .set(eventMap)  // Use set instead of add for idempotence
                         .await()
 
-                    Log.d(TAG, "Successfully created employee deadline event for $year DIRECTLY in Firestore with ID: ${docRef.id}")
+                    Log.d(TAG, "Successfully created employee deadline event for $year DIRECTLY in Firestore with ID: $customDocId")
                     success = true
 
                     // Small delay to avoid overwhelming Firestore
@@ -316,13 +339,15 @@ object TaxDeadlineHelper {
                     val firestore = Firebase.firestore
                     val eventMap = event.toMap()
 
-                    // Create directly in Firestore
+                    // Create directly in Firestore with unique ID using event details
+                    val customDocId = "tax_deadline_selfemployed_$year"
                     val docRef = firestore.collection("users").document(userId)
                         .collection("events")
-                        .add(eventMap)
+                        .document(customDocId)  // Use consistent document ID based on year
+                        .set(eventMap)  // Use set instead of add for idempotence
                         .await()
 
-                    Log.d(TAG, "Successfully created self-employed deadline event for $year DIRECTLY in Firestore with ID: ${docRef.id}")
+                    Log.d(TAG, "Successfully created self-employed deadline event for $year DIRECTLY in Firestore with ID: $customDocId")
                     success = true
 
                     // Small delay to avoid overwhelming Firestore

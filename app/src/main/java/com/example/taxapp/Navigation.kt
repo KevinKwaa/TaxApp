@@ -247,18 +247,56 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             // Calendar Screen
             composable("calendar") {
+                // STRONG reset and refresh when entering calendar
+                val lifecycleOwner = LocalLifecycleOwner.current
+                val coroutineScope = rememberCoroutineScope()
+
+                // This will trigger EVERY time the calendar is displayed on screen
+                DisposableEffect(lifecycleOwner) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_RESUME) {
+                            Log.d("Navigation", "⚠️ Calendar screen RESUMED - FORCING COMPLETE REFRESH")
+
+                            coroutineScope.launch {
+                                // Complete reset and refresh sequence
+                                EventRepository.resetInstance()
+                                delay(300)
+                                val repo = EventRepository.getInstance()
+                                repo.forceRefresh()
+
+                                // Add a second refresh after a brief delay to ensure data is loaded
+                                delay(500)
+                                repo.forceRefresh()
+
+                                // Log to verify refresh was triggered
+                                Log.d("Navigation", "✅ Calendar force refresh completed")
+                            }
+                        }
+                    }
+
+                    // Register the observer
+                    lifecycleOwner.lifecycle.addObserver(observer)
+
+                    // Clean up when leaving the screen
+                    onDispose {
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
+
                 // Check if we're coming from a profile update
                 LaunchedEffect(profileUpdated.value) {
                     if (profileUpdated.value) {
-                        Log.d("Navigation", "Calendar detected profile was updated, refreshing")
+                        Log.d("Navigation", "Calendar detected profile was updated, performing thorough refresh")
 
                         // Reset repository to force fresh data load
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            // Complete cleanup sequence
                             EventRepository.resetInstance()
+                            delay(300) // Allow cleanup to complete
+                            val repo = EventRepository.getInstance()
+                            repo.forceRefresh()
+                            delay(500) // Allow refresh to complete
                         }
-
-                        // Wait for a moment to ensure refresh
-                        delay(500)
 
                         // Reset the flag
                         profileUpdated.value = false
@@ -268,15 +306,19 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 // Force fresh data load when entering calendar
                 LaunchedEffect(Unit) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        Log.d("Navigation", "Calendar screen entered, refreshing events")
+                        Log.d("Navigation", "Calendar screen entered, performing thorough refresh")
+
+                        // Complete cleanup sequence
                         EventRepository.resetInstance()
+                        delay(300) // Allow cleanup to complete
+                        val repo = EventRepository.getInstance()
+                        repo.forceRefresh()
                     }
                 }
 
+                val refreshKey = System.currentTimeMillis()
                 if (currentUserId != null) {
                     // Wrap events in a key based on a timestamp to force recomposition
-                    val refreshKey = if (profileUpdated.value) System.currentTimeMillis() else 0
-
                     CalendarScreen(
                         events = eventsMap,
                         currentUserId = currentUserId!!,

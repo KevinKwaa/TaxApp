@@ -175,6 +175,19 @@ object FirebaseManager {
         // Update cache
         lastCheckedUserId = userId
         lastCheckedTimestamp = System.currentTimeMillis()
+
+        // If we've logged out, schedule the persistence clear for later
+        if (userId == null) {
+            try {
+                // Instead of clearing persistence immediately, just log that it can't be done now
+                Log.d(TAG, "Logged out - persistence clearing skipped while app is running")
+
+                // If you really want to clear persistence, you could do it on app restart instead
+                // Or implement a proper shutdown sequence for Firestore before clearing
+            } catch (e: Exception) {
+                Log.e(TAG, "Error planning persistence clearing", e)
+            }
+        }
     }
 
     fun getStorageInstance(): FirebaseStorage {

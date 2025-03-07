@@ -19,11 +19,14 @@ import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Date
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Repository for managing events with Firebase Firestore
  */
 class EventRepository {
+    private val TAG = "EventRepository"
+
     // Use default Firebase instances to align with AuthViewModel
     private val auth = Firebase.auth
     private val db = Firebase.firestore
@@ -41,31 +44,46 @@ class EventRepository {
         _eventsCache.value = emptyMap()
     }
 
+    // Flag to track if repository is currently operating - prevents concurrent operations
+    private val isRefreshing = AtomicBoolean(false)
+
     // Get the user-specific events collection
     private fun getUserEventsCollection(userId: String) =
         db.collection("users").document(userId).collection("events")
 
     // These are the key methods in EventRepository.kt that need attention:
 
+    // Update the forceRefresh method to be more thorough
     fun forceRefresh() {
-        Log.d(TAG, "Force refresh triggered")
-
-        // Reset current cache
-        _eventsCache.value = emptyMap()
-
-        // Clean up any existing listener
-        cleanupListener()
-
-        // Get current user ID
-        val userId = auth.currentUser?.uid
-        if (userId != null) {
-            Log.d(TAG, "Current user: $userId - forcing refresh of events")
+        // Use atomic flag to prevent multiple concurrent refreshes
+        if (!isRefreshing.compareAndSet(false, true)) {
+            Log.d(TAG, "Refresh already in progress, skipping")
+            return
         }
 
-        // Increment the refresh trigger to notify observers
-        _forceRefreshTrigger.value = System.currentTimeMillis()
+        try {
+            Log.d(TAG, "Force refresh triggered")
 
-        Log.d(TAG, "Force refresh complete with new trigger: ${_forceRefreshTrigger.value}")
+            // Reset current cache
+            _eventsCache.value = emptyMap()
+
+            // Clean up any existing listener
+            cleanupListener()
+
+            // Get current user ID
+            val userId = auth.currentUser?.uid
+            if (userId != null) {
+                Log.d(TAG, "Current user: $userId - forcing refresh of events")
+            }
+
+            // Increment the refresh trigger to notify observers
+            _forceRefreshTrigger.value = System.currentTimeMillis()
+
+            Log.d(TAG, "Force refresh complete with new trigger: ${_forceRefreshTrigger.value}")
+        } finally {
+            // Always reset the flag when done
+            isRefreshing.set(false)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -83,6 +101,9 @@ class EventRepository {
 
             val docRef = getUserEventsCollection(userId).add(eventMap).await()
             Log.d(TAG, "Event added successfully with ID: ${docRef.id}")
+
+            // Force refresh to update UI immediately
+            forceRefresh()
             return true
         } catch (e: Exception) {
             Log.e(TAG, "Error adding event", e)
@@ -112,6 +133,9 @@ class EventRepository {
                 val documentId = query.documents[0].id
                 getUserEventsCollection(userId).document(documentId).delete().await()
                 Log.d(TAG, "Event deleted successfully: ${event.title}")
+
+                // Force refresh to update UI immediately
+                forceRefresh()
                 true
             } else {
                 Log.w(TAG, "Event not found to delete: ${event.title}")
@@ -136,7 +160,7 @@ class EventRepository {
             return@callbackFlow
         }
 
-        Log.d(TAG, "Setting up events listener for user: $userId")
+        Log.d(TAG, "Setting up NEW events listener for user: $userId")
 
         // Use a fresh listener each time
         val query = getUserEventsCollection(userId)
@@ -207,6 +231,9 @@ class EventRepository {
                 val documentId = query.documents[0].id
                 getUserEventsCollection(userId).document(documentId).set(event.toMap()).await()
                 Log.d(TAG, "Event updated successfully: ${event.title}")
+
+                // Force refresh to update UI immediately
+                forceRefresh()
                 true
             } else {
                 Log.w(TAG, "Event not found to update")
@@ -246,7 +273,7 @@ class EventRepository {
 
         // Method to reset the singleton instance when a user logs out
         fun resetInstance() {
-            Log.d(TAG, "Resetting EventRepository instance")
+            Log.d(TAG, "Resetting EventRepository instance with thorough cleanup")
 
             // Clean up the existing instance if it exists
             INSTANCE?.let {
@@ -261,7 +288,7 @@ class EventRepository {
             // Force the instance to null to ensure a fresh one is created
             INSTANCE = null
 
-            Log.d(TAG, "EventRepository instance has been reset")
+            Log.d(TAG, "EventRepository instance has been reset completely")
         }
     }
 }

@@ -49,6 +49,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -70,6 +71,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
@@ -85,7 +87,10 @@ import com.example.taxapp.accessibility.SpeakableContent
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.withTimeout
+import kotlinx.coroutines.withTimeout
 import java.time.DayOfWeek
 import java.util.*
 
@@ -103,7 +108,7 @@ data class Event(
 fun CalendarScreen(
     events: Map<LocalDate, List<Event>>,
     currentUserId: String,
-    refreshKey: Long = 0, // Add this parameter with default value
+    refreshKey: Long = 0,
     onNavigateToAddEvent: (LocalDate) -> Unit,
     onNavigateToEventDetails: (Event) -> Unit,
     onNavigateBack: () -> Unit,
@@ -146,15 +151,8 @@ fun CalendarScreen(
     // Force refresh key - this will trigger recomposition when refreshed
     val refreshTrigger by eventRepository.forceRefreshTrigger.collectAsState()
 
-    // Add a LaunchedEffect to log refresh triggers and respond to refreshKey
-    LaunchedEffect(refreshTrigger, refreshKey) {
-        Log.d("CalendarScreen", "Refresh triggered with key: $refreshTrigger, refreshKey: $refreshKey")
-        if (refreshKey > 0) {
-            // Additional refresh logic when refreshKey changes
-            Log.d("CalendarScreen", "External refresh requested with key: $refreshKey")
-            eventRepository.forceRefresh()
-        }
-    }
+    // Get the lifecycle owner to handle proper cleanup
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     // Create state for events - this is key to refreshing UI
     var eventsState by remember(refreshTrigger, currentUserId) {
@@ -162,7 +160,7 @@ fun CalendarScreen(
     }
 
     // Update the events state when events change
-    LaunchedEffect(events, refreshTrigger) {
+    LaunchedEffect(events, refreshTrigger, refreshKey) {
         Log.d("CalendarScreen", "Events updated, count: ${events.size}")
         eventsState = events
     }
@@ -174,11 +172,56 @@ fun CalendarScreen(
         }
     }
 
+    // Collect events safely with lifecycle awareness
+    val liveEvents by produceState(
+        initialValue = events,
+        key1 = refreshKey,
+        key2 = currentUserId,
+        key3 = refreshTrigger
+    ) {
+        // Create a Job that can be cancelled
+        val collectJob = coroutineScope.launch {
+            try {
+                // Use a larger timeout for initial loading
+                withTimeout(10000) { // Increased from 5000ms to 10000ms
+                    eventRepository.getAllEvents(currentUserId).collect { freshEvents ->
+                        Log.d("CalendarScreen", "UI Update: Live events updated, count: ${freshEvents.size}")
+                        value = freshEvents
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle the error but don't crash
+                Log.e("CalendarScreen", "Error collecting events: ${e.message}")
+                // On error, use the last known good value
+            }
+        }
+    }
+
+    // Add a LaunchedEffect to respond to refreshKey
+    LaunchedEffect(refreshKey) {
+        if (refreshKey > 0) {
+            Log.d("CalendarScreen", "External refresh requested with key: $refreshKey")
+
+            try {
+                // Reset repository and force refresh sequentially
+                EventRepository.resetInstance()
+                delay(300) // Allow cleanup to complete
+
+                val freshRepo = EventRepository.getInstance()
+                freshRepo.forceRefresh()
+            } catch (e: Exception) {
+                Log.e("CalendarScreen", "Error during refresh: ${e.message}")
+            }
+        }
+    }
+
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
     ScreenReader("Calendar")
     val ttsManager = LocalTtsManager.current
+
+    // Rest of your UI code remains the same...
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Column(
             modifier = modifier
@@ -441,7 +484,7 @@ fun CalendarScreen(
                 CalendarGrid(
                     yearMonth = currentYearMonth,
                     selectedDate = selectedDate,
-                    events = events,
+                    events = liveEvents,
                     onDateSelect = { date ->
                         selectedDate = date
                         // Optional: Add subtle feedback when selecting a date
@@ -458,7 +501,7 @@ fun CalendarScreen(
                 // Selected Date Events Section with localized date format
                 SelectedDateEvents(
                     selectedDate = selectedDate,
-                    events = eventsState[selectedDate] ?: mutableListOf(),
+                    events = liveEvents[selectedDate] ?: mutableListOf(),
                     onEventClick = { event ->
                         // Use the captured ttsManager reference
                         ttsManager?.speak("Opening event: ${event.title}")
