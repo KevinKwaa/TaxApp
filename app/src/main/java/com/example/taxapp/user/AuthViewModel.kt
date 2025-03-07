@@ -10,6 +10,7 @@ import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class AuthViewModel : ViewModel() {
@@ -93,12 +94,25 @@ class AuthViewModel : ViewModel() {
 
                     // Create or update tax deadline events based on preference
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        TaxDeadlineHelper.updateTaxDeadlineEvents(
-                            employment,
-                            viewModelScope
-                        )
+                        // FIX: Launch a coroutine to call the suspend function
+                        viewModelScope.launch {
+                            try {
+                                Log.d(TAG, "Updating tax deadline events from userProfile")
+                                TaxDeadlineHelper.updateTaxDeadlineEvents(
+                                    employment,
+                                    viewModelScope
+                                ) { success ->
+                                    Log.d(TAG, "Tax event update from userProfile completed: $success")
+                                    // We already called onResult, so we don't need to call it again
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error updating tax events from userProfile", e)
+                                // We already called onResult, so we don't need to call it again
+                            }
+                        }
                     }
 
+                    // Call onResult immediately, don't wait for tax events
                     onResult(true, null)
                 }
                 .addOnFailureListener { exception ->
@@ -114,12 +128,25 @@ class AuthViewModel : ViewModel() {
 
                                 // Create or update tax deadline events based on preference
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    TaxDeadlineHelper.updateTaxDeadlineEvents(
-                                        employment,
-                                        viewModelScope
-                                    )
+                                    // FIX: Launch a coroutine to call the suspend function
+                                    viewModelScope.launch {
+                                        try {
+                                            Log.d(TAG, "Updating tax deadline events after new profile creation")
+                                            TaxDeadlineHelper.updateTaxDeadlineEvents(
+                                                employment,
+                                                viewModelScope
+                                            ) { success ->
+                                                Log.d(TAG, "Tax event update after profile creation completed: $success")
+                                                // We already called onResult, so we don't need to call it again
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e(TAG, "Error updating tax events after profile creation", e)
+                                            // We already called onResult, so we don't need to call it again
+                                        }
+                                    }
                                 }
 
+                                // Call onResult immediately, don't wait for tax events
                                 onResult(true, null)
                             }
                             .addOnFailureListener { setException ->

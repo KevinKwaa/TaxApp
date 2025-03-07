@@ -2,6 +2,7 @@ package com.example.taxapp.user
 
 import android.os.Build
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
@@ -87,6 +88,7 @@ import com.example.taxapp.user.AppUtil
 //import com.example.smarttax_ver1.viewmodel.EditProfileViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -98,7 +100,8 @@ fun EditProfileScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     editProfileViewModel: EditProfileViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    onProfileSaved: () -> Unit = {} // Add this callback parameter with default empty implementation
 ){
     Scaffold(
         topBar = {
@@ -170,8 +173,9 @@ fun EditProfileScreen(
 fun EditProfileScreenContent(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    editProfileViewModel: EditProfileViewModel,
-    authViewModel: AuthViewModel = viewModel()
+    editProfileViewModel: EditProfileViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
+    onProfileSaved: () -> Unit = {}
 ){
     // Use collectAsState to properly observe viewModel state
     val email = editProfileViewModel.email
@@ -523,14 +527,22 @@ fun EditProfileScreenContent(
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    //
                     ttsManager?.speak("Saving Profile")
                     editProfileViewModel.updateUserProfile { success, error ->
                         if (success) {
-                            updateSuccess = true
-                            //Toast.makeText(LocalContext.current, "Profile Updated", Toast.LENGTH_SHORT).show()
+                            // Show success message
+                            Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+
+                            // Reset event repository
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                // Use our callback to notify Navigation that profile was saved
+                                onProfileSaved()
+                            } else {
+                                // Just navigate back for older Android versions
+                                navController.popBackStack()
+                            }
                         } else {
-                            AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
+                            AppUtil.showToast(context, error ?: "Something went wrong...")
                         }
                     }
                 },
@@ -546,7 +558,7 @@ fun EditProfileScreenContent(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(text = stringResource(id = R.string.save_profile),)
+                    Text(text = stringResource(id = R.string.save_profile))
                 }
             }
 

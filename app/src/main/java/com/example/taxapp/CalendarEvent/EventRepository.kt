@@ -13,6 +13,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
@@ -27,6 +28,10 @@ class EventRepository {
     private val auth = Firebase.auth
     private val db = Firebase.firestore
 
+    // Add a stateflow that can be observed to force UI updates
+    private val _forceRefreshTrigger = MutableStateFlow(0L)
+    val forceRefreshTrigger: StateFlow<Long> = _forceRefreshTrigger
+
     private val _eventsCache = MutableStateFlow<Map<LocalDate, MutableList<Event>>>(emptyMap())
 
     // Track active listeners to ensure proper cleanup
@@ -39,6 +44,18 @@ class EventRepository {
     // Get the user-specific events collection
     private fun getUserEventsCollection(userId: String) =
         db.collection("users").document(userId).collection("events")
+
+    // These are the key methods in EventRepository.kt that need attention:
+
+    fun forceRefresh() {
+        Log.d(TAG, "Force refresh triggered")
+        // Reset current cache
+        _eventsCache.value = emptyMap()
+        // Clean up any existing listener
+        cleanupListener()
+        // Increment the refresh trigger to notify observers
+        _forceRefreshTrigger.value = System.currentTimeMillis()
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun addEvent(event: Event): Boolean {
@@ -59,39 +76,6 @@ class EventRepository {
         } catch (e: Exception) {
             Log.e(TAG, "Error adding event", e)
             return false
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun updateEvent(event: Event): Boolean {
-        // Get the current user ID directly from Firebase Auth
-        val userId = auth.currentUser?.uid
-        if (userId == null) {
-            Log.e(TAG, "Cannot update event: No user logged in")
-            return false
-        }
-
-        return try {
-            // Find the event document in the user's events collection
-            val query = getUserEventsCollection(userId)
-                .whereEqualTo("title", event.title)
-                .whereEqualTo("dateTimestamp", event.date.toTimestamp())
-                .limit(1)
-                .get()
-                .await()
-
-            if (query.documents.isNotEmpty()) {
-                val documentId = query.documents[0].id
-                getUserEventsCollection(userId).document(documentId).set(event.toMap()).await()
-                Log.d(TAG, "Event updated successfully: ${event.title}")
-                true
-            } else {
-                Log.w(TAG, "Event not found to update")
-                false
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating event", e)
-            false
         }
     }
 
@@ -153,13 +137,28 @@ class EventRepository {
             }
 
             if (snapshot != null) {
-                Log.d(TAG, "Received ${snapshot.documents.size} events for user: $userId")
+                // More detailed logging
+                val eventCount = snapshot.documents.size
+                Log.d(TAG, "Received $eventCount events for user: $userId")
+
+                // Count tax deadline events specifically
+                val taxDeadlineCount = snapshot.documents.count {
+                    val title = it.getString("title") ?: ""
+                    title.contains("Tax Filing Deadline", ignoreCase = true)
+                }
+                Log.d(TAG, "Of these, $taxDeadlineCount are tax deadline events")
+
                 val eventsMap = mutableMapOf<LocalDate, MutableList<Event>>()
                 for (document in snapshot.documents) {
                     try {
                         val event = document.toEvent()
                         val date = event.date
                         eventsMap.getOrPut(date) { mutableListOf() }.add(event)
+
+                        // Log tax deadline events specifically
+                        if (event.title.contains("Tax Filing Deadline", ignoreCase = true)) {
+                            Log.d(TAG, "Found tax deadline event: ${event.title} on ${event.date}")
+                        }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error parsing event document: ${document.id}", e)
                     }
@@ -175,6 +174,39 @@ class EventRepository {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun updateEvent(event: Event): Boolean {
+        // Get the current user ID directly from Firebase Auth
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            Log.e(TAG, "Cannot update event: No user logged in")
+            return false
+        }
+
+        return try {
+            // Find the event document in the user's events collection
+            val query = getUserEventsCollection(userId)
+                .whereEqualTo("title", event.title)
+                .whereEqualTo("dateTimestamp", event.date.toTimestamp())
+                .limit(1)
+                .get()
+                .await()
+
+            if (query.documents.isNotEmpty()) {
+                val documentId = query.documents[0].id
+                getUserEventsCollection(userId).document(documentId).set(event.toMap()).await()
+                Log.d(TAG, "Event updated successfully: ${event.title}")
+                true
+            } else {
+                Log.w(TAG, "Event not found to update")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating event", e)
+            false
+        }
+    }
+
     // Helper method to clean up the active listener
     private fun cleanupListener() {
         activeListenerRegistration?.let {
@@ -187,8 +219,7 @@ class EventRepository {
     // Method to reset the repository when a user logs out
     fun reset() {
         Log.d(TAG, "Resetting EventRepository")
-        cleanupListener()
-        _eventsCache.value = emptyMap()
+        forceRefresh()
     }
 
     companion object {
@@ -206,6 +237,7 @@ class EventRepository {
         fun resetInstance() {
             Log.d(TAG, "Resetting EventRepository instance")
             INSTANCE?.reset()
+            // Force the instance to null to ensure a fresh one is created
             INSTANCE = null
         }
     }

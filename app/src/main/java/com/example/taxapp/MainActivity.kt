@@ -2,6 +2,7 @@ package com.example.taxapp
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
@@ -28,7 +29,13 @@ import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 class MainActivity : BaseActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -49,11 +56,122 @@ class MainActivity : BaseActivity() {
                 }
             }
         }
+
+        // Ensure default tax events exist for current user
+        ensureDefaultTaxEvents()
+
         // Check for upcoming tax deadlines
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             TaxDeadlineHelper.checkUpcomingDeadline(this, lifecycleScope)
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Check if the user is logged in
+            val currentUser = Firebase.auth.currentUser
+            if (currentUser != null) {
+                lifecycleScope.launch {
+                    try {
+                        // Get user's employment status (default to employee if not set)
+                        val userId = currentUser.uid
+                        val userDoc = Firebase.firestore.collection("users").document(userId).get().await()
+                        val employment = userDoc.getString("employment") ?: "employee"
+
+                        Log.d("MainActivity", "Ensuring default tax events for employment: $employment")
+
+                        // Check if there are any tax deadline events
+                        val eventRepository = EventRepository.getInstance()
+                        val eventsExist = withTimeoutOrNull(3000) {
+                            // Try to fetch events, with a timeout in case Firestore is slow
+                            val events = eventRepository.getAllEvents(userId).first()
+
+                            // Check if any tax deadline events exist
+                            events.values.flatten().any { event ->
+                                event.title.contains("Tax Filing Deadline", ignoreCase = true)
+                            }
+                        } ?: false
+
+                        if (!eventsExist) {
+                            Log.d("MainActivity", "No tax deadline events found, creating defaults")
+                            // No tax events found, create defaults
+                            TaxDeadlineHelper.updateTaxDeadlineEvents(employment, lifecycleScope) { success ->
+                                Log.d("MainActivity", "Default tax events created: $success")
+                            }
+                        } else {
+                            Log.d("MainActivity", "Tax deadline events already exist")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error checking for default tax events", e)
+                    }
+                }
+            }
+        }
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun ensureDefaultTaxEvents() {
+        // Check if the user is logged in
+        val currentUser = Firebase.auth.currentUser
+        if (currentUser != null) {
+            lifecycleScope.launch {
+                try {
+                    // Get user's employment status (default to employee if not set)
+                    val userId = currentUser.uid
+                    val userDoc = Firebase.firestore.collection("users").document(userId).get().await()
+                    val employment = userDoc.getString("employment") ?: "employee"
+
+                    Log.d("MainActivity", "Ensuring default tax events for employment: $employment")
+
+                    // Reset repository to ensure fresh data
+                    EventRepository.resetInstance()
+                    val eventRepository = EventRepository.getInstance()
+
+                    // Check if there are any tax deadline events
+                    var taxEventsExist = false
+                    try {
+                        withTimeout(5000) { // 5 second timeout
+                            // Try to fetch events
+                            val events = eventRepository.getAllEvents(userId).first()
+
+                            // Check if any tax deadline events exist
+                            taxEventsExist = events.values.flatten().any { event ->
+                                event.title.contains("Tax Filing Deadline", ignoreCase = true)
+                            }
+
+                            val taxEvents = events.values.flatten().filter {
+                                it.title.contains("Tax Filing Deadline", ignoreCase = true)
+                            }
+
+                            Log.d("MainActivity", "Found ${taxEvents.size} existing tax events:")
+                            taxEvents.forEach { event ->
+                                Log.d("MainActivity", "  - ${event.title} on ${event.date}")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error checking for tax events", e)
+                        taxEventsExist = false
+                    }
+
+                    if (!taxEventsExist) {
+                        Log.d("MainActivity", "No tax deadline events found, creating defaults")
+                        // Force a complete refresh
+                        EventRepository.resetInstance()
+
+                        // No tax events found, create defaults with direct update
+                        TaxDeadlineHelper.updateTaxDeadlineEvents(employment, lifecycleScope) { success ->
+                            Log.d("MainActivity", "Default tax events created: $success")
+                            // Force repository refresh
+                            EventRepository.getInstance().forceRefresh()
+                        }
+                    } else {
+                        Log.d("MainActivity", "Tax deadline events already exist")
+                    }
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Error setting up default tax events", e)
+                }
+            }
+        }
+    }
+
     override fun onStart() {
         super.onStart()
 
@@ -62,6 +180,16 @@ class MainActivity : BaseActivity() {
         if (currentUser == null) {
             // If not logged in, make sure event repository is reset
             EventRepository.resetInstance()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // Force refresh repository when app comes to foreground
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Firebase.auth.currentUser != null) {
+            EventRepository.resetInstance()
+            EventRepository.getInstance().forceRefresh()
         }
     }
 }

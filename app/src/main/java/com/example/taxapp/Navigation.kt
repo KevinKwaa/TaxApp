@@ -6,8 +6,10 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,6 +22,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -124,6 +129,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val isLoggedIn = Firebase.auth.currentUser != null
     val startDestination = if(isLoggedIn) "home" else "auth"
 
+    val profileUpdated = remember { mutableStateOf(false) }
+
     // Track navigation to speak screen changes
     LaunchedEffect(navController) {
         navController.addOnDestinationChangedListener { _, destination, arguments ->
@@ -203,11 +210,28 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             composable("editProfile") {
                 val authViewModel: AuthViewModel = viewModel()
+                val editProfileViewModel: EditProfileViewModel = viewModel()
+
                 EditProfileScreen(
                     modifier = modifier,
                     navController = navController,
                     editProfileViewModel = editProfileViewModel,
-                    authViewModel = authViewModel
+                    authViewModel = authViewModel,
+                    onProfileSaved = {
+                        // Set the flag to indicate profile was updated
+                        profileUpdated.value = true
+                        Log.d("Navigation", "Profile updated flag set to true")
+
+                        // Force reset the repository to ensure fresh data
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            EventRepository.resetInstance()
+                        }
+
+                        // Navigate back to home
+                        navController.navigate("home") {
+                            popUpTo("editProfile") { inclusive = true }
+                        }
+                    }
                 )
             }
 
@@ -223,10 +247,40 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
             // Calendar Screen
             composable("calendar") {
+                // Check if we're coming from a profile update
+                LaunchedEffect(profileUpdated.value) {
+                    if (profileUpdated.value) {
+                        Log.d("Navigation", "Calendar detected profile was updated, refreshing")
+
+                        // Reset repository to force fresh data load
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            EventRepository.resetInstance()
+                        }
+
+                        // Wait for a moment to ensure refresh
+                        delay(500)
+
+                        // Reset the flag
+                        profileUpdated.value = false
+                    }
+                }
+
+                // Force fresh data load when entering calendar
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        Log.d("Navigation", "Calendar screen entered, refreshing events")
+                        EventRepository.resetInstance()
+                    }
+                }
+
                 if (currentUserId != null) {
+                    // Wrap events in a key based on a timestamp to force recomposition
+                    val refreshKey = if (profileUpdated.value) System.currentTimeMillis() else 0
+
                     CalendarScreen(
                         events = eventsMap,
                         currentUserId = currentUserId!!,
+                        //refreshKey = refreshKey, // Add this parameter to CalendarScreen
                         onNavigateToAddEvent = { date ->
                             // Capture the date for announcement
                             val dateFormat = DateTimeFormatter.ofPattern("MMMM d")

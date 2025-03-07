@@ -716,6 +716,9 @@ fun EventDetailCard(
         } else null
     }
 
+    // Determine if this is a tax deadline event
+    val isTaxDeadlineEvent = event.title.contains("Tax Filing Deadline", ignoreCase = true)
+
     Card(
         modifier = modifier
             .shadow(
@@ -828,77 +831,81 @@ fun EventDetailCard(
                     .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Edit button - with improved styling
-                Button(
-                    onClick = onShowEditMode, // Pass the function reference here
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = accessibleColors.buttonBackground,
-                        contentColor = accessibleColors.buttonText
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = accessibleColors.calendarBorder.copy(alpha = 0.3f)
-                    )
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                // Show Edit and Delete buttons only if not a tax deadline event
+                if (!isTaxDeadlineEvent) {
+                    // Edit button - with improved styling
+                    Button(
+                        onClick = onShowEditMode, // Pass the function reference here
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = accessibleColors.buttonBackground,
+                            contentColor = accessibleColors.buttonText
+                        ),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = accessibleColors.calendarBorder.copy(alpha = 0.3f)
+                        )
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 8.dp),
-                            tint = accessibleColors.buttonText
-                        )
-                        Text(
-                            text = stringResource(id = R.string.edit_event),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp),
+                                tint = accessibleColors.buttonText
                             )
-                        )
+                            Text(
+                                text = stringResource(id = R.string.edit_event),
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Medium
+                                )
+                            )
+                        }
                     }
-                }
 
-                // Delete button - with improved styling
-                Button(
-                    onClick = onShowDeleteConfirmation, // Pass the function reference here
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
-                    )
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Delete button - with improved styling
+                    Button(
+                        onClick = onShowDeleteConfirmation, // Pass the function reference here
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
+                        ),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+                        )
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                        Text(
-                            text = stringResource(id = R.string.delete_event),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
                             )
-                        )
+                            Text(
+                                text = stringResource(id = R.string.delete_event),
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Medium
+                                )
+                            )
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
                 // Back to calendar button - with improved styling
+                // ALWAYS show this button for ALL events
                 Button(
                     onClick = onNavigateBack,
                     modifier = Modifier

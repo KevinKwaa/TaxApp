@@ -6,16 +6,17 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.example.taxapp.firebase.FirebaseManager
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.time.LocalDate
 import java.time.Month
-import java.time.Period
 import java.time.Year
 import java.time.temporal.ChronoUnit
 
@@ -25,161 +26,246 @@ import java.time.temporal.ChronoUnit
 object TaxDeadlineHelper {
     private const val TAG = "TaxDeadlineHelper"
 
-    // Event IDs for tax deadline events
-    private const val EMPLOYEE_ID = "tax_deadline_employee"
-    private const val SELF_EMPLOY_ID = "tax_deadline_self_employ"
+    // Event ID prefixes for tax deadline events
+    private const val EMPLOYEE_PREFIX = "Tax Filing Deadline (Employee)"
+    private const val SELF_EMPLOY_PREFIX = "Tax Filing Deadline (Self-Employed)"
 
     /**
      * Update tax deadline events based on the user's tax filing preference
+     * Returns true if the update was successful, false otherwise
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    fun updateTaxDeadlineEvents(employment: String, scope: CoroutineScope, onComplete: () -> Unit = {}) {
-        val userId = FirebaseManager.getCurrentUserId() ?: return
-
-        Log.d(TAG, "Starting tax deadline update with employment type: $employment")
-
-        scope.launch(Dispatchers.IO) {
-            try {
-                val eventRepository = EventRepository.getInstance()
-
-                // First, find and delete any existing tax deadline events
-                val deadlineKeywords = listOf("Tax Filing Deadline", "tax deadline")
-
-                // Get all events
-                val allEvents = mutableMapOf<LocalDate, MutableList<Event>>()
-                try {
-                    // Use collectLatest to get just one emission
-                    eventRepository.getAllEvents(userId).collectLatest { eventsMap ->
-                        allEvents.putAll(eventsMap)
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error collecting events", e)
-                }
-
-                // Find all deadline events
-                val eventsToDelete = mutableListOf<Event>()
-                for ((_, events) in allEvents) {
-                    for (event in events) {
-                        if (deadlineKeywords.any { event.title.contains(it, ignoreCase = true) }) {
-                            eventsToDelete.add(event)
-                        }
-                    }
-                }
-
-                Log.d(TAG, "Found ${eventsToDelete.size} existing tax deadline events to remove")
-
-                // Delete each event
-                for (event in eventsToDelete) {
-                    val success = eventRepository.deleteEvent(event)
-                    Log.d(TAG, "Deleted tax deadline event: ${event.title} - success: $success")
-                }
-
-                // Create new deadline based on employment type
-                Log.d(TAG, "Creating new tax deadline for employment type: $employment")
-                when (employment) {
-                    "employee" -> createEmployeeDeadlineEvent(eventRepository)
-                    "self-employed" -> createSelfEmployDeadlineEvent(eventRepository)
-                    else -> {
-                        Log.d(TAG, "Unknown employment type: $employment, defaulting to employee")
-                        createEmployeeDeadlineEvent(eventRepository)
-                    }
-                }
-
-                withContext(Dispatchers.Main) {
-                    onComplete()
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error updating tax deadline events", e)
-                withContext(Dispatchers.Main) {
-                    onComplete()
-                }
+    suspend fun updateTaxDeadlineEvents(
+        employment: String,
+        scope: CoroutineScope,
+        onComplete: (Boolean) -> Unit = {}
+    ) {
+        val userId = FirebaseManager.getCurrentUserId()
+        if (userId == null) {
+            Log.e(TAG, "No user ID available")
+            withContext(Dispatchers.Main) {
+                onComplete(false)
             }
+            return
         }
-    }
 
-    /**
-     * Remove existing tax deadline events to avoid duplicates
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun removeExistingTaxDeadlineEvents(eventRepository: EventRepository) {
-        val userId = FirebaseManager.getCurrentUserId() ?: return
+        Log.d(TAG, "Starting tax deadline update with employment type: $employment for user: $userId")
 
         try {
-            // Get events once (not as a flow) for a more direct approach
-            val allEvents = mutableListOf<Event>()
-            eventRepository.getAllEvents(userId).first().forEach { (_, events) ->
-                allEvents.addAll(events)
+            // First, make sure we have a fresh repository instance and clear events
+            EventRepository.resetInstance()
+            val eventRepository = EventRepository.getInstance()
+
+            // Step 1: Find and delete ALL existing tax deadline events DIRECTLY in Firestore
+            val success = deleteAllTaxDeadlineEvents(userId)
+            Log.d(TAG, "Direct Firestore deletion of tax events complete, success: $success")
+
+            // Small delay to ensure deletions are processed
+            withContext(Dispatchers.IO) {
+                Thread.sleep(300)
             }
+
+            // Step 2: Create new deadline events based on employment type
+            Log.d(TAG, "Creating new tax deadline events for employment type: $employment")
+            val createSuccess = when (employment) {
+                "employee" -> createEmployeeDeadlineEvents(userId, eventRepository)
+                "self-employed" -> createSelfEmployDeadlineEvents(userId, eventRepository)
+                else -> {
+                    Log.d(TAG, "Unknown employment type: $employment, defaulting to employee")
+                    createEmployeeDeadlineEvents(userId, eventRepository)
+                }
+            }
+
+            Log.d(TAG, "Creation of new tax events complete, success: $createSuccess")
+
+            // Small delay to ensure creations are processed
+            withContext(Dispatchers.IO) {
+                Thread.sleep(300)
+            }
+
+            // Step 3: CRITICAL - Force refresh the repository to update the UI
+            eventRepository.forceRefresh()
+
+            // Log event count after update
+            eventRepository.getAllEvents(userId).first().let { events ->
+                Log.d(TAG, "After update: Found ${events.size} event dates with a total of ${events.values.sumOf { it.size }} events")
+                val taxEvents = events.values.flatten().filter { it.title.contains("Tax Filing Deadline", ignoreCase = true) }
+                Log.d(TAG, "Tax deadline events after update: ${taxEvents.size}")
+                taxEvents.forEach { event ->
+                    Log.d(TAG, "  - Tax event: ${event.title} on ${event.date}")
+                }
+            }
+
+            // Report final status
+            val finalSuccess = createSuccess && success
+            Log.d(TAG, "Tax deadline update completed. Overall success: $finalSuccess")
+            withContext(Dispatchers.Main) {
+                onComplete(finalSuccess)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating tax deadline events", e)
+            // Force refresh even on error to ensure UI updates
+            EventRepository.getInstance().forceRefresh()
+            withContext(Dispatchers.Main) {
+                onComplete(false)
+            }
+        }
+    }
+
+    /**
+     * Delete all existing tax deadline events directly from Firestore
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun deleteAllTaxDeadlineEvents(userId: String): Boolean {
+        Log.d(TAG, "Starting DIRECT deletion of all tax deadline events in Firestore")
+        try {
+            // Get reference to Firestore
+            val firestore = FirebaseManager.getAuthFirestore()
+            val eventsCollection = firestore.collection("users").document(userId).collection("events")
+
+            // Get all events directly
+            val documents = eventsCollection.get().await().documents
+            Log.d(TAG, "Found ${documents.size} total events in Firestore")
 
             // Find tax deadline events
-            val deadlineEvents = allEvents.filter {
-                it.title.contains("Tax Filing Deadline", ignoreCase = true)
+            val taxDeadlineEvents = documents.filter { doc ->
+                val title = doc.getString("title") ?: ""
+                title.contains("Tax Filing Deadline", ignoreCase = true)
             }
 
-            Log.d(TAG, "Found ${deadlineEvents.size} tax deadline events to remove")
+            Log.d(TAG, "Found ${taxDeadlineEvents.size} tax deadline events to delete")
 
-            // Delete each event and wait for completion
-            var successCount = 0
-            for (event in deadlineEvents) {
-                val success = eventRepository.deleteEvent(event)
-                if (success) successCount++
+            // Delete each event directly
+            var allSuccessful = true
+            for (doc in taxDeadlineEvents) {
+                try {
+                    val docId = doc.id
+                    Log.d(TAG, "Deleting tax event with ID: $docId, title: ${doc.getString("title")}")
+                    eventsCollection.document(docId).delete().await()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error deleting event document", e)
+                    allSuccessful = false
+                }
             }
 
-            Log.d(TAG, "Successfully deleted $successCount tax deadline events")
+            Log.d(TAG, "Deleted ${taxDeadlineEvents.size} tax deadline events with success: $allSuccessful")
+            return allSuccessful
         } catch (e: Exception) {
-            Log.e(TAG, "Error removing tax deadline events", e)
+            Log.e(TAG, "Error in direct Firestore deletion of tax events", e)
+            return false
         }
     }
 
     /**
-     * Create a deadline event for self-filing (April 30th)
+     * Create deadline events for employee filing (April 30th) for multiple years
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun createEmployeeDeadlineEvent(eventRepository: EventRepository) {
+    private suspend fun createEmployeeDeadlineEvents(userId: String, eventRepository: EventRepository): Boolean {
         val currentYear = Year.now().value
-        val deadlineDate = LocalDate.of(currentYear, Month.APRIL, 30)
+        var allSuccessful = true
 
-        val event = Event(
-            title = "Tax Filing Deadline (Employee)",
-            description = "Today is the deadline for filing your taxes. Make sure you've submitted all required forms to LHDN.",
-            date = deadlineDate,
-            startTime = "00:00",
-            endTime = "23:59",
-            hasReminder = true
-        )
+        // Create events for the current year and next 3 years
+        for (year in currentYear..currentYear + 3) {
+            val deadlineDate = LocalDate.of(year, Month.APRIL, 30)
 
-        Log.d(TAG, "Attempting to add employee deadline event for $deadlineDate")
-        val success = eventRepository.addEvent(event)
-        if (success) {
-            Log.d(TAG, "Created employee deadline event for $deadlineDate")
-        } else {
-            Log.e(TAG, "Failed to create employee deadline event")
+            // Skip past dates
+            val today = LocalDate.now()
+            if (deadlineDate.isBefore(today)) {
+                Log.d(TAG, "Skipping past date: $deadlineDate")
+                continue
+            }
+
+            Log.d(TAG, "Creating employee deadline event for $year-04-30")
+
+            val event = Event(
+                title = "Tax Filing Deadline (Employee) - $year",
+                description = "Today is the deadline for filing your taxes for year ${year-1}. Make sure you've submitted all required forms to LHDN.",
+                date = deadlineDate,
+                startTime = "00:00",
+                endTime = "23:59",
+                hasReminder = true
+            )
+
+            try {
+                // ADD DIRECT FIRESTORE CREATION - more reliable than repository
+                val firestore = FirebaseManager.getAuthFirestore()
+                val eventMap = event.toMap()
+
+                // Create directly in Firestore
+                firestore.collection("users").document(userId)
+                    .collection("events")
+                    .add(eventMap)
+                    .await()
+
+                Log.d(TAG, "Successfully created employee deadline event for $year DIRECTLY in Firestore")
+
+                // Small delay to avoid overwhelming Firestore
+                withContext(Dispatchers.IO) {
+                    Thread.sleep(100)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error creating employee deadline event for $year", e)
+                allSuccessful = false
+            }
         }
+
+        return allSuccessful
     }
 
     /**
-     * Create a deadline event for agent-filing (June 30th)
+     * Create deadline events for self-employed filing (June 30th) for multiple years
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun createSelfEmployDeadlineEvent(eventRepository: EventRepository) {
+    private suspend fun createSelfEmployDeadlineEvents(userId: String, eventRepository: EventRepository): Boolean {
         val currentYear = Year.now().value
-        val deadlineDate = LocalDate.of(currentYear, Month.JUNE, 30)
+        var allSuccessful = true
 
-        val event = Event(
-            title = "Tax Filing Deadline (Self-Employed)",
-            description = "Today is the deadline for filing your taxes. Make sure you had submitted all required forms to LHDN.",
-            date = deadlineDate,
-            startTime = "00:00",
-            endTime = "23:59",
-            hasReminder = true
-        )
+        // Create events for the current year and next 3 years
+        for (year in currentYear..currentYear + 3) {
+            val deadlineDate = LocalDate.of(year, Month.JUNE, 30)
 
-        val success = eventRepository.addEvent(event)
-        if (success) {
-            Log.d(TAG, "Created self-employed deadline event for $deadlineDate")
-        } else {
-            Log.e(TAG, "Failed to create self-employed deadline event")
+            // Skip past dates
+            val today = LocalDate.now()
+            if (deadlineDate.isBefore(today)) {
+                Log.d(TAG, "Skipping past date: $deadlineDate")
+                continue
+            }
+
+            Log.d(TAG, "Creating self-employed deadline event for $year-06-30")
+
+            val event = Event(
+                title = "Tax Filing Deadline (Self-Employed) - $year",
+                description = "Today is the deadline for filing your taxes for year ${year-1}. Make sure you've submitted all required forms to LHDN.",
+                date = deadlineDate,
+                startTime = "00:00",
+                endTime = "23:59",
+                hasReminder = true
+            )
+
+            try {
+                // ADD DIRECT FIRESTORE CREATION - more reliable than repository
+                val firestore = FirebaseManager.getAuthFirestore()
+                val eventMap = event.toMap()
+
+                // Create directly in Firestore
+                firestore.collection("users").document(userId)
+                    .collection("events")
+                    .add(eventMap)
+                    .await()
+
+                Log.d(TAG, "Successfully created self-employed deadline event for $year DIRECTLY in Firestore")
+
+                // Small delay to avoid overwhelming Firestore
+                withContext(Dispatchers.IO) {
+                    Thread.sleep(100)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error creating self-employed deadline event for $year", e)
+                allSuccessful = false
+            }
         }
+
+        return allSuccessful
     }
 
     /**
@@ -203,7 +289,7 @@ object TaxDeadlineHelper {
                 val deadlineDate = when (employment) {
                     "employee" -> LocalDate.of(currentYear, Month.APRIL, 30)
                     "self-employed" -> LocalDate.of(currentYear, Month.JUNE, 30)
-                    else -> LocalDate.of(currentYear, Month.APRIL, 30) // Default to self-filing
+                    else -> LocalDate.of(currentYear, Month.APRIL, 30) // Default to employee
                 }
 
                 // Calculate days remaining until the deadline
@@ -238,7 +324,7 @@ object TaxDeadlineHelper {
         }
     }
 
-    // In TaxDeadlineHelper.kt
+    // Test function
     @RequiresApi(Build.VERSION_CODES.O)
     fun testAddDeadlineEvent(context: Context, scope: CoroutineScope) {
         Toast.makeText(context, "Testing tax deadline event creation...", Toast.LENGTH_SHORT).show()
@@ -246,7 +332,6 @@ object TaxDeadlineHelper {
         scope.launch {
             try {
                 val eventRepository = EventRepository.getInstance()
-                val currentYear = Year.now().value
                 val testDate = LocalDate.now().plusDays(1) // Tomorrow for testing
 
                 val event = Event(
@@ -272,6 +357,32 @@ object TaxDeadlineHelper {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
+            }
+        }
+    }
+
+    /**
+     * Directly force update default tax events for a user
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun forceDefaultEvents(scope: CoroutineScope) {
+        scope.launch {
+            try {
+                val userId = FirebaseManager.getCurrentUserId() ?: return@launch
+
+                // Get user's employment status
+                val firestore = FirebaseManager.getAuthFirestore()
+                val userDoc = firestore.collection("users").document(userId).get().await()
+                val employment = userDoc.getString("employment") ?: "employee"
+
+                Log.d(TAG, "Forcing default tax events for: $employment")
+
+                // Update tax deadline events
+                updateTaxDeadlineEvents(employment, scope) { success ->
+                    Log.d(TAG, "Force default events completed: $success")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error forcing default events", e)
             }
         }
     }

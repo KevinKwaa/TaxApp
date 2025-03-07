@@ -2,6 +2,7 @@ package com.example.taxapp.CalendarEvent
 
 import android.os.Build
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
@@ -44,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -103,7 +105,7 @@ fun CalendarScreen(
     currentUserId: String,
     onNavigateToAddEvent: (LocalDate) -> Unit,
     onNavigateToEventDetails: (Event) -> Unit,
-    onNavigateBack: () -> Unit, // Added new callback for back navigation
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -135,6 +137,28 @@ fun CalendarScreen(
                 // Initialize TTS engine
             }
         } else null
+    }
+
+    // Get event repository
+    val eventRepository = remember { EventRepository.getInstance() }
+
+    // Force refresh key - this will trigger recomposition when refreshed
+    val refreshTrigger by eventRepository.forceRefreshTrigger.collectAsState()
+
+    // Add a LaunchedEffect to log refresh triggers
+    LaunchedEffect(refreshTrigger) {
+        Log.d("CalendarScreen", "Refresh triggered with key: $refreshTrigger")
+    }
+
+    // Create state for events - this is key to refreshing UI
+    var eventsState by remember(refreshTrigger, currentUserId) {
+        mutableStateOf(events)
+    }
+
+    // Update the events state when events change
+    LaunchedEffect(events, refreshTrigger) {
+        Log.d("CalendarScreen", "Events updated, count: ${events.size}")
+        eventsState = events
     }
 
     // Clean up TTS when not needed
@@ -428,7 +452,7 @@ fun CalendarScreen(
                 // Selected Date Events Section with localized date format
                 SelectedDateEvents(
                     selectedDate = selectedDate,
-                    events = events[selectedDate] ?: mutableListOf(),
+                    events = eventsState[selectedDate] ?: mutableListOf(),
                     onEventClick = { event ->
                         // Use the captured ttsManager reference
                         ttsManager?.speak("Opening event: ${event.title}")
