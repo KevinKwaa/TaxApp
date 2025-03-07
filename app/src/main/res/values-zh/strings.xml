@@ -152,4 +152,86 @@
     <string name="individual_description">我受雇于一个组织。</string>
     <string name="self_employed">自雇</string>
     <string name="self_employed_description">我经营自己的生意，不受雇于别人。</string>
+
+    <!-- Tax Information Screen -->
+    <string name="tax_information">税务信息</string>
+    <string name="back_to_home">返回主页</string>
+    <string name="going_back_home">正在返回主页</string>
+    <string name="going_home">前往主页</string>
+    <string name="going_to_profile">前往个人资料</string>
+    <string name="home">主页</string>
+
+    <!-- Tax Information Content -->
+    <string name="your_income_tax">您的所得税</string>
+    <string name="your_annual_income">您的年收入：</string>
+    <string name="estimated_tax">预估税额：</string>
+    <string name="effective_tax_rate">有效税率：</string>
+
+    <!-- Tax Rates Table -->
+    <string name="malaysia_income_tax_rates">马来西亚所得税率（2023）</string>
+    <string name="chargeable_income">应税收入（令吉）</string>
+    <string name="rate">税率（%）</string>
+    <string name="tax_rm">税额（令吉）</string>
+
+    <!-- Tax Regulations -->
+    <string name="malaysia_tax_regulations">马来西亚税务法规</string>
+    <string name="tax_regulations_desc">马来西亚的所得税由马来西亚内陆税收局（LHDN）管理。以下是个人纳税人的主要法规：</string>
+
+    <string name="filing_deadline">申报截止日期</string>
+    <string name="filing_deadline_desc">对于没有商业收入（仅有雇佣收入）的个人，报税截止日期为每年4月30日。对于有商业收入的个人，截止日期为6月30日。</string>
+
+    <string name="tax_reliefs">税务减免</string>
+    <string name="tax_reliefs_desc">有各种税务减免可用于减少您的应税收入。这些包括个人减免、医疗费用、生活方式开支等。</string>
+
+    <string name="tax_deductions">税务扣除</string>
+    <string name="tax_deductions_desc">税务扣除是在计算税款前可从收入中扣除的费用。这包括获批准的慈善捐款和伊斯兰教什一税（zakat）付款。</string>
+
+    <string name="payment_methods">付款方式</string>
+    <string name="payment_methods_desc">您可以通过多种方式支付税款，包括网上银行（FPX）、信用卡、ATM或通过LHDN付款柜台。</string>
+
+    <string name="pcb">PCB（每月税款扣除）</string>
+    <string name="pcb_desc">PCB是雇主从雇员薪资中每月扣除税款的机制。这有助于全年分摊税负，而不是一次性付款。</string>
+
+    <!-- Tax Relief Categories -->
+    <string name="tax_relief_categories">税务减免类别</string>
+    <string name="relief_categories_desc">税务减免可降低您的应税收入，减轻整体税负。以下是马来西亚可用的主要税务减免类别：</string>
+
+    <string name="lifestyle_expenses">生活方式开支</string>
+    <string name="lifestyle_expenses_desc">包括购买书籍、电脑、智能手机、体育器材和互联网订阅。</string>
+
+    <string name="medical_expenses">医疗费用</string>
+    <string name="medical_expenses_desc">包括严重疾病治疗、体检和父母的医疗费用。</string>
+
+    <string name="education_fees">教育费用</string>
+    <string name="education_fees_desc">包括在认可机构攻读文凭、本科学位、硕士或博士学位的费用。</string>
+
+    <string name="epf_contributions">公积金缴款</string>
+    <string name="epf_contributions_desc">雇员公积金缴款有资格获得税务减免。</string>
+
+    <string name="life_insurance">人寿保险</string>
+    <string name="life_insurance_desc">为人寿保险单支付的保费有资格获得税务减免。</string>
+
+    <string name="housing_loan_interest">房贷利息</string>
+    <string name="housing_loan_interest_desc">首次购房者的房贷利息可作为税务减免申报。</string>
+
+    <!-- Disclaimer -->
+    <string name="tax_information_disclaimer">免责声明：此信息仅供一般指导，可能不反映最新的税法变更。请咨询税务专业人士或访问LHDN网站获取最准确和最新的信息。</string>
+
+    <!-- Tax Plan Screen -->
+    <string name="tax_guide_title">马来西亚税务信息指南</string>
+    <string name="tax_guide_description">了解马来西亚所得税率、法规和可用的税务减免，帮助您有效规划财务。</string>
+    <string name="view_tax_information">查看税务信息</string>
+    <string name="going_to_tax_information">前往税务信息</string>
+
+    <string name="tax_planning_tools">税务规划工具</string>
+    <string name="tax_calculator">税款计算器</string>
+    <string name="tax_calculator_desc">根据您的收入和适用扣除项计算预估税款。</string>
+    <string name="tax_calculator_coming_soon">税款计算器即将推出</string>
+
+    <string name="deduction_optimizer">扣除优化器</string>
+    <string name="deduction_optimizer_desc">寻找优化税务扣除和最大化节税的方法。</string>
+    <string name="feature_coming_soon">功能即将推出</string>
+
+    <string name="tax_calendar_desc">跟踪重要的税务截止日期和日程安排。</string>
+    <string name="going_to_calendar">前往日历</string>
 </resources>

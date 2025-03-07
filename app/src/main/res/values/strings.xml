@@ -149,4 +149,86 @@
     <string name="individual_description">I am employed under an organization.</string>
     <string name="self_employed">Self-Employed</string>
     <string name="self_employed_description">I run my own business and not employed by others.</string>
+
+    <!-- Tax Information Screen -->
+    <string name="tax_information">Tax Information</string>
+    <string name="back_to_home">Back to home</string>
+    <string name="going_back_home">Going back to home</string>
+    <string name="going_home">Going to home screen</string>
+    <string name="going_to_profile">Going to profile</string>
+    <string name="home">Home</string>
+
+    <!-- Tax Information Content -->
+    <string name="your_income_tax">Your Income Tax</string>
+    <string name="your_annual_income">Your Annual Income:</string>
+    <string name="estimated_tax">Estimated Tax:</string>
+    <string name="effective_tax_rate">Effective Tax Rate:</string>
+
+    <!-- Tax Rates Table -->
+    <string name="malaysia_income_tax_rates">Malaysia Income Tax Rates (2023)</string>
+    <string name="chargeable_income">Chargeable Income (RM)</string>
+    <string name="rate">Rate (%)</string>
+    <string name="tax_rm">Tax (RM)</string>
+
+    <!-- Tax Regulations -->
+    <string name="malaysia_tax_regulations">Malaysia Tax Regulations</string>
+    <string name="tax_regulations_desc">Income tax in Malaysia is administered by the Inland Revenue Board of Malaysia (LHDN). Here are key regulations for individual taxpayers:</string>
+
+    <string name="filing_deadline">Filing Deadline</string>
+    <string name="filing_deadline_desc">For individuals without business income (employment income only), the tax filing deadline is April 30th each year. For individuals with business income, the deadline is June 30th.</string>
+
+    <string name="tax_reliefs">Tax Reliefs</string>
+    <string name="tax_reliefs_desc">Various tax reliefs are available to reduce your chargeable income. These include personal relief, medical expenses, lifestyle expenses, and more.</string>
+
+    <string name="tax_deductions">Tax Deductions</string>
+    <string name="tax_deductions_desc">Tax deductions are expenses that can be subtracted from your income before calculating tax. These include approved donations to charity and zakat payments.</string>
+
+    <string name="payment_methods">Payment Methods</string>
+    <string name="payment_methods_desc">You can pay your taxes through several methods including online banking (FPX), credit card, ATM, or through LHDN payment counters.</string>
+
+    <string name="pcb">PCB (Monthly Tax Deduction)</string>
+    <string name="pcb_desc">PCB is a mechanism where employers deduct monthly tax payments from employees\' salaries. This helps distribute the tax burden throughout the year rather than a lump sum payment.</string>
+
+    <!-- Tax Relief Categories -->
+    <string name="tax_relief_categories">Tax Relief Categories</string>
+    <string name="relief_categories_desc">Tax reliefs reduce your chargeable income, lowering your overall tax burden. Below are the main categories of tax reliefs available in Malaysia:</string>
+
+    <string name="lifestyle_expenses">Lifestyle Expenses</string>
+    <string name="lifestyle_expenses_desc">Covers purchases of books, computers, smartphones, sports equipment, and internet subscriptions.</string>
+
+    <string name="medical_expenses">Medical Expenses</string>
+    <string name="medical_expenses_desc">Includes serious disease treatment, medical check-ups, and medical expenses for parents.</string>
+
+    <string name="education_fees">Education Fees</string>
+    <string name="education_fees_desc">Covers fees for pursuing diplomas, undergraduate degrees, masters, or doctorates at recognized institutions.</string>
+
+    <string name="epf_contributions">EPF Contributions</string>
+    <string name="epf_contributions_desc">Employee Provident Fund contributions are eligible for tax relief.</string>
+
+    <string name="life_insurance">Life Insurance</string>
+    <string name="life_insurance_desc">Premiums paid for life insurance policies qualify for tax relief.</string>
+
+    <string name="housing_loan_interest">Housing Loan Interest</string>
+    <string name="housing_loan_interest_desc">Interest paid on housing loans for first-time homebuyers can be claimed as tax relief.</string>
+
+    <!-- Disclaimer -->
+    <string name="tax_information_disclaimer">Disclaimer: This information is provided for general guidance only and may not reflect the most recent tax law changes. Please consult with a tax professional or visit the LHDN website for the most accurate and up-to-date information.</string>
+
+    <!-- Tax Plan Screen -->
+    <string name="tax_guide_title">Malaysia Tax Information Guide</string>
+    <string name="tax_guide_description">Learn about Malaysian income tax rates, regulations, and available tax reliefs to help plan your finances effectively.</string>
+    <string name="view_tax_information">View Tax Information</string>
+    <string name="going_to_tax_information">Going to tax information</string>
+
+    <string name="tax_planning_tools">Tax Planning Tools</string>
+    <string name="tax_calculator">Tax Calculator</string>
+    <string name="tax_calculator_desc">Calculate your estimated tax based on your income and applicable deductions.</string>
+    <string name="tax_calculator_coming_soon">Tax calculator coming soon</string>
+
+    <string name="deduction_optimizer">Deduction Optimizer</string>
+    <string name="deduction_optimizer_desc">Find ways to optimize your tax deductions and maximize your savings.</string>
+    <string name="feature_coming_soon">Feature coming soon</string>
+
+    <string name="tax_calendar_desc">Keep track of important tax deadlines and scheduling.</string>
+    <string name="going_to_calendar">Going to calendar</string>
 </resources>

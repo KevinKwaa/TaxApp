@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
@@ -309,6 +310,24 @@ fun HomeScreenContent(
                     }
                 ) {
                     Text(text = stringResource(id = R.string.tax_plan),)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Add the new Tax Information button
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        navController.navigate("taxInformation")
+                        ttsManager?.speak("Going to tax information")
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(text = stringResource(R.string.tax_information))
                 }
 
                 Spacer(modifier = Modifier.weight(1f))

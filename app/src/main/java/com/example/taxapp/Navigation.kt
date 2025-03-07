@@ -57,6 +57,8 @@ import com.example.taxapp.receiptcategory.CategoryScreen
 import com.example.taxapp.receiptcategory.ReceiptSummaryScreen
 import com.example.taxapp.receiptcategory.ReceiptViewModel
 import com.example.taxapp.receiptcategory.UploadReceiptScreen
+import com.example.taxapp.taxinformation.TaxInfoViewModel
+import com.example.taxapp.taxinformation.TaxInformationScreen
 import com.example.taxapp.taxplan.TaxPlanScreen
 import kotlinx.coroutines.delay
 
@@ -171,6 +173,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 }
                 "category" -> {
                     ttsManager?.speak("Tax categories screen")
+                }
+                "taxPlan" -> {
+                    ttsManager?.speak("Tax plan screen")
+                }
+                "taxInformation" -> {
+                    ttsManager?.speak("Tax information screen")
                 }
             }
         }
@@ -359,6 +367,15 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 TaxPlanScreen(
                     modifier = modifier,
                     navController = navController
+                )
+            }
+
+            composable("taxInformation") {
+                val taxInfoViewModel: TaxInfoViewModel = viewModel()
+                TaxInformationScreen(
+                    modifier = modifier,
+                    navController = navController,
+                    taxInfoViewModel = taxInfoViewModel
                 )
             }
 

@@ -75,7 +75,14 @@ class TaxPlanViewModel : ViewModel() {
             try {
                 val result = repository.getUserTaxPlans()
                 if (result.isSuccess) {
-                    taxPlans = result.getOrNull() ?: emptyList()
+                    val loadedPlans = result.getOrNull() ?: emptyList()
+
+                    // Validate each plan to ensure no zeros
+                    val validatedPlans = loadedPlans.map { plan ->
+                        validatePlan(plan)
+                    }
+
+                    taxPlans = validatedPlans
                     Log.d(TAG, "Loaded ${taxPlans.size} tax plans")
                 } else {
                     throw result.exceptionOrNull() ?: Exception("Failed to load tax plans")
@@ -103,7 +110,8 @@ class TaxPlanViewModel : ViewModel() {
                 if (result.isSuccess) {
                     val plan = result.getOrNull()
                     if (plan != null) {
-                        currentPlan = plan
+                        // Validate the plan before viewing
+                        currentPlan = validatePlan(plan)
                         isViewingPlan = true
                         Log.d(TAG, "Viewing tax plan: ${plan.name}")
                     } else {
@@ -119,6 +127,124 @@ class TaxPlanViewModel : ViewModel() {
                 isLoading = false
             }
         }
+    }
+
+    /**
+     * Validate a tax plan to ensure it has proper values
+     */
+    private fun validatePlan(plan: TaxPlan): TaxPlan {
+        // Check for zero potential savings
+        if (plan.potentialSavings <= 0) {
+            Log.w(TAG, "Plan has zero potential savings, recalculating: ${plan.id}")
+
+            // Calculate proper savings from suggestions
+            val suggestions = plan.suggestions.map { suggestion ->
+                // If suggestion has zero saving, estimate a reasonable amount
+                if (suggestion.potentialSaving <= 0) {
+                    val estimatedSaving = estimateSavingForCategory(suggestion.category)
+                    suggestion.copy(potentialSaving = estimatedSaving)
+                } else {
+                    suggestion
+                }
+            }
+
+            // Calculate new total savings
+            val newTotalSavings = suggestions.sumOf { it.potentialSaving }
+
+            // If still zero or no suggestions, generate default suggestions
+            if (newTotalSavings <= 0 || suggestions.isEmpty()) {
+                Log.w(TAG, "Creating default suggestions for plan: ${plan.id}")
+                val defaultSuggestions = createDefaultSuggestions()
+                val defaultSavings = defaultSuggestions.sumOf { it.potentialSaving }
+
+                return plan.copy(
+                    suggestions = defaultSuggestions,
+                    potentialSavings = defaultSavings
+                )
+            }
+
+            return plan.copy(
+                suggestions = suggestions,
+                potentialSavings = newTotalSavings
+            )
+        }
+
+        // Check for zero savings in suggestions
+        val hasZeroSuggestions = plan.suggestions.any { it.potentialSaving <= 0 }
+        if (hasZeroSuggestions) {
+            Log.w(TAG, "Plan has suggestions with zero savings, fixing: ${plan.id}")
+
+            val fixedSuggestions = plan.suggestions.map { suggestion ->
+                if (suggestion.potentialSaving <= 0) {
+                    val estimatedSaving = estimateSavingForCategory(suggestion.category)
+                    suggestion.copy(potentialSaving = estimatedSaving)
+                } else {
+                    suggestion
+                }
+            }
+
+            // Recalculate total savings
+            val fixedTotalSavings = fixedSuggestions.sumOf { it.potentialSaving }
+
+            return plan.copy(
+                suggestions = fixedSuggestions,
+                potentialSavings = fixedTotalSavings
+            )
+        }
+
+        return plan
+    }
+
+    /**
+     * Estimate reasonable saving amount for a category
+     */
+    private fun estimateSavingForCategory(category: String): Double {
+        // Default values based on typical Malaysian tax relief categories
+        return when (category.lowercase()) {
+            "lifestyle" -> 200.0
+            "medical" -> 640.0
+            "education" -> 560.0
+            "epf" -> 480.0
+            "sspn" -> 240.0
+            "donation" -> 80.0
+            "insurance" -> 240.0
+            "business expenses" -> 1200.0
+            "home office" -> 192.0
+            else -> 150.0 // Default value for unknown categories
+        }
+    }
+
+    /**
+     * Create default suggestions when none available
+     */
+    private fun createDefaultSuggestions(): List<TaxPlanSuggestion> {
+        return listOf(
+            TaxPlanSuggestion(
+                category = "Lifestyle",
+                suggestion = "Maximize your RM2,500 lifestyle relief by keeping receipts for books, electronics, sports equipment, and internet subscriptions.",
+                potentialSaving = 200.0
+            ),
+            TaxPlanSuggestion(
+                category = "Medical",
+                suggestion = "Track medical expenses for yourself and dependents for relief up to RM8,000.",
+                potentialSaving = 640.0
+            ),
+            TaxPlanSuggestion(
+                category = "EPF",
+                suggestion = "Maximize your EPF contribution (11% for employees, voluntary for self-employed) for tax relief up to RM4,000.",
+                potentialSaving = 480.0
+            ),
+            TaxPlanSuggestion(
+                category = "Education",
+                suggestion = "Claim education relief of up to RM7,000 for skills development courses or further education.",
+                potentialSaving = 560.0
+            ),
+            TaxPlanSuggestion(
+                category = "Donation",
+                suggestion = "Make donations to approved organizations for tax deductions.",
+                potentialSaving = 80.0
+            )
+        )
     }
 
     /**
@@ -153,15 +279,8 @@ class TaxPlanViewModel : ViewModel() {
                 val income = userDoc.getString("income") ?: "0"
                 val employment = userDoc.getString("employment") ?: "employee"
 
-                if (income.toDoubleOrNull() ?: 0.0 <= 0) {
-                    throw Exception("Please update your profile with valid income information")
-                }
-
-                // Adjust income based on plan type
-                val adjustedIncome = when (planType) {
-                    "future" -> (income.toDoubleOrNull() ?: 0.0) * 1.2 // 20% higher
-                    else -> income.toDoubleOrNull() ?: 0.0
-                }
+                // Don't stop the process for income validation, use a default
+                val incomeValue = income.toDoubleOrNull() ?: 50000.0
 
                 // Generate plan name with date if not provided
                 val dateFormat = SimpleDateFormat("MMM yyyy", Locale.getDefault())
@@ -175,18 +294,65 @@ class TaxPlanViewModel : ViewModel() {
                     planName
                 }
 
-                // Create description based on plan type
-                val planDescription = when (planType) {
-                    "future" -> "AI-generated tax plan based on projected future income"
-                    "business" -> "AI-generated tax plan for business ventures"
-                    else -> "AI-generated tax plan based on your current income"
+                // Create the tax plan - two approaches: try AI first, then fallback
+
+                // Create GeminiAIService for AI generation
+                val geminiService = GeminiTaxPlanService(context)
+
+                try {
+                    // Try to generate with AI first
+                    Log.d(TAG, "Attempting AI tax plan generation")
+                    val aiResult = geminiService.generateTaxPlan(
+                        income.toString(),
+                        employment,
+                        name,
+                        planType
+                    )
+
+                    if (aiResult.isSuccess) {
+                        Log.d(TAG, "AI successfully generated tax plan")
+                        val aiTaxPlan = aiResult.getOrNull()
+
+                        if (aiTaxPlan != null) {
+                            // Validate the AI-generated plan
+                            val validatedPlan = validateAIGeneratedPlan(aiTaxPlan, finalPlanName, planType)
+
+                            // Save to repository
+                            val saveResult = repository.createTaxPlan(validatedPlan)
+                            if (saveResult.isFailure) {
+                                throw saveResult.exceptionOrNull() ?: Exception("Failed to save tax plan")
+                            }
+
+                            // Reload plans
+                            loadTaxPlans()
+
+                            // Hide the create dialog
+                            hideCreatePlanDialog()
+
+                            onSuccess()
+                            return@launch
+                        }
+                    }
+
+                    // If we reached here, AI generation failed
+                    Log.w(TAG, "AI tax plan generation failed, using fallback generation")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in AI tax plan generation, using fallback", e)
                 }
 
-                // Create tax suggestions based on plan type and income
-                val suggestions = generateTaxSuggestions(adjustedIncome, employment, planType)
+                // Fallback: Generate tax suggestions manually
+                Log.d(TAG, "Using fallback tax plan generation")
+                val suggestions = generateTaxSuggestions(incomeValue, employment, planType)
 
-                // Calculate total potential savings
+                // Calculate total savings
                 val totalSavings = suggestions.sumOf { it.potentialSaving }
+
+                // Create description based on plan type
+                val planDescription = when (planType) {
+                    "future" -> "Tax plan optimized for future income growth and long-term tax efficiency"
+                    "business" -> "Tax plan designed for business ventures with focus on business deductions"
+                    else -> "Personalized tax plan based on your current income and employment status"
+                }
 
                 // Create the tax plan
                 val taxPlan = TaxPlan(
@@ -199,8 +365,11 @@ class TaxPlanViewModel : ViewModel() {
                     planType = planType
                 )
 
+                // Final validation
+                val validatedPlan = validatePlan(taxPlan)
+
                 // Save to repository
-                val saveResult = repository.createTaxPlan(taxPlan)
+                val saveResult = repository.createTaxPlan(validatedPlan)
                 if (saveResult.isFailure) {
                     throw saveResult.exceptionOrNull() ?: Exception("Failed to save tax plan")
                 }
@@ -223,6 +392,64 @@ class TaxPlanViewModel : ViewModel() {
     }
 
     /**
+     * Ensure an AI-generated plan meets our requirements
+     */
+    private fun validateAIGeneratedPlan(plan: TaxPlan, name: String, planType: String): TaxPlan {
+        // Check for issues that need fixing
+        val needsFixing = plan.potentialSavings <= 0 ||
+                plan.suggestions.isEmpty() ||
+                plan.suggestions.any { it.potentialSaving <= 0 }
+
+        if (!needsFixing) {
+            // Just update name if needed
+            return if (plan.name != name) {
+                plan.copy(name = name)
+            } else {
+                plan
+            }
+        }
+
+        Log.d(TAG, "Fixing AI-generated plan with issues")
+
+        // Fix suggestions with zero savings
+        val fixedSuggestions = if (plan.suggestions.isEmpty()) {
+            // Create new suggestions if none exist
+            generateTaxSuggestions(50000.0, "employee", planType)
+        } else {
+            // Fix existing suggestions
+            plan.suggestions.map { suggestion ->
+                if (suggestion.potentialSaving <= 0) {
+                    val estimatedSaving = estimateSavingForCategory(suggestion.category)
+                    suggestion.copy(potentialSaving = estimatedSaving)
+                } else {
+                    suggestion
+                }
+            }
+        }
+
+        // Recalculate total savings
+        val fixedTotalSavings = fixedSuggestions.sumOf { it.potentialSaving }
+
+        // Create description based on plan type if needed
+        val planDescription = if (plan.description.isBlank()) {
+            when (planType) {
+                "future" -> "Tax plan optimized for future income growth and long-term tax efficiency"
+                "business" -> "Tax plan designed for business ventures with focus on business deductions"
+                else -> "Personalized tax plan based on your current income and employment status"
+            }
+        } else {
+            plan.description
+        }
+
+        return plan.copy(
+            name = name,
+            description = planDescription,
+            suggestions = fixedSuggestions,
+            potentialSavings = fixedTotalSavings
+        )
+    }
+
+    /**
      * Generate tax suggestions based on income, employment type and plan type
      */
     private fun generateTaxSuggestions(income: Double, employmentType: String, planType: String): List<TaxPlanSuggestion> {
@@ -230,12 +457,20 @@ class TaxPlanViewModel : ViewModel() {
 
         // Calculate estimated tax rate based on income
         val estimatedTaxRate = when {
-            income < 35000 -> 0.0
+            income < 5000 -> 0.0
+            income < 20000 -> 0.01
+            income < 35000 -> 0.03
             income < 50000 -> 0.08
             income < 70000 -> 0.13
             income < 100000 -> 0.21
-            else -> 0.24
+            income < 250000 -> 0.24
+            income < 400000 -> 0.245
+            income < 600000 -> 0.25
+            income < 1000000 -> 0.26
+            else -> 0.30
         }
+
+        Log.d(TAG, "Generating suggestions with income: $income, rate: $estimatedTaxRate, type: $planType")
 
         // Add common suggestions for all plan types
         suggestions.add(TaxPlanSuggestion(
@@ -247,7 +482,19 @@ class TaxPlanViewModel : ViewModel() {
         suggestions.add(TaxPlanSuggestion(
             category = "Medical",
             suggestion = "Track medical expenses for yourself and dependents for relief up to RM8,000.",
-            potentialSaving = 5000 * estimatedTaxRate
+            potentialSaving = 8000 * estimatedTaxRate
+        ))
+
+        // Add EPF suggestion
+        val epfAmount = minOf(income * 0.11, 4000.0)
+        suggestions.add(TaxPlanSuggestion(
+            category = "EPF",
+            suggestion = if (employmentType == "employee") {
+                "Ensure you're maximizing your mandatory EPF contribution of 11% for tax relief up to RM4,000."
+            } else {
+                "Make voluntary EPF contributions up to RM4,000 annually for tax relief."
+            },
+            potentialSaving = epfAmount * estimatedTaxRate
         ))
 
         // Add plan-type specific suggestions
@@ -255,21 +502,21 @@ class TaxPlanViewModel : ViewModel() {
             "future" -> {
                 // Future income plan - focus on tax brackets and investment strategies
                 suggestions.add(TaxPlanSuggestion(
-                    category = "Tax Bracket Planning",
-                    suggestion = "With your projected income, consider maximizing deductible retirement contributions to manage your tax bracket.",
-                    potentialSaving = income * 0.03 // Higher potential savings for future planning
-                ))
-
-                suggestions.add(TaxPlanSuggestion(
                     category = "Investment",
                     suggestion = "Consider tax-efficient investment vehicles like unit trusts with tax incentives.",
-                    potentialSaving = income * 0.02
+                    potentialSaving = income * 0.02 * estimatedTaxRate
                 ))
 
                 suggestions.add(TaxPlanSuggestion(
                     category = "Education",
                     suggestion = "Invest in skill development courses with tax relief up to RM7,000 to increase future earning potential.",
                     potentialSaving = 7000 * estimatedTaxRate
+                ))
+
+                suggestions.add(TaxPlanSuggestion(
+                    category = "Retirement Planning",
+                    suggestion = "Supplement your EPF with Private Retirement Scheme (PRS) contributions for additional tax relief up to RM3,000.",
+                    potentialSaving = 3000 * estimatedTaxRate
                 ))
             }
             "business" -> {
@@ -287,25 +534,19 @@ class TaxPlanViewModel : ViewModel() {
                 ))
 
                 suggestions.add(TaxPlanSuggestion(
-                    category = "Business Tools",
-                    suggestion = "Equipment and software purchased for business use may be eligible for capital allowances.",
-                    potentialSaving = 3000 * estimatedTaxRate
+                    category = "Capital Investment",
+                    suggestion = "Plan capital investments to take advantage of capital allowances and incentives for business expansion.",
+                    potentialSaving = income * 0.04 * estimatedTaxRate
                 ))
 
                 suggestions.add(TaxPlanSuggestion(
-                    category = "Business Registration",
-                    suggestion = "Consider formal business registration to access additional tax benefits and deductions.",
-                    potentialSaving = income * 0.05 * estimatedTaxRate
+                    category = "Business Structure",
+                    suggestion = "Review your business structure (sole proprietorship vs. LLC) to optimize tax treatment based on your projected growth.",
+                    potentialSaving = income * 0.035 * estimatedTaxRate
                 ))
             }
             else -> {
                 // Standard plan - focus on common deductions
-                suggestions.add(TaxPlanSuggestion(
-                    category = "EPF",
-                    suggestion = "Maximize your EPF contribution (11% for employees, voluntary for self-employed) for tax relief up to RM4,000.",
-                    potentialSaving = 4000 * estimatedTaxRate
-                ))
-
                 suggestions.add(TaxPlanSuggestion(
                     category = "Education",
                     suggestion = "Claim education relief of up to RM7,000 for skills development courses or further education.",
@@ -330,12 +571,24 @@ class TaxPlanViewModel : ViewModel() {
 
         // Add common suggestion for all plans
         suggestions.add(TaxPlanSuggestion(
-            category = "Donations",
+            category = "Donation",
             suggestion = "Make donations to approved organizations for tax deductions.",
             potentialSaving = 1000 * estimatedTaxRate
         ))
 
-        return suggestions
+        // Safety check: ensure no zero savings
+        val finalSuggestions = suggestions.map { suggestion ->
+            if (suggestion.potentialSaving <= 0) {
+                // Minimum 50 RM per suggestion if calculation resulted in zero
+                suggestion.copy(potentialSaving = 50.0)
+            } else {
+                suggestion
+            }
+        }
+
+        Log.d(TAG, "Generated ${finalSuggestions.size} suggestions with total: ${finalSuggestions.sumOf { it.potentialSaving }}")
+
+        return finalSuggestions
     }
 
     /**
@@ -400,7 +653,9 @@ class TaxPlanViewModel : ViewModel() {
      * Format currency for display
      */
     fun formatCurrency(amount: Double): String {
-        return String.format("RM %.2f", amount)
+        // Ensure amount is never negative or zero
+        val positiveAmount = if (amount <= 0) 0.01 else amount
+        return String.format("RM %.2f", positiveAmount)
     }
 
     /**

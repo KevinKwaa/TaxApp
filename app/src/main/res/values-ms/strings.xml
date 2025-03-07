@@ -153,4 +153,86 @@
     <string name="individual_description">Saya bekerja di bawah sebuah organisasi.</string>
     <string name="self_employed">Bekerja Sendiri</string>
     <string name="self_employed_description">Saya menjalankan perniagaan saya sendiri dan tidak bekerja dengan orang lain.</string>
+
+    <!-- Tax Information Screen -->
+    <string name="tax_information">Maklumat Cukai</string>
+    <string name="back_to_home">Kembali ke laman utama</string>
+    <string name="going_back_home">Kembali ke laman utama</string>
+    <string name="going_home">Pergi ke laman utama</string>
+    <string name="going_to_profile">Pergi ke profil</string>
+    <string name="home">Laman Utama</string>
+
+    <!-- Tax Information Content -->
+    <string name="your_income_tax">Cukai Pendapatan Anda</string>
+    <string name="your_annual_income">Pendapatan Tahunan Anda:</string>
+    <string name="estimated_tax">Anggaran Cukai:</string>
+    <string name="effective_tax_rate">Kadar Cukai Efektif:</string>
+
+    <!-- Tax Rates Table -->
+    <string name="malaysia_income_tax_rates">Kadar Cukai Pendapatan Malaysia (2023)</string>
+    <string name="chargeable_income">Pendapatan Bercukai (RM)</string>
+    <string name="rate">Kadar (%)</string>
+    <string name="tax_rm">Cukai (RM)</string>
+
+    <!-- Tax Regulations -->
+    <string name="malaysia_tax_regulations">Peraturan Cukai Malaysia</string>
+    <string name="tax_regulations_desc">Cukai pendapatan di Malaysia diuruskan oleh Lembaga Hasil Dalam Negeri Malaysia (LHDN). Berikut adalah peraturan utama untuk pembayar cukai individu:</string>
+
+    <string name="filing_deadline">Tarikh Akhir Pengemukaan</string>
+    <string name="filing_deadline_desc">Bagi individu tanpa pendapatan perniagaan (hanya pendapatan pekerjaan), tarikh akhir pengisian cukai adalah 30 April setiap tahun. Bagi individu dengan pendapatan perniagaan, tarikh akhir adalah 30 Jun.</string>
+
+    <string name="tax_reliefs">Pelepasan Cukai</string>
+    <string name="tax_reliefs_desc">Pelbagai pelepasan cukai tersedia untuk mengurangkan pendapatan bercukai anda. Ini termasuk pelepasan peribadi, perbelanjaan perubatan, perbelanjaan gaya hidup, dan lain-lain.</string>
+
+    <string name="tax_deductions">Potongan Cukai</string>
+    <string name="tax_deductions_desc">Potongan cukai adalah perbelanjaan yang boleh ditolak daripada pendapatan anda sebelum mengira cukai. Ini termasuk sumbangan yang diluluskan kepada badan amal dan pembayaran zakat.</string>
+
+    <string name="payment_methods">Kaedah Pembayaran</string>
+    <string name="payment_methods_desc">Anda boleh membayar cukai anda melalui beberapa kaedah termasuk perbankan dalam talian (FPX), kad kredit, ATM, atau melalui kaunter pembayaran LHDN.</string>
+
+    <string name="pcb">PCB (Potongan Cukai Bulanan)</string>
+    <string name="pcb_desc">PCB adalah mekanisme di mana majikan memotong pembayaran cukai bulanan daripada gaji pekerja. Ini membantu mengagihkan beban cukai sepanjang tahun berbanding pembayaran sekaligus.</string>
+
+    <!-- Tax Relief Categories -->
+    <string name="tax_relief_categories">Kategori Pelepasan Cukai</string>
+    <string name="relief_categories_desc">Pelepasan cukai mengurangkan pendapatan bercukai anda, menurunkan beban cukai keseluruhan. Berikut adalah kategori utama pelepasan cukai yang tersedia di Malaysia:</string>
+
+    <string name="lifestyle_expenses">Perbelanjaan Gaya Hidup</string>
+    <string name="lifestyle_expenses_desc">Meliputi pembelian buku, komputer, telefon pintar, peralatan sukan, dan langganan internet.</string>
+
+    <string name="medical_expenses">Perbelanjaan Perubatan</string>
+    <string name="medical_expenses_desc">Termasuk rawatan penyakit serius, pemeriksaan kesihatan, dan perbelanjaan perubatan untuk ibu bapa.</string>
+
+    <string name="education_fees">Yuran Pendidikan</string>
+    <string name="education_fees_desc">Meliputi yuran untuk melanjutkan diploma, ijazah sarjana muda, sarjana, atau doktor falsafah di institusi yang diiktiraf.</string>
+
+    <string name="epf_contributions">Sumbangan KWSP</string>
+    <string name="epf_contributions_desc">Sumbangan Kumpulan Wang Simpanan Pekerja layak mendapat pelepasan cukai.</string>
+
+    <string name="life_insurance">Insurans Hayat</string>
+    <string name="life_insurance_desc">Premium yang dibayar untuk polisi insurans hayat layak mendapat pelepasan cukai.</string>
+
+    <string name="housing_loan_interest">Faedah Pinjaman Perumahan</string>
+    <string name="housing_loan_interest_desc">Faedah yang dibayar atas pinjaman perumahan untuk pembeli rumah kali pertama boleh dituntut sebagai pelepasan cukai.</string>
+
+    <!-- Disclaimer -->
+    <string name="tax_information_disclaimer">Penafian: Maklumat ini disediakan untuk panduan umum sahaja dan mungkin tidak mencerminkan perubahan undang-undang cukai terkini. Sila rujuk kepada profesional cukai atau layari laman web LHDN untuk maklumat yang paling tepat dan terkini.</string>
+
+    <!-- Tax Plan Screen -->
+    <string name="tax_guide_title">Panduan Maklumat Cukai Malaysia</string>
+    <string name="tax_guide_description">Pelajari tentang kadar cukai pendapatan Malaysia, peraturan, dan pelepasan cukai yang tersedia untuk membantu merancang kewangan anda dengan berkesan.</string>
+    <string name="view_tax_information">Lihat Maklumat Cukai</string>
+    <string name="going_to_tax_information">Pergi ke maklumat cukai</string>
+
+    <string name="tax_planning_tools">Alat Perancangan Cukai</string>
+    <string name="tax_calculator">Kalkulator Cukai</string>
+    <string name="tax_calculator_desc">Kira anggaran cukai anda berdasarkan pendapatan dan potongan yang berkenaan.</string>
+    <string name="tax_calculator_coming_soon">Kalkulator cukai akan datang</string>
+
+    <string name="deduction_optimizer">Pengoptimum Potongan</string>
+    <string name="deduction_optimizer_desc">Cari cara untuk mengoptimumkan potongan cukai dan memaksimumkan penjimatan anda.</string>
+    <string name="feature_coming_soon">Ciri akan datang</string>
+
+    <string name="tax_calendar_desc">Ikuti tarikh akhir cukai penting dan penjadualannya.</string>
+    <string name="going_to_calendar">Pergi ke kalendar</string>
 </resources>
