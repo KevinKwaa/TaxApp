@@ -14,7 +14,8 @@ data class TaxPlan(
     val suggestions: List<TaxPlanSuggestion> = emptyList(),
     val potentialSavings: Double = 0.0,
     val createdAt: Timestamp = Timestamp.now(),
-    val updatedAt: Timestamp = Timestamp.now()
+    val updatedAt: Timestamp = Timestamp.now(),
+    val planType: String = "standard" // Add this field to distinguish plan types
 )
 
 /**

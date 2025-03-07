@@ -45,6 +45,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +67,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
 import com.example.taxapp.accessibility.AccessibilityState
@@ -273,6 +276,9 @@ fun TaxPlanListScreen(
     ScreenReader("Tax Plan Screen")
     val ttsManager = LocalTtsManager.current
 
+    // Add this to TaxPlanListScreen
+    var showAIExplanation by remember { mutableStateOf(false) }
+
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Column(
             modifier = modifier
@@ -334,6 +340,89 @@ fun TaxPlanListScreen(
                         "⚙️",
                         style = MaterialTheme.typography.titleMedium,
                         color = accessibleColors.buttonText
+                    )
+                }
+
+                IconButton(
+                    onClick = { showAIExplanation = true },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.1f))
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_info),  // Add this icon to your drawable resources
+                        contentDescription = "AI Information",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+// Add this dialog
+                if (showAIExplanation) {
+                    AlertDialog(
+                        onDismissRequest = { showAIExplanation = false },
+                        title = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_ai),  // Add this icon to your drawable resources
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("AI Tax Plan Generator")
+                            }
+                        },
+                        text = {
+                            Column {
+                                Text(
+                                    "This feature uses AI to analyze your income and employment type to generate personalized tax-saving suggestions.",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    "How it works:",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    "1. The AI analyzes your income level and employment type",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Text(
+                                    "2. It identifies applicable tax relief categories for your situation",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Text(
+                                    "3. It generates specific suggestions with estimated savings",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    "Note: Make sure your income and employment information are up-to-date in your profile for the most accurate suggestions.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = { showAIExplanation = false }
+                            ) {
+                                Text("Got it")
+                            }
+                        }
                     )
                 }
             }
@@ -430,47 +519,85 @@ fun TaxPlanListScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Generate button
+                    // Replace the existing Generate button in TaxPlanListScreen with this enhanced version
                     Button(
-                        onClick = {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                viewModel.generateTaxPlan(
-                                    context = context,
-                                    onSuccess = {
-                                        AppUtil.showToast(
-                                            context,
-                                            "Tax plan generated successfully"
-                                        )
-                                    },
-                                    onError = { error ->
-                                        AppUtil.showToast(context, error)
-                                    }
-                                )
-                            } else {
-                                AppUtil.showToast(
-                                    context,
-                                    "This feature requires Android N or higher"
-                                )
-                            }
-                        },
+                        onClick = { viewModel.showCreatePlanDialog() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp)
                             .border(
                                 width = 1.dp,
-                                color = Color.White,
+                                color = if (isLoading) MaterialTheme.colorScheme.primaryContainer else Color.White,
                                 shape = RoundedCornerShape(12.dp)
                             ),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Black,
-                            contentColor = Color.White
+                            containerColor = if (isLoading) MaterialTheme.colorScheme.primaryContainer else Color.Black,
+                            contentColor = if (isLoading) MaterialTheme.colorScheme.primary else Color.White
                         ),
                         shape = RoundedCornerShape(12.dp),
                         enabled = !isLoading
                     ) {
-                        Text(
-                            text = "Generate Tax Plan",
-                            fontSize = scaledSp(18),
-                            fontWeight = FontWeight.Medium
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            if (isLoading) {
+                                // Show loading indicator when AI is generating the plan
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "AI Generating Tax Plan...",
+                                    fontSize = scaledSp(16),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            } else {
+                                // Show AI icon and text when not loading
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_ai),  // Make sure to add this icon to your drawable resources
+                                    contentDescription = "AI",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Generate AI Tax Plan",
+                                    fontSize = scaledSp(16),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+
+                    if (viewModel.showCreatePlanDialog) {
+                        TaxPlanCreateDialog(
+                            onDismiss = { viewModel.hideCreatePlanDialog() },
+                            onCreatePlan = { name, planType ->
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    viewModel.generateTaxPlan(
+                                        context = context,
+                                        planName = name,
+                                        planType = planType,
+                                        onSuccess = {
+                                            AppUtil.showToast(
+                                                context,
+                                                "Tax plan generated successfully"
+                                            )
+                                        },
+                                        onError = { error ->
+                                            AppUtil.showToast(context, error)
+                                        }
+                                    )
+                                } else {
+                                    AppUtil.showToast(
+                                        context,
+                                        "This feature requires Android N or higher"
+                                    )
+                                    viewModel.hideCreatePlanDialog()
+                                }
+                            }
                         )
                     }
                 }
