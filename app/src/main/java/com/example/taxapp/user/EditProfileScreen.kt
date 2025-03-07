@@ -524,6 +524,7 @@ fun EditProfileScreenContent(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // In EditProfileScreenContent
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
@@ -533,13 +534,28 @@ fun EditProfileScreenContent(
                             // Show success message
                             Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
 
-                            // Reset event repository
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                // Use our callback to notify Navigation that profile was saved
+                            // First, reset event repository to clear any cached data
+                            if (Build.VERSION_CODES.O <= Build.VERSION.SDK_INT) {
+                                Log.d("EditProfileScreen", "Profile saved, forcing repository refresh")
+                                // Reset repository to force it to reload with fresh data
+                                EventRepository.resetInstance()
+
+                                // Important: Make sure the repository instance is created again
+                                // This will start a new Firestore listener
+                                val repo = EventRepository.getInstance()
+                                repo.forceRefresh()
+
+                                // Call the callback to notify navigation that update happened
+                                // but without forcing navigation to calendar
                                 onProfileSaved()
-                            } else {
-                                // Just navigate back for older Android versions
-                                navController.popBackStack()
+
+                                // Navigation should stay on the current screen
+                                // The events will be refreshed when the user goes to the calendar screen
+                            }
+
+                            // Navigate back to home
+                            navController.navigate("home") {
+                                popUpTo("editProfile") { inclusive = true }
                             }
                         } else {
                             AppUtil.showToast(context, error ?: "Something went wrong...")

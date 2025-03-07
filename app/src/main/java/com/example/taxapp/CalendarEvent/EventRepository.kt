@@ -49,12 +49,23 @@ class EventRepository {
 
     fun forceRefresh() {
         Log.d(TAG, "Force refresh triggered")
+
         // Reset current cache
         _eventsCache.value = emptyMap()
+
         // Clean up any existing listener
         cleanupListener()
+
+        // Get current user ID
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            Log.d(TAG, "Current user: $userId - forcing refresh of events")
+        }
+
         // Increment the refresh trigger to notify observers
         _forceRefreshTrigger.value = System.currentTimeMillis()
+
+        Log.d(TAG, "Force refresh complete with new trigger: ${_forceRefreshTrigger.value}")
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -236,9 +247,21 @@ class EventRepository {
         // Method to reset the singleton instance when a user logs out
         fun resetInstance() {
             Log.d(TAG, "Resetting EventRepository instance")
-            INSTANCE?.reset()
+
+            // Clean up the existing instance if it exists
+            INSTANCE?.let {
+                // Clean up any active listeners
+                it.cleanupListener()
+                // Clear any cached data
+                it._eventsCache.value = emptyMap()
+                // Increment the refresh trigger one last time
+                it._forceRefreshTrigger.value = System.currentTimeMillis()
+            }
+
             // Force the instance to null to ensure a fresh one is created
             INSTANCE = null
+
+            Log.d(TAG, "EventRepository instance has been reset")
         }
     }
 }

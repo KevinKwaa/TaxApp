@@ -280,7 +280,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     CalendarScreen(
                         events = eventsMap,
                         currentUserId = currentUserId!!,
-                        //refreshKey = refreshKey, // Add this parameter to CalendarScreen
+                        refreshKey = refreshKey, // Enable this parameter!
                         onNavigateToAddEvent = { date ->
                             // Capture the date for announcement
                             val dateFormat = DateTimeFormatter.ofPattern("MMMM d")

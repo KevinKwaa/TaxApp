@@ -103,6 +103,7 @@ data class Event(
 fun CalendarScreen(
     events: Map<LocalDate, List<Event>>,
     currentUserId: String,
+    refreshKey: Long = 0, // Add this parameter with default value
     onNavigateToAddEvent: (LocalDate) -> Unit,
     onNavigateToEventDetails: (Event) -> Unit,
     onNavigateBack: () -> Unit,
@@ -145,9 +146,14 @@ fun CalendarScreen(
     // Force refresh key - this will trigger recomposition when refreshed
     val refreshTrigger by eventRepository.forceRefreshTrigger.collectAsState()
 
-    // Add a LaunchedEffect to log refresh triggers
-    LaunchedEffect(refreshTrigger) {
-        Log.d("CalendarScreen", "Refresh triggered with key: $refreshTrigger")
+    // Add a LaunchedEffect to log refresh triggers and respond to refreshKey
+    LaunchedEffect(refreshTrigger, refreshKey) {
+        Log.d("CalendarScreen", "Refresh triggered with key: $refreshTrigger, refreshKey: $refreshKey")
+        if (refreshKey > 0) {
+            // Additional refresh logic when refreshKey changes
+            Log.d("CalendarScreen", "External refresh requested with key: $refreshKey")
+            eventRepository.forceRefresh()
+        }
     }
 
     // Create state for events - this is key to refreshing UI

@@ -6,8 +6,11 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.example.taxapp.firebase.FirebaseManager
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -49,27 +52,47 @@ object TaxDeadlineHelper {
             return
         }
 
+        Log.d(TAG, "------------ TAX EVENT UPDATE START ------------")
         Log.d(TAG, "Starting tax deadline update with employment type: $employment for user: $userId")
 
         try {
             // First, make sure we have a fresh repository instance and clear events
+            Log.d(TAG, "Resetting EventRepository instance")
             EventRepository.resetInstance()
             val eventRepository = EventRepository.getInstance()
 
+            // Log current events before deletion for debugging
+            eventRepository.getAllEvents(userId).first().let { events ->
+                Log.d(TAG, "BEFORE UPDATE: Found ${events.size} event dates with a total of ${events.values.sumOf { it.size }} events")
+                val taxEvents = events.values.flatten().filter { it.title.contains("Tax Filing Deadline", ignoreCase = true) }
+                Log.d(TAG, "Tax deadline events BEFORE update: ${taxEvents.size}")
+                taxEvents.forEach { event ->
+                    Log.d(TAG, "  - BEFORE: Tax event: ${event.title} on ${event.date}")
+                }
+            }
+
             // Step 1: Find and delete ALL existing tax deadline events DIRECTLY in Firestore
+            Log.d(TAG, "Step 1: Deleting all existing tax deadline events")
             val success = deleteAllTaxDeadlineEvents(userId)
             Log.d(TAG, "Direct Firestore deletion of tax events complete, success: $success")
 
             // Small delay to ensure deletions are processed
             withContext(Dispatchers.IO) {
-                Thread.sleep(300)
+                Log.d(TAG, "Waiting for deletion to complete...")
+                Thread.sleep(500)
             }
 
             // Step 2: Create new deadline events based on employment type
-            Log.d(TAG, "Creating new tax deadline events for employment type: $employment")
+            Log.d(TAG, "Step 2: Creating new tax deadline events for employment type: $employment")
             val createSuccess = when (employment) {
-                "employee" -> createEmployeeDeadlineEvents(userId, eventRepository)
-                "self-employed" -> createSelfEmployDeadlineEvents(userId, eventRepository)
+                "employee" -> {
+                    Log.d(TAG, "Creating employee tax deadline events (April 30th)")
+                    createEmployeeDeadlineEvents(userId, eventRepository)
+                }
+                "self-employed" -> {
+                    Log.d(TAG, "Creating self-employed tax deadline events (June 30th)")
+                    createSelfEmployDeadlineEvents(userId, eventRepository)
+                }
                 else -> {
                     Log.d(TAG, "Unknown employment type: $employment, defaulting to employee")
                     createEmployeeDeadlineEvents(userId, eventRepository)
@@ -80,25 +103,41 @@ object TaxDeadlineHelper {
 
             // Small delay to ensure creations are processed
             withContext(Dispatchers.IO) {
-                Thread.sleep(300)
+                Log.d(TAG, "Waiting for creation to complete...")
+                Thread.sleep(500)
             }
 
             // Step 3: CRITICAL - Force refresh the repository to update the UI
+            Log.d(TAG, "Step 3: Force refreshing the repository")
             eventRepository.forceRefresh()
 
             // Log event count after update
-            eventRepository.getAllEvents(userId).first().let { events ->
-                Log.d(TAG, "After update: Found ${events.size} event dates with a total of ${events.values.sumOf { it.size }} events")
-                val taxEvents = events.values.flatten().filter { it.title.contains("Tax Filing Deadline", ignoreCase = true) }
-                Log.d(TAG, "Tax deadline events after update: ${taxEvents.size}")
-                taxEvents.forEach { event ->
-                    Log.d(TAG, "  - Tax event: ${event.title} on ${event.date}")
+            withContext(Dispatchers.IO) {
+                // Wait a moment for Firestore to catch up
+                Thread.sleep(500)
+
+                try {
+                    // Try with timeout to avoid blocking indefinitely
+                    withTimeout(5000) {
+                        eventRepository.getAllEvents(userId).first().let { events ->
+                            Log.d(TAG, "AFTER UPDATE: Found ${events.size} event dates with a total of ${events.values.sumOf { it.size }} events")
+                            val taxEvents = events.values.flatten().filter { it.title.contains("Tax Filing Deadline", ignoreCase = true) }
+                            Log.d(TAG, "Tax deadline events AFTER update: ${taxEvents.size}")
+                            taxEvents.forEach { event ->
+                                Log.d(TAG, "  - AFTER: Tax event: ${event.title} on ${event.date}")
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error checking events after update", e)
                 }
             }
 
             // Report final status
             val finalSuccess = createSuccess && success
             Log.d(TAG, "Tax deadline update completed. Overall success: $finalSuccess")
+            Log.d(TAG, "------------ TAX EVENT UPDATE END ------------")
+
             withContext(Dispatchers.Main) {
                 onComplete(finalSuccess)
             }
@@ -135,21 +174,27 @@ object TaxDeadlineHelper {
 
             Log.d(TAG, "Found ${taxDeadlineEvents.size} tax deadline events to delete")
 
-            // Delete each event directly
+            // Delete each event directly - in BATCHES for better performance
             var allSuccessful = true
-            for (doc in taxDeadlineEvents) {
-                try {
+
+            if (taxDeadlineEvents.isNotEmpty()) {
+                // Use batched writes for more efficient deletion
+                val batch = firestore.batch()
+
+                taxDeadlineEvents.forEach { doc ->
                     val docId = doc.id
-                    Log.d(TAG, "Deleting tax event with ID: $docId, title: ${doc.getString("title")}")
-                    eventsCollection.document(docId).delete().await()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error deleting event document", e)
-                    allSuccessful = false
+                    Log.d(TAG, "Adding to batch delete: event ID: $docId, title: ${doc.getString("title")}")
+                    batch.delete(eventsCollection.document(docId))
                 }
+
+                // Execute the batch
+                batch.commit().await()
+                Log.d(TAG, "Batch deletion completed for ${taxDeadlineEvents.size} tax deadline events")
+            } else {
+                Log.d(TAG, "No tax deadline events found to delete")
             }
 
-            Log.d(TAG, "Deleted ${taxDeadlineEvents.size} tax deadline events with success: $allSuccessful")
-            return allSuccessful
+            return true
         } catch (e: Exception) {
             Log.e(TAG, "Error in direct Firestore deletion of tax events", e)
             return false
@@ -163,6 +208,7 @@ object TaxDeadlineHelper {
     private suspend fun createEmployeeDeadlineEvents(userId: String, eventRepository: EventRepository): Boolean {
         val currentYear = Year.now().value
         var allSuccessful = true
+        val maxRetries = 2
 
         // Create events for the current year and next 3 years
         for (year in currentYear..currentYear + 3) {
@@ -186,26 +232,42 @@ object TaxDeadlineHelper {
                 hasReminder = true
             )
 
-            try {
-                // ADD DIRECT FIRESTORE CREATION - more reliable than repository
-                val firestore = FirebaseManager.getAuthFirestore()
-                val eventMap = event.toMap()
+            // Try with retries
+            var success = false
+            var attempts = 0
 
-                // Create directly in Firestore
-                firestore.collection("users").document(userId)
-                    .collection("events")
-                    .add(eventMap)
-                    .await()
+            while (!success && attempts < maxRetries) {
+                attempts++
+                try {
+                    // ADD DIRECT FIRESTORE CREATION - more reliable than repository
+                    val firestore = Firebase.firestore
+                    val eventMap = event.toMap()
 
-                Log.d(TAG, "Successfully created employee deadline event for $year DIRECTLY in Firestore")
+                    // Create directly in Firestore
+                    val docRef = firestore.collection("users").document(userId)
+                        .collection("events")
+                        .add(eventMap)
+                        .await()
 
-                // Small delay to avoid overwhelming Firestore
-                withContext(Dispatchers.IO) {
-                    Thread.sleep(100)
+                    Log.d(TAG, "Successfully created employee deadline event for $year DIRECTLY in Firestore with ID: ${docRef.id}")
+                    success = true
+
+                    // Small delay to avoid overwhelming Firestore
+                    withContext(Dispatchers.IO) {
+                        Thread.sleep(100)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error creating employee deadline event for $year (attempt $attempts): ${e.message}")
+
+                    // Wait a bit longer between retries
+                    withContext(Dispatchers.IO) {
+                        Thread.sleep(500)
+                    }
+
+                    if (attempts >= maxRetries) {
+                        allSuccessful = false
+                    }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error creating employee deadline event for $year", e)
-                allSuccessful = false
             }
         }
 
@@ -219,6 +281,7 @@ object TaxDeadlineHelper {
     private suspend fun createSelfEmployDeadlineEvents(userId: String, eventRepository: EventRepository): Boolean {
         val currentYear = Year.now().value
         var allSuccessful = true
+        val maxRetries = 2
 
         // Create events for the current year and next 3 years
         for (year in currentYear..currentYear + 3) {
@@ -242,26 +305,42 @@ object TaxDeadlineHelper {
                 hasReminder = true
             )
 
-            try {
-                // ADD DIRECT FIRESTORE CREATION - more reliable than repository
-                val firestore = FirebaseManager.getAuthFirestore()
-                val eventMap = event.toMap()
+            // Try with retries
+            var success = false
+            var attempts = 0
 
-                // Create directly in Firestore
-                firestore.collection("users").document(userId)
-                    .collection("events")
-                    .add(eventMap)
-                    .await()
+            while (!success && attempts < maxRetries) {
+                attempts++
+                try {
+                    // ADD DIRECT FIRESTORE CREATION - more reliable than repository
+                    val firestore = Firebase.firestore
+                    val eventMap = event.toMap()
 
-                Log.d(TAG, "Successfully created self-employed deadline event for $year DIRECTLY in Firestore")
+                    // Create directly in Firestore
+                    val docRef = firestore.collection("users").document(userId)
+                        .collection("events")
+                        .add(eventMap)
+                        .await()
 
-                // Small delay to avoid overwhelming Firestore
-                withContext(Dispatchers.IO) {
-                    Thread.sleep(100)
+                    Log.d(TAG, "Successfully created self-employed deadline event for $year DIRECTLY in Firestore with ID: ${docRef.id}")
+                    success = true
+
+                    // Small delay to avoid overwhelming Firestore
+                    withContext(Dispatchers.IO) {
+                        Thread.sleep(100)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error creating self-employed deadline event for $year (attempt $attempts): ${e.message}")
+
+                    // Wait a bit longer between retries
+                    withContext(Dispatchers.IO) {
+                        Thread.sleep(500)
+                    }
+
+                    if (attempts >= maxRetries) {
+                        allSuccessful = false
+                    }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error creating self-employed deadline event for $year", e)
-                allSuccessful = false
             }
         }
 

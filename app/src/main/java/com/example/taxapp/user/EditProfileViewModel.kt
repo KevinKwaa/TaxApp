@@ -233,12 +233,18 @@ class EditProfileViewModel : ViewModel() {
 
                                     Log.d(TAG, "Tax event update completed: $success")
 
-                                    // Force reset repository again to ensure fresh data on next load
-                                    EventRepository.getInstance().forceRefresh()
+                                    // CRITICAL: Force reset repository again to ensure fresh data on next load
+                                    val repo = EventRepository.getInstance()
+                                    repo.forceRefresh()
 
-                                    // Now events should be refreshed
-                                    isLoading = false
-                                    onResult(true, null)
+                                    // IMPORTANT: Add this delay to make sure Firestore has time to process changes
+                                    viewModelScope.launch {
+                                        delay(500)
+
+                                        // Now we can signal completion - the events should now be refreshed
+                                        isLoading = false
+                                        onResult(true, if (success) null else "Profile saved but tax events may not be updated")
+                                    }
                                 }
                             } catch (e: Exception) {
                                 Log.e(TAG, "Error updating tax events", e)
