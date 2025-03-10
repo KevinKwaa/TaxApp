@@ -25,7 +25,7 @@
     <string name="save_changes">Save Changes</string>
 
     <!-- EventDetailScreen -->
-    <string name="date_colon">Date: </string>
+    <string name="date_colon">Date:  </string>
     <string name="time_colon">Time: </string>
     <string name="description_colon">Description:</string>
     <string name="reminder_colon">Reminder: </string>
@@ -95,11 +95,12 @@
 
     <!-- Receipt Details -->
     <string name="receipt_details">Receipt Details</string>
-    <string name="merchant_name">Merchant Name</string>
+    <string name="merchant_name">Merchant: </string>
+    <string name="merchant">Merchant </string>
     <string name="receipt_date">Date</string>
-    <string name="receipt_total">Total Amount</string>
+    <string name="receipt_total">Total Amount: </string>
     <string name="receipt_category">Category</string>
-    <string name="expense_items">Expense Items</string>
+    <string name="expense_items">Expense Items %1$s</string>
     <string name="confirm_save">Confirm and Save</string>
 
     <!-- Categories -->
@@ -125,10 +126,10 @@
     <string name="from">From:</string>
     <string name="edit_receipt">Edit receipt</string>
     <string name="date">Date (DD/MM/YYYY)</string>
-    <string name="total_amount">Total amount</string>
+    <string name="total_amount">Total amount: </string>
     <string name="items">Items</string>
     <string name="no_item_add">No items added</string>
-    <string name="amount">Amount</string>
+    <string name="amount">Amount (RM)</string>
     <string name="cate">Category: %1$s</string>
     <string name="subtotal">Subtotal</string>
     <string name="valid_amount">Please enter a valid amount.</string>
@@ -233,8 +234,39 @@
     <string name="going_to_calendar">Going to calendar</string>
 
     <!-- Tax Plan Screen -->
-    <string name="main_features" translatable="false">Main Features</string>
-    <string name="calendar_description" translatable="false">Track important tax dates and deadlines</string>
-    <string name="tax_plan_description" translatable="false">Optimize your tax savings strategies</string>
-    <string name="tax_info_description" translatable="false">Learn about Malaysian tax regulations</string>
+    <string name="main_features">Main Features</string>
+    <string name="calendar_description">Track important tax dates and deadlines</string>
+    <string name="tax_plan_description">Optimize your tax savings strategies</string>
+    <string name="tax_info_description">Learn about Malaysian tax regulations</string>
+
+
+    <!-- Validation Error Messages -->
+    <string name="error_name_empty">Name cannot be empty</string>
+    <string name="error_name_too_short">Name is too short</string>
+    <string name="error_name_invalid_chars">Name contains invalid characters</string>
+    <string name="error_phone_empty">Phone number cannot be empty</string>
+    <string name="error_phone_too_short">Phone number is too short</string>
+    <string name="error_phone_invalid_chars">Phone number contains invalid characters</string>
+    <string name="error_dob_empty">Date of birth cannot be empty</string>
+    <string name="error_dob_future">Date of birth cannot be in the future</string>
+    <string name="error_dob_format">Invalid date format. Use MM/DD/YYYY</string>
+    <string name="error_income_empty">Income cannot be empty</string>
+    <string name="error_income_invalid_chars">Income can only contain numbers, commas, and periods</string>
+    <string name="error_income_negative">Income cannot be negative</string>
+    <string name="error_income_format">Invalid income format</string>
+    <string name="error_employment_invalid">Please select a valid employment type</string>
+    <string name="error_password_empty">Password cannot be empty</string>
+    <string name="error_password_too_short">Password must be at least 8 characters long</string>
+    <string name="error_password_no_uppercase">Password must contain at least one uppercase letter</string>
+    <string name="error_password_no_digit">Password must contain at least one number</string>
+    <string name="error_password_no_special">Password must contain at least one special character</string>
+    <string name="error_password_confirmation_empty">Please confirm your password</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="error_email_empty">Email cannot be empty</string>
+    <string name="error_email_format">Invalid email format</string>
+    <string name="password_requirements">Password must be at least 8 characters with uppercase, number, and special character</string>
+    <string name="is_saving">Saving...</string>
+    <string name="add_item">Add Item</string>
+    <string name="save_item">Save Item</string>
 </resources>

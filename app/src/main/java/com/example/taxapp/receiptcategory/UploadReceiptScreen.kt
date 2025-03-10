@@ -463,8 +463,8 @@ fun UploadReceiptContent(
                     // Take photo option
                     UploadOption(
                         icon = Icons.Default.PhotoCamera,
-                        title = "Take Photo",
-                        description = "Capture receipt using camera",
+                        title = stringResource(id = R.string.take_photo),
+                        description = stringResource(id = R.string.capture_receipt),
                         onClick = {
                             ttsManager?.speak("Capture receipt")
                             when (PackageManager.PERMISSION_GRANTED) {
@@ -508,8 +508,8 @@ fun UploadReceiptContent(
                     // Upload from gallery option
                     UploadOption(
                         icon = Icons.Default.PhotoLibrary,
-                        title = "From Gallery",
-                        description = "Select receipt from gallery",
+                        title = stringResource(id = R.string.from_gallery),
+                        description = stringResource(id = R.string.select_from_gallery),
                         onClick = {
                             ttsManager?.speak("Browse Gallery")
                             galleryLauncher.launch("image/*")
@@ -520,14 +520,6 @@ fun UploadReceiptContent(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-            }
-
-            if (isDarkMode) {
-                Text(
-                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
-                )
             }
         }
     }
@@ -541,13 +533,14 @@ fun UploadOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val accessibleColors = LocalThemeColors.current
     Card(
         modifier = modifier
             .padding(8.dp)
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onPrimary
+            containerColor = accessibleColors.calendarSurface
         )
     ) {
         Column(
@@ -578,7 +571,7 @@ fun UploadOption(
             Text(
                 text = title,
                 fontSize = scaledSp(16),
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
 
             Spacer(modifier = Modifier.height(4.dp))

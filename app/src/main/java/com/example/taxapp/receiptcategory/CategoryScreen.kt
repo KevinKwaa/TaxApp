@@ -196,7 +196,7 @@ fun CategoryScreen(
                         Icon(
                             imageVector = Icons.Default.Language, // Use the standard language icon
                             contentDescription = "Change Language",
-                            //tint = accessibleColors.buttonText,
+                            tint = accessibleColors.headerText,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -215,7 +215,7 @@ fun CategoryScreen(
                         Icon(
                             imageVector = Icons.Default.Settings,  // Standard settings icon
                             contentDescription = "Accessibility Settings",
-                            //tint = accessibleColors.buttonText,
+                            tint = accessibleColors.headerText,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -456,7 +456,7 @@ fun CategoryScreenContent(
                                 fontWeight = FontWeight.Bold
                             ),
                             textAlign = TextAlign.Center,
-                            color = Color.Black
+                            color = accessibleColors.headerText
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -468,11 +468,13 @@ fun CategoryScreenContent(
 
                         ElevatedButton(
                             modifier = buttonModifier,
+                            colors = ButtonDefaults.elevatedButtonColors(
+                                containerColor = accessibleColors.cardBackground),
                             onClick = { categoryViewModel.loadCategoryData() }
                         ) {
                             Text(
                                 text = stringResource(id = R.string.retry),
-                                color = Color.Black
+                                color = accessibleColors.headerText
                                 )
                         }
 
@@ -481,16 +483,18 @@ fun CategoryScreenContent(
 
                             ElevatedButton(
                                 modifier = buttonModifier,
+                                colors = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = accessibleColors.cardBackground),
                                 onClick = { navController.navigate("uploadReceipt") }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
                                     contentDescription = "Add Receipt",
                                     modifier = Modifier.size(20.dp),
-                                    tint = Color.Black
+                                    tint = accessibleColors.headerText
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = stringResource(id = R.string.add_receipt), color = Color.Black)
+                                Text(text = stringResource(id = R.string.add_receipt), color = accessibleColors.headerText)
                             }
                         }
                     }
@@ -521,21 +525,24 @@ fun CategoryScreenContent(
                                 Text(
                                     text = stringResource(id = R.string.categories_summary),
                                     style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color = accessibleColors.headerText
                                 )
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
                                     text = "Total Expenses: ${categoryViewModel.formatCurrency(categorySummary.values.sum())}",
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = accessibleColors.headerText
                                 )
 
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(
                                     text = "Number of Categories: ${categoryData.size}",
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = accessibleColors.headerText
                                 )
 
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -543,7 +550,8 @@ fun CategoryScreenContent(
                                 val totalItems = categoryData.values.sumOf { it.size }
                                 Text(
                                     text = "Number of Expense Items: $totalItems",
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = accessibleColors.headerText
                                 )
                             }
                         }
@@ -619,6 +627,7 @@ fun CategoryItemsSection(
     formatDate: (Date) -> String
 ) {
     val rotationState by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f)
+    val accessibleColors = LocalThemeColors.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -644,13 +653,14 @@ fun CategoryItemsSection(
                     Text(
                         text = category,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = accessibleColors.headerText
                     )
 
                     Text(
                         text = "${expenseItems.size} ${if (expenseItems.size == 1) "item" else "items"}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
+                        color = accessibleColors.headerText,
                     )
                 }
 
@@ -721,6 +731,7 @@ fun ExpenseItemCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val accessibleColors = LocalThemeColors.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -745,7 +756,8 @@ fun ExpenseItemCard(
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        color = accessibleColors.headerText
                     )
 
                     Row(
@@ -755,7 +767,7 @@ fun ExpenseItemCard(
                         Text(
                             text = "From: ${expenseItem.merchantName}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline,
+                            color = accessibleColors.headerText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
@@ -766,7 +778,7 @@ fun ExpenseItemCard(
                         Text(
                             text = formatDate(expenseItem.date),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = accessibleColors.headerText
                         )
                     }
                 }
@@ -776,7 +788,8 @@ fun ExpenseItemCard(
                     text = formatCurrency(expenseItem.amount),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    color = accessibleColors.headerText
                 )
 
                 // Action buttons

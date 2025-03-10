@@ -97,11 +97,12 @@
 
     <!-- Receipt Details -->
     <string name="receipt_details">Butiran Resit</string>
-    <string name="merchant_name">Nama Peniaga</string>
+    <string name="merchant_name">Nama Peniaga: </string>
+    <string name="merchant">Peniaga </string>
     <string name="receipt_date">Tarikh</string>
-    <string name="receipt_total">Jumlah</string>
+    <string name="receipt_total">Jumlah: </string>
     <string name="receipt_category">Kategori</string>
-    <string name="expense_items">Item Perbelanjaan</string>
+    <string name="expense_items">Item Perbelanjaan %1$s</string>
     <string name="confirm_save">Sahkan dan Simpan</string>
 
     <!-- Categories -->
@@ -131,7 +132,7 @@
     <string name="total_amount">Jumlah</string>
     <string name="items">Barang</string>
     <string name="no_item_add">Tiada item ditambah</string>
-    <string name="amount">Jumlah</string>
+    <string name="amount">Jumlah (RM)</string>
     <string name="cate">Kategori: %1$s</string>
 
     <string name="subtotal">Jumlah kecil</string>
@@ -235,4 +236,41 @@
 
     <string name="tax_calendar_desc">Ikuti tarikh akhir cukai penting dan penjadualannya.</string>
     <string name="going_to_calendar">Pergi ke kalendar</string>
+
+    <string name="main_features">Ciri-ciri Utama</string>
+    <string name="calendar_description">Jejaki tarikh dan tarikh akhir cukai penting</string>
+    <string name="tax_plan_description">Optimumkan strategi penjimatan cukai anda</string>
+    <string name="tax_info_description">Ketahui tentang peraturan cukai Malaysia</string>
+
+    <!-- Validation Error Messages in Malay -->
+    <string name="error_name_empty">Nama tidak boleh kosong</string>
+    <string name="error_name_too_short">Nama terlalu pendek</string>
+    <string name="error_name_invalid_chars">Nama mengandungi aksara yang tidak sah</string>
+    <string name="error_phone_empty">Nombor telefon tidak boleh kosong</string>
+    <string name="error_phone_too_short">Nombor telefon terlalu pendek</string>
+    <string name="error_phone_invalid_chars">Nombor telefon mengandungi aksara yang tidak sah</string>
+    <string name="error_dob_empty">Tarikh lahir tidak boleh kosong</string>
+    <string name="error_dob_future">Tarikh lahir tidak boleh pada masa hadapan</string>
+    <string name="error_dob_format">Format tarikh tidak sah. Gunakan MM/DD/YYYY</string>
+    <string name="error_income_empty">Pendapatan tidak boleh kosong</string>
+    <string name="error_income_invalid_chars">Pendapatan hanya boleh mengandungi nombor, koma, dan titik</string>
+    <string name="error_income_negative">Pendapatan tidak boleh negatif</string>
+    <string name="error_income_format">Format pendapatan tidak sah</string>
+    <string name="error_employment_invalid">Sila pilih jenis pekerjaan yang sah</string>
+    <string name="error_password_empty">Kata laluan tidak boleh kosong</string>
+    <string name="error_password_too_short">Kata laluan mestilah sekurang-kurangnya 8 aksara</string>
+    <string name="error_password_no_uppercase">Kata laluan mestilah mengandungi sekurang-kurangnya satu huruf besar</string>
+    <string name="error_password_no_digit">Kata laluan mestilah mengandungi sekurang-kurangnya satu nombor</string>
+    <string name="error_password_no_special">Kata laluan mestilah mengandungi sekurang-kurangnya satu aksara khas</string>
+    <string name="error_password_confirmation_empty">Sila sahkan kata laluan anda</string>
+    <string name="error_password_mismatch">Kata laluan tidak sepadan</string>
+    <string name="confirm_password">Sahkan kata laluan</string>
+    <string name="error_email_empty">E-mel tidak boleh kosong</string>
+    <string name="error_email_format">Format e-mel tidak sah</string>
+    <string name="password_requirements">Kata laluan mestilah sekurang-kurangnya 8 aksara dengan huruf besar, nombor dan aksara khas</string>
+    <string name="is_saving">Sedang menyimpan...</string>
+    <string name="add_item">Tambah Item</string>
+    <string name="save_item">Simpan Item</string>
+
+
 </resources>

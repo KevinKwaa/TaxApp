@@ -25,6 +25,7 @@ val LocalHighContrastMode = compositionLocalOf { false }
 val LocalDarkMode = compositionLocalOf { false }
 val LocalThemeColors = compositionLocalOf<AccessibleColors> { error("No AccessibleColors provided") }
 
+
 // Class to hold accessible color variations
 class AccessibleColors(
     val calendarBackground: Color,
@@ -41,35 +42,9 @@ class AccessibleColors(
     val cardBackground: Color,
     val cardBorder: Color,
     val headerText: Color,
-    //
-    //val primary: Color,
-//    val onPrimary: Color,
-//    val primaryContainer: Color,
-//    val onPrimaryContainer: Color,
-//    val secondary: Color,
-//    val onSecondary: Color,
-//    val secondaryContainer: Color,
-//    val onSecondaryContainer: Color,
-//    val tertiary: Color,
-//    val onTertiary: Color,
-//    val tertiaryContainer: Color,
-//    val onTertiaryContainer: Color,
-//    val error: Color,
-//    val surface: Color,
-//    val onSurface: Color,
-//    val surfaceVariant: Color,
-//    val onSurfaceVariant: Color,
-//    val surfaceContainerHighest: Color,
-//    val surfaceContainerHigh: Color,
-//    val surfaceContainer: Color,
-//    val surfaceContainerLow: Color,
-//    val surfaceContainerLowest: Color,
-//    val inverseSurface: Color,
-//    val inverseOnSurface: Color,
-//    val surfaceTint: Color,
-//    val surfaceTintColor: Color,
-//    val outline: Color,
-//    val outlineVariant: Color,
+    val surfaceContainerHigh: Color,   // For main feature cards (Tax Calendar, Tax Plan, Tax Info)
+    val surface: Color,                // For small feature cards (Upload Receipt, Tax Categories)
+    val surfaceContainerHighest: Color
 
 )
 
@@ -227,7 +202,7 @@ private fun createAccessibleColorScheme(
         onSurfaceVariant = Color(0xFF505050),
 
         outline = Color(0xFF757575),
-        outlineVariant = Color(0xFFBDBDBD)
+        outlineVariant = Color(0xFFBDBDBD),
     )
 
     // Define high contrast light scheme
@@ -310,8 +285,10 @@ private fun createAccessibleColors(
                 cardBackground = Color(0xFF1A1A1A),
                 cardBorder = Color(0xFF4D90FF).copy(alpha = 0.5f),
                 headerText = Color.White,
-                //
-                //primary = MaterialTheme.colorScheme.primary
+                surfaceContainerHigh = Color(0xFF6A5B7B),    // Darker purple/lavender that preserves the original hue
+                surface = Color(0xFF394956),                 // Darker blue-gray that maintains the blue tint
+                surfaceContainerHighest = Color(0xFF5D4D70)  // Darker lavender that preserves the original hue
+
             )
         } else {
             // Regular dark mode
@@ -330,8 +307,9 @@ private fun createAccessibleColors(
                 cardBackground = Color(0xFF252525),
                 cardBorder = Color(0xFF81A9FF).copy(alpha = 0.2f),
                 headerText = Color(0xFFE1E1E1),
-                //
-                //primary = Color(0xffd0bcff)
+                surfaceContainerHigh = Color(0xFF7E6C94),    // Dark lavender/purple
+                surface = Color(0xFF4A5D6E),                 // Dark blue-gray
+                surfaceContainerHighest = Color(0xFF6F5C87)  // Dark lavender, slightly different than the first
             )
         }
     } else {
@@ -352,8 +330,9 @@ private fun createAccessibleColors(
                 cardBackground = Color.White,
                 cardBorder = Color.Black,
                 headerText = Color.Black,
-                //
-                //primary = MaterialTheme.colorScheme.primary
+                surfaceContainerHigh = Color(0xFFE6E0EC),    // Slightly darker than ECE6F0 for better contrast
+                surface = Color(0xFFE9F0F3),                 // Light grayish blue
+                surfaceContainerHighest = Color(0xFFE0DAE6)
             )
         } else {
             // Regular light mode
@@ -372,7 +351,9 @@ private fun createAccessibleColors(
                 cardBackground = Color(0xFFF5F5F5),
                 cardBorder = Color(0xFF1565C0).copy(alpha = 0.2f),
                 headerText = Color(0xFF121212),
-                //primary = MaterialTheme.colorScheme.primary
+                surfaceContainerHigh = Color(0xFFECE6F0),    // Exact light purple/gray from screenshot
+                surface = Color(0xFFE7F1F9),                 // Light grayish blue from screenshot
+                surfaceContainerHighest = Color(0xFFE5DFE9)
             )
         }
     }

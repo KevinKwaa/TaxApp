@@ -173,7 +173,6 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back to selection screen",
-                        //tint = accessibleColors.calendarText
                     )
                 }
 
@@ -193,7 +192,8 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                     Icon(
                         imageVector = Icons.Default.Language,
                         contentDescription = "Change Language",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
+                        tint = accessibleColors.headerText
                     )
                 }
 
@@ -214,7 +214,8 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Accessibility Settings",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
+                        tint = accessibleColors.headerText
                     )
                 }
             }

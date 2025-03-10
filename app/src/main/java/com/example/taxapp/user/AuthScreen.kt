@@ -106,6 +106,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
+    //val accesibleColor2 =
     val isDarkMode = LocalDarkMode.current
     ScreenReader("Auth Screen")
     val ttsManager = LocalTtsManager.current
@@ -135,7 +136,8 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
                     Icon(
                         imageVector = Icons.Default.Language,
                         contentDescription = "Change Language",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
+                        tint = accessibleColors.headerText
                     )
                 }
 
@@ -147,18 +149,12 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Accessibility Settings",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
+                        tint = accessibleColors.headerText
                     )
                 }
             }
 
-            if (isDarkMode) {
-                Text(
-                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
-                )
-            }
 
             Image(
                 painter = painterResource(id = R.drawable.banner),
@@ -192,6 +188,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            //login button
             Button(
                 onClick = {
                     ttsManager?.speak("Login")
@@ -215,6 +212,8 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
 
             Spacer(modifier = Modifier.height(20.dp))
 
+
+            //
             OutlinedButton(
                 onClick = {
                     ttsManager?.speak("Register yourself up")
@@ -224,11 +223,11 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
                     .fillMaxWidth()
                     .height(60.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = accessibleColors.buttonBackground
+                    contentColor = MaterialTheme.colorScheme.primary
                 ),
                 border = BorderStroke(
                     width = 1.dp,
-                    color = accessibleColors.buttonBackground
+                    color = MaterialTheme.colorScheme.primary
                 )
             ) {
                 // Using scaledSp() for proper scaling in button text

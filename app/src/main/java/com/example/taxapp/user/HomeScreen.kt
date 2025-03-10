@@ -189,7 +189,8 @@ fun HomeScreen(
                                     imageVector = Icons.Default.Language, // Use the standard language icon
                                     contentDescription = "Change Language",
                                     //tint = accessibleColors.buttonText,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(24.dp),
+                                    tint = accessibleColors.headerText
                                 )
                             }
 
@@ -208,7 +209,8 @@ fun HomeScreen(
                                     imageVector = Icons.Default.Settings,  // Standard settings icon
                                     contentDescription = "Accessibility Settings",
                                     //tint = accessibleColors.buttonText,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(24.dp),
+                                    tint = accessibleColors.headerText
                                 )
                             }
                         }
@@ -294,10 +296,10 @@ fun HomeScreen(
 
                     // Main features section
                     Text(
-                        text = "Welcome to Smart Tax Handler",
+                        text = stringResource(id = R.string.welcome_message),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 24.dp)
+                        modifier = Modifier.padding(bottom = 24.dp),
                     )
 
                     // Feature cards in a grid-like layout
@@ -309,7 +311,7 @@ fun HomeScreen(
                             ttsManager?.speak("Tax Calendar")
                             navController.navigate("calendar")
                         },
-                        colors = MaterialTheme.colorScheme.surfaceContainerHigh to Color.Black
+                        colors = accessibleColors.surfaceContainerHigh to accessibleColors.headerText
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -326,7 +328,7 @@ fun HomeScreen(
                                 ttsManager?.speak("Upload Receipt")
                                 navController.navigate("uploadReceipt")
                             },
-                            colors = MaterialTheme.colorScheme.surface to Color.Black
+                            colors = accessibleColors.surface to accessibleColors.headerText
                         )
 
                         SmallFeatureCard(
@@ -337,7 +339,7 @@ fun HomeScreen(
                                 ttsManager?.speak("Tax Categories")
                                 navController.navigate("category")
                             },
-                            colors = MaterialTheme.colorScheme.surface to Color.Black
+                            colors = accessibleColors.surface to accessibleColors.headerText
                         )
                     }
 
@@ -351,7 +353,7 @@ fun HomeScreen(
                             ttsManager?.speak("Tax Planning")
                             navController.navigate("taxPlan")
                         },
-                        colors = MaterialTheme.colorScheme.surfaceContainerHigh to Color.Black
+                        colors = accessibleColors.surfaceContainerHigh to accessibleColors.headerText
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -364,7 +366,7 @@ fun HomeScreen(
                             ttsManager?.speak("Tax Information")
                             navController.navigate("taxInformation")
                         },
-                        colors = MaterialTheme.colorScheme.surfaceContainerHighest to Color.Black
+                        colors = accessibleColors.surfaceContainerHighest to accessibleColors.headerText
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -435,6 +437,7 @@ fun FeatureCard(
     onClick: () -> Unit,
     colors: Pair<Color, Color> // Background and content color
 ) {
+
     ElevatedCard(
         onClick = onClick,
         modifier = Modifier

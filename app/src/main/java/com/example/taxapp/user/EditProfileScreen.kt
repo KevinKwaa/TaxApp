@@ -749,7 +749,7 @@ fun EditProfileScreenContent(
                     }
                 },
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = accessibleColors.buttonBackground
+                    contentColor = MaterialTheme.colorScheme.primary
                 ),
                 border = BorderStroke(
                     width = 1.dp,

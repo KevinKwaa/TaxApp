@@ -238,7 +238,8 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                         Icon(
                             imageVector = Icons.Default.Language,
                             contentDescription = "Change Language",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = accessibleColors.headerText
                         )
                     }
 
@@ -260,7 +261,8 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Accessibility Settings",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = accessibleColors.headerText
                         )
                     }
                 }
@@ -358,7 +360,7 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                     onValueChange = { confirmPassword = it },
                     label = {
                         Text(
-                            text = "Confirm Password",
+                            text = stringResource(id = R.string.confirm_password),
                             color = accessibleColors.calendarText.copy(alpha = 0.8f)
                         )
                     },
@@ -387,7 +389,8 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                 // Password requirements text
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Password must be at least 8 characters with uppercase, number, and special character",
+                    text = stringResource(R.string.password_requirements),
+                    //"Password must be at least 8 characters with uppercase, number, and special character"
                     style = MaterialTheme.typography.bodySmall,
                     color = accessibleColors.calendarText.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth()

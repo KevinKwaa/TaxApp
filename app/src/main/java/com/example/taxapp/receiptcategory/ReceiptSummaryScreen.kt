@@ -392,7 +392,7 @@ fun ReceiptSummaryContent(
                                 .padding(16.dp)
                         ) {
                             Text(
-                                text = "Receipt Information",
+                                text = stringResource(id = R.string.receipt_details),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -404,7 +404,7 @@ fun ReceiptSummaryContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Merchant: ",
+                                    text = stringResource(id = R.string.merchant_name),
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -421,7 +421,7 @@ fun ReceiptSummaryContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Date: ",
+                                    text = stringResource(id = R.string.date_colon),
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -438,7 +438,7 @@ fun ReceiptSummaryContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Total Amount: ",
+                                    text = stringResource(id = R.string.receipt_total),
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -463,7 +463,11 @@ fun ReceiptSummaryContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Expense Items (${receiptViewModel.expenseItems.size})",
+                           // text = "Expense Items (${receiptViewModel.expenseItems.size})",
+                            text = stringResource(
+                                id = R.string.expense_items,
+                                receiptViewModel.expenseItems.size
+                            ),
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -476,7 +480,7 @@ fun ReceiptSummaryContent(
                         ) {
                             Icon(Icons.Filled.Add, contentDescription = "Add Item")
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "Add Item")
+                            Text(text = stringResource(id = R.string.add_item))
                         }
                     }
                 }
@@ -549,7 +553,7 @@ fun ReceiptSummaryContent(
                                 text = if (receiptViewModel.expenseItems.size > 1)
                                     "Save ${receiptViewModel.expenseItems.size} Items"
                                 else
-                                    "Save Item",
+                                    stringResource(id = R.string.save_item),
                                 fontSize = 18.sp
                             )
                         }
@@ -578,7 +582,7 @@ fun ReceiptSummaryContent(
                             )
                         ) {
                             Text(
-                                text = "Cancel",
+                                text = stringResource(id = R.string.cancel),
                                 fontSize = 18.sp,
                                 color = Color.White
                             )
@@ -742,7 +746,7 @@ fun EditableExpenseItemCard(
                 OutlinedTextField(
                     value = editedMerchant,
                     onValueChange = { editedMerchant = it },
-                    label = { Text(text = "Merchant") },
+                    label = { Text(text = stringResource(id = R.string.merchant)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
@@ -752,7 +756,7 @@ fun EditableExpenseItemCard(
                 OutlinedTextField(
                     value = editedDate,
                     onValueChange = { editedDate = it },
-                    label = { Text(text = "Date (DD/MM/YYYY)") },
+                    label = { Text(text = stringResource(id = R.string.date)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
@@ -768,7 +772,7 @@ fun EditableExpenseItemCard(
                 OutlinedTextField(
                     value = editedName,
                     onValueChange = { editedName = it },
-                    label = { Text(text = "Item Description") },
+                    label = { Text(text = stringResource(id = R.string.item_description)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
@@ -781,7 +785,7 @@ fun EditableExpenseItemCard(
                         editedAmount = it
                         isValidAmount = it.toDoubleOrNull() != null
                     },
-                    label = { Text(text = "Amount (RM)") },
+                    label = { Text(text = stringResource(id = R.string.amount)) },
                     isError = !isValidAmount,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier
@@ -841,7 +845,7 @@ fun EditableExpenseItemCard(
                         .align(Alignment.End)
                         .padding(top = 8.dp)
                 ) {
-                    Text(text = "Save Changes")
+                    Text(text = stringResource(id = R.string.save_changes))
                 }
             } else {
                 // Display mode - show item details

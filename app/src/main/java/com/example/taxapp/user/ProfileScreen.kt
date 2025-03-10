@@ -24,12 +24,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -192,62 +197,31 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                     modifier = Modifier.weight(1f)
                 )
 
-                // Accessibility buttons on the right side
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                // Language button
+                IconButton(
+                    onClick = { showLanguageSelector = true },
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    // Language button with improved styling
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(
-                                accessibleColors.buttonText,
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.buttonText,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
-                            .clickable { showLanguageSelector = true }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "🌐",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = accessibleColors.buttonText
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Language,
+                        contentDescription = "Change Language",
+                        modifier = Modifier.size(24.dp),
+                        tint = accessibleColors.headerText
+                    )
+                }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                // Accessibility button
+                IconButton(
+                    onClick = { showAccessibilitySettings = true },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Accessibility Settings",
+                        modifier = Modifier.size(24.dp),
+                        tint = accessibleColors.headerText
+                    )
 
-                    // Accessibility button with improved styling
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(
-                                accessibleColors.buttonText,
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.buttonText,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
-                            .clickable { showAccessibilitySettings = true }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "⚙️",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = accessibleColors.buttonText
-                        )
-                    }
                 }
             }
 
@@ -533,16 +507,9 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
-                Text(text = if (isLoading) "Saving..." else "Save Profile")
+                Text(text = if (isLoading) stringResource(id =R.string.is_saving) else stringResource(id =R.string.save_profile))
             }
 
-            if (isDarkMode) {
-                Text(
-                    text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = accessibleColors.calendarText.copy(alpha = 0.7f)
-                )
-            }
         }
 
         if (showLanguageSelector) {
