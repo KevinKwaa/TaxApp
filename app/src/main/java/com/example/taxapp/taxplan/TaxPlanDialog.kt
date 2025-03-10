@@ -23,10 +23,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import com.example.taxapp.R
 
 /**
  * Dialog for creating a new tax plan
@@ -39,21 +41,26 @@ fun TaxPlanCreateDialog(
     var planName by remember { mutableStateOf("") }
     var selectedPlanType by remember { mutableStateOf("standard") }
 
+    // Get string resources at the composable level
+    val standardPlanName = stringResource(id = R.string.standard_plan)
+    val futurePlanName = stringResource(id = R.string.future_income_plan_title)
+    val businessPlanName = stringResource(id = R.string.business_plan_title)
+
     // Plan types
     val planTypes = listOf(
-        "standard" to "Standard Tax Plan",
-        "future" to "Future Income Plan (20% higher income)",
-        "business" to "Business Venture Plan"
+        "standard" to stringResource(id = R.string.standard_tax_plan),
+        "future" to stringResource(id = R.string.future_income_plan),
+        "business" to stringResource(id = R.string.business_venture_plan)
     )
 
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true),
-        title = { Text("Create New Tax Plan", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(id = R.string.create_new_tax_plan), fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text(
-                    "Generate a new AI-powered tax plan with custom options.",
+                    stringResource(id = R.string.generate_ai_plan),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -63,8 +70,8 @@ fun TaxPlanCreateDialog(
                 OutlinedTextField(
                     value = planName,
                     onValueChange = { planName = it },
-                    label = { Text("Plan Name (Optional)") },
-                    placeholder = { Text("e.g., My Tax Plan 2025") },
+                    label = { Text(stringResource(id = R.string.plan_name_optional)) },
+                    placeholder = { Text(stringResource(id = R.string.plan_name_placeholder)) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -72,7 +79,7 @@ fun TaxPlanCreateDialog(
 
                 // Plan type selection
                 Text(
-                    "Select Plan Type:",
+                    stringResource(id = R.string.select_plan_type),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -111,12 +118,12 @@ fun TaxPlanCreateDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    // Use default name if empty
+                    // Use default name if empty - using pre-loaded string resources
                     val finalName = if (planName.isBlank()) {
                         when (selectedPlanType) {
-                            "future" -> "Future Income Tax Plan"
-                            "business" -> "Business Tax Plan"
-                            else -> "My Tax Plan"
+                            "future" -> futurePlanName
+                            "business" -> businessPlanName
+                            else -> standardPlanName
                         }
                     } else {
                         planName
@@ -125,12 +132,12 @@ fun TaxPlanCreateDialog(
                     onCreatePlan(finalName, selectedPlanType)
                 }
             ) {
-                Text("Generate Plan")
+                Text(stringResource(id = R.string.generate_plan))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(id = R.string.cancel))
             }
         }
     )

@@ -281,7 +281,7 @@ fun CalendarScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        IconButton(onClick = { onNavigateBack() }) {
+                        IconButton(onClick = { navController.navigate("home") }) {
                             Icon(
                                 Icons.Filled.Home,
                                 contentDescription = "Home",
@@ -492,6 +492,23 @@ fun CalendarScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
+                        // Selected Date Events Section with localized date format
+                        SelectedDateEvents(
+                            selectedDate = selectedDate,
+                            events = liveEvents[selectedDate] ?: mutableListOf(),
+                            onEventClick = { event ->
+                                // Use the captured ttsManager reference
+                                ttsManager?.speak("Opening event: ${event.title}")
+                                onNavigateToEventDetails(event)
+                            },
+                            onAddEventClick = {
+                                // Use the captured ttsManager reference
+                                ttsManager?.speak("Adding new event")
+                                onNavigateToAddEvent(selectedDate)
+                            },
+                            currentLanguageCode = currentLanguageCode
+                        )
+
                         // Add Event Button
                         Button(
                             onClick = { onNavigateToAddEvent(selectedDate) },
@@ -516,22 +533,6 @@ fun CalendarScreen(
                             }
                         }
 
-                        // Selected Date Events Section with localized date format
-                        SelectedDateEvents(
-                            selectedDate = selectedDate,
-                            events = liveEvents[selectedDate] ?: mutableListOf(),
-                            onEventClick = { event ->
-                                // Use the captured ttsManager reference
-                                ttsManager?.speak("Opening event: ${event.title}")
-                                onNavigateToEventDetails(event)
-                            },
-                            onAddEventClick = {
-                                // Use the captured ttsManager reference
-                                ttsManager?.speak("Adding new event")
-                                onNavigateToAddEvent(selectedDate)
-                            },
-                            currentLanguageCode = currentLanguageCode
-                        )
                     }
                 }
             }
@@ -782,7 +783,7 @@ fun SelectedDateEvents(
                             else
                                 accessibleColors.calendarBorder.copy(alpha = 0.1f)
                         )
-                        .padding(vertical = 24.dp),
+                        .padding(vertical = 20.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(

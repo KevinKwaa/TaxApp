@@ -115,7 +115,6 @@ fun TaxPlanScreen(
     val activity = context as? ComponentActivity
     var showLanguageSelector by remember { mutableStateOf(false) }
     var showAccessibilitySettings by remember { mutableStateOf(false) }
-    // Add this to TaxPlanListScreen
     var showAIExplanation by remember { mutableStateOf(false) }
 
     // Access shared repositories
@@ -151,8 +150,23 @@ fun TaxPlanScreen(
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Home Screen")
+    val screenReaderText = if (viewModel.isViewingPlan)
+        stringResource(id = R.string.tax_plan_detail_screen)
+    else
+        stringResource(id = R.string.tax_plan_screen)
+    ScreenReader(screenReaderText)
     val ttsManager = LocalTtsManager.current
+
+    // Fixed back navigation handling
+    val handleBackNavigation = {
+        if (viewModel.isViewingPlan) {
+            // If viewing a plan, go back to the plan list
+            viewModel.closePlanView()
+        } else {
+            // If at the plan list, navigate back from the screen
+            onNavigateBack()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -167,18 +181,17 @@ fun TaxPlanScreen(
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    //titleContentColor = MaterialTheme.colorScheme.onTertiary
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = handleBackNavigation) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(id = R.string.back)
                         )
                     }
                 },
                 actions = {
-                    // Language button with improved styling
+                    // Language button
                     IconButton(
                         onClick = { showLanguageSelector = true },
                         modifier = Modifier
@@ -190,14 +203,13 @@ fun TaxPlanScreen(
                             )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Language, // Use the standard language icon
-                            contentDescription = "Change Language",
-                            //tint = accessibleColors.buttonText,
+                            imageVector = Icons.Default.Language,
+                            contentDescription = stringResource(id = R.string.change_language),
                             modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    // Accessibility button with improved styling
+                    // Accessibility button
                     IconButton(
                         onClick = { showAccessibilitySettings = true },
                         modifier = Modifier
@@ -209,13 +221,13 @@ fun TaxPlanScreen(
                             )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Settings,  // Standard settings icon
-                            contentDescription = "Accessibility Settings",
-                            //tint = accessibleColors.buttonText,
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(id = R.string.accessibility_settings),
                             modifier = Modifier.size(24.dp)
                         )
                     }
 
+                    // AI information button
                     IconButton(
                         onClick = { showAIExplanation = true },
                         modifier = Modifier
@@ -227,14 +239,13 @@ fun TaxPlanScreen(
                             )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Info,  // Using built-in Material icon
-                            contentDescription = "AI Information",
+                            imageVector = Icons.Default.Info,
+                            contentDescription = stringResource(id = R.string.ai_information),
                             modifier = Modifier.size(24.dp)
-                            //tint = MaterialTheme.colorScheme.primary
                         )
                     }
 
-                    // Add this dialog
+                    // AI explanation dialog
                     if (showAIExplanation) {
                         AlertDialog(
                             onDismissRequest = { showAIExplanation = false },
@@ -243,26 +254,26 @@ fun TaxPlanScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
-                                        painter = painterResource(id = R.drawable.ic_ai),  // Add this icon to your drawable resources
+                                        painter = painterResource(id = R.drawable.ic_ai),
                                         contentDescription = null,
                                         modifier = Modifier.size(24.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("AI Tax Plan Generator")
+                                    Text(stringResource(id = R.string.ai_tax_plan_generator))
                                 }
                             },
                             text = {
                                 Column {
                                     Text(
-                                        "This feature uses AI to analyze your income and employment type to generate personalized tax-saving suggestions.",
+                                        stringResource(id = R.string.ai_feature_description),
                                         style = MaterialTheme.typography.bodyMedium
                                     )
 
                                     Spacer(modifier = Modifier.height(16.dp))
 
                                     Text(
-                                        "How it works:",
+                                        stringResource(id = R.string.how_it_works),
                                         style = MaterialTheme.typography.titleSmall,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -270,24 +281,24 @@ fun TaxPlanScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     Text(
-                                        "1. The AI analyzes your income level and employment type",
+                                        stringResource(id = R.string.ai_step_1),
                                         style = MaterialTheme.typography.bodyMedium
                                     )
 
                                     Text(
-                                        "2. It identifies applicable tax relief categories for your situation",
+                                        stringResource(id = R.string.ai_step_2),
                                         style = MaterialTheme.typography.bodyMedium
                                     )
 
                                     Text(
-                                        "3. It generates specific suggestions with estimated savings",
+                                        stringResource(id = R.string.ai_step_3),
                                         style = MaterialTheme.typography.bodyMedium
                                     )
 
                                     Spacer(modifier = Modifier.height(16.dp))
 
                                     Text(
-                                        "Note: Make sure your income and employment information are up-to-date in your profile for the most accurate suggestions.",
+                                        stringResource(id = R.string.ai_note),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -297,7 +308,7 @@ fun TaxPlanScreen(
                                 Button(
                                     onClick = { showAIExplanation = false }
                                 ) {
-                                    Text("Got it")
+                                    Text(stringResource(id = R.string.got_it))
                                 }
                             }
                         )
@@ -316,53 +327,53 @@ fun TaxPlanScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     IconButton(onClick = {
-                        ttsManager?.speak("Home")
+                        ttsManager?.speak("Going back home")
                         navController.navigate("home")
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Home,
-                            contentDescription = "Home",
+                            contentDescription = stringResource(id = R.string.home),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
                     IconButton(onClick = {
-                        ttsManager?.speak("Calendar")
+                        ttsManager?.speak("Calendar screen")
                         navController.navigate("calendar")
                     }) {
                         Icon(
                             imageVector = Icons.Filled.CalendarMonth,
-                            contentDescription = "Calendar"
+                            contentDescription = stringResource(id = R.string.calendar)
                         )
                     }
 
                     IconButton(onClick = {
-                        ttsManager?.speak("Upload Receipt")
+                        ttsManager?.speak("Upload receipt page")
                         navController.navigate("uploadReceipt")
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Receipt,
-                            contentDescription = "Upload Receipt"
+                            contentDescription = stringResource(id = R.string.upload_receipt)
                         )
                     }
 
                     IconButton(onClick = {
-                        ttsManager?.speak("Categories")
+                        ttsManager?.speak("Category page")
                         navController.navigate("category")
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Category,
-                            contentDescription = "Categories"
+                            contentDescription = stringResource(id = R.string.categories)
                         )
                     }
 
                     IconButton(onClick = {
-                        ttsManager?.speak("Account")
+                        ttsManager?.speak("Profile page")
                         navController.navigate("editProfile")
                     }) {
                         Icon(
                             imageVector = Icons.Filled.AccountCircle,
-                            contentDescription = "Account"
+                            contentDescription = stringResource(id = R.string.account)
                         )
                     }
                 }
@@ -386,8 +397,8 @@ fun TaxPlanScreen(
         if (viewModel.showDeleteConfirmation) {
             AlertDialog(
                 onDismissRequest = { viewModel.cancelDelete() },
-                title = { Text("Delete Tax Plan") },
-                text = { Text("Are you sure you want to delete this tax plan? This action cannot be undone.") },
+                title = { Text(stringResource(id = R.string.delete_tax_plan)) },
+                text = { Text(stringResource(id = R.string.delete_confirmation)) },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -404,17 +415,19 @@ fun TaxPlanScreen(
                             containerColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text("Delete")
+                        Text(stringResource(id = R.string.delete))
                     }
                 },
                 dismissButton = {
                     OutlinedButton(onClick = { viewModel.cancelDelete() }) {
-                        Text("Cancel")
+                        Text(stringResource(id = R.string.cancel))
                     }
                 }
             )
         }
     }
+
+    // Language selector
     if (showLanguageSelector) {
         LanguageSelector(
             currentLanguageCode = currentLanguageCode,
@@ -426,6 +439,7 @@ fun TaxPlanScreen(
         )
     }
 
+    // Accessibility settings
     if (showAccessibilitySettings) {
         AccessibilitySettings(
             currentSettings = accessibilityState,
@@ -489,7 +503,7 @@ fun TaxPlanListScreen(
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Tax Plan Screen")
+    ScreenReader(stringResource(id = R.string.tax_plan_screen))
     val ttsManager = LocalTtsManager.current
 
     // Add this to TaxPlanListScreen
@@ -538,7 +552,7 @@ fun TaxPlanListScreen(
                         Button(
                             onClick = { viewModel.loadTaxPlans() }
                         ) {
-                            Text("Retry")
+                            Text(stringResource(id = R.string.retry))
                         }
                     }
                 }
@@ -560,7 +574,7 @@ fun TaxPlanListScreen(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "No tax plans yet",
+                                    text = stringResource(id = R.string.no_tax_plans),
                                     style = MaterialTheme.typography.bodyLarge,
                                     textAlign = TextAlign.Center
                                 )
@@ -568,7 +582,7 @@ fun TaxPlanListScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "Generate a tax plan to get started",
+                                    text = stringResource(id = R.string.generate_to_start),
                                     style = MaterialTheme.typography.bodyMedium,
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
@@ -597,17 +611,11 @@ fun TaxPlanListScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Generate button
-                    // Replace the existing Generate button in TaxPlanListScreen with this enhanced version
                     Button(
                         onClick = { viewModel.showCreatePlanDialog() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-//                            .border(
-//                                width = 1.dp,
-//                                color = if (isLoading) MaterialTheme.colorScheme.primaryContainer else Color.White,
-//                                shape = RoundedCornerShape(12.dp)
-//                            ),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = accessibleColors.buttonBackground,
                             contentColor = accessibleColors.buttonText
@@ -628,20 +636,20 @@ fun TaxPlanListScreen(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = "AI Generating Tax Plan...",
+                                    text = stringResource(id = R.string.ai_generating),
                                     fontSize = scaledSp(16),
                                     fontWeight = FontWeight.Medium
                                 )
                             } else {
                                 // Show AI icon and text when not loading
                                 Icon(
-                                    painter = painterResource(id = R.drawable.ic_ai),  // Make sure to add this icon to your drawable resources
+                                    painter = painterResource(id = R.drawable.ic_ai),
                                     contentDescription = "AI",
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Generate AI Tax Plan",
+                                    text = stringResource(id = R.string.generate_tax_plan),
                                     fontSize = scaledSp(16),
                                     fontWeight = FontWeight.Medium
                                 )
@@ -689,7 +697,7 @@ fun TaxPlanListScreen(
                     currentLanguageCode = languageCode
                 },
                 onDismiss = { showLanguageSelector = false },
-                activity = activity  // Pass the activity
+                activity = activity
             )
         }
 
@@ -743,7 +751,10 @@ fun TaxPlanItem(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Potential Savings: ${formatCurrency(taxPlan.potentialSavings)}",
+                    text = stringResource(
+                        id = R.string.potential_savings,
+                        formatCurrency(taxPlan.potentialSavings)
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
@@ -751,7 +762,10 @@ fun TaxPlanItem(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${taxPlan.suggestions.size} suggestions",
+                    text = stringResource(
+                        id = R.string.suggestions_count,
+                        taxPlan.suggestions.size
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
@@ -771,7 +785,7 @@ fun TaxPlanItem(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Visibility,
-                        contentDescription = "View plan",
+                        contentDescription = stringResource(id = R.string.view_plan),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -786,7 +800,7 @@ fun TaxPlanItem(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete plan",
+                        contentDescription = stringResource(id = R.string.delete_plan),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -852,7 +866,7 @@ fun TaxPlanDetailScreen(
 
                 // Use displayTotalSavings instead of the original value
                 Text(
-                    text = "Potential Tax Savings: ${viewModel.formatCurrency(displayTotalSavings)}",
+                    text = stringResource(id = R.string.potential_tax_savings, viewModel.formatCurrency(displayTotalSavings)),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
@@ -862,7 +876,7 @@ fun TaxPlanDetailScreen(
 
         // Suggestions
         Text(
-            text = "Tax Saving Suggestions",
+            text = stringResource(id = R.string.tax_saving_suggestions),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = 8.dp)
@@ -878,7 +892,7 @@ fun TaxPlanDetailScreen(
                 )
             ) {
                 Text(
-                    text = "No suggestions available",
+                    text = stringResource(id = R.string.no_suggestions_available),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(16.dp)
                 )

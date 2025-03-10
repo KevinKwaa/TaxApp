@@ -446,7 +446,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                                 showStatusFeedback = true
                             }
                         }
-                    }
+                    },
+                    navController = navController
                 )
             }
 

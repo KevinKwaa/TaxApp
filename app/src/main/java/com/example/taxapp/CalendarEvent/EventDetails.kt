@@ -127,7 +127,8 @@ fun EventDetailScreen(
                     }
                 },
                 accessibilityState = accessibilityState,
-                currentLanguageCode = currentLanguageCode
+                currentLanguageCode = currentLanguageCode,
+                navController = navController
             )
         } else {
             Scaffold(
@@ -183,7 +184,7 @@ fun EventDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            IconButton(onClick = { onNavigateBack() }) {
+                            IconButton(onClick = { navController.navigate("home") }) {
                                 Icon(
                                     Icons.Filled.Home,
                                     contentDescription = "Home",
@@ -191,7 +192,7 @@ fun EventDetailScreen(
                                 )
                             }
 
-                            IconButton(onClick = { /* Already on Calendar */ }) {
+                            IconButton(onClick = { onNavigateBack() }) {
                                 Icon(
                                     Icons.Filled.CalendarMonth,
                                     contentDescription = "Calendar",
@@ -365,7 +366,8 @@ fun EventEditMode(
     onEventSaved: (Event) -> Unit,
     accessibilityState: AccessibilityState,
     currentLanguageCode: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
 ) {
     // Get the custom colors from the accessibility theme
     val accessibleColors = LocalThemeColors.current
@@ -419,7 +421,7 @@ fun EventEditMode(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { onNavigateBack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Cancel Edit"
@@ -457,35 +459,37 @@ fun EventEditMode(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    IconButton(onClick = { /* Navigate to home */ }) {
+                    IconButton(onClick = { navController.navigate("home") }) {
                         Icon(
                             Icons.Filled.Home,
-                            contentDescription = "Home"
+                            contentDescription = "Home",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    IconButton(onClick = { /* Navigate to calendar */ }) {
+                    IconButton(onClick = { onNavigateBack() }) {
                         Icon(
                             Icons.Filled.CalendarMonth,
-                            contentDescription = "Calendar"
+                            contentDescription = "Calendar",
+                            tint = MaterialTheme.colorScheme.primary // Highlight current screen
                         )
                     }
 
-                    IconButton(onClick = { /* Navigate to receipt */ }) {
+                    IconButton(onClick = { navController.navigate("uploadReceipt") }) {
                         Icon(
                             Icons.Filled.Receipt,
                             contentDescription = "Upload Receipt"
                         )
                     }
 
-                    IconButton(onClick = { /* Navigate to category */ }) {
+                    IconButton(onClick = { navController.navigate("category") }) {
                         Icon(
                             Icons.Filled.Category,
                             contentDescription = "Categories"
                         )
                     }
 
-                    IconButton(onClick = { /* Navigate to profile */ }) {
+                    IconButton(onClick = { navController.navigate("editProfile") }) {
                         Icon(
                             Icons.Filled.AccountCircle,
                             contentDescription = "Account"

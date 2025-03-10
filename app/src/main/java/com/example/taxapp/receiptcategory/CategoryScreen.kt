@@ -263,13 +263,11 @@ fun CategoryScreen(
                         )
                     }
 
-                    IconButton(onClick = {
-                        ttsManager?.speak("Categories")
-                        navController.navigate("category")
-                    }) {
+                    IconButton(onClick = { /* Already on Category */ }) {
                         Icon(
                             imageVector = Icons.Filled.Category,
-                            contentDescription = "Categories"
+                            contentDescription = "Categories",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
 

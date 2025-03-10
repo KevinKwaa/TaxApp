@@ -242,13 +242,11 @@ fun EditProfileScreen(
                         )
                     }
 
-                    IconButton(onClick = {
-                        ttsManager?.speak("Account")
-                        navController.navigate("editProfile")
-                    }) {
+                    IconButton(onClick = { /* Already on Profile */ }) {
                         Icon(
                             imageVector = Icons.Filled.AccountCircle,
-                            contentDescription = "Account"
+                            contentDescription = "Account",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

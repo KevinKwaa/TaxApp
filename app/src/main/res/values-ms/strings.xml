@@ -271,6 +271,106 @@
     <string name="is_saving">Sedang menyimpan...</string>
     <string name="add_item">Tambah Item</string>
     <string name="save_item">Simpan Item</string>
+    <string name="generate_tax_plan">Hasilkan Pelan Cukai AI</string>
 
+    <!-- Navigation and Action strings -->
+    <string name="change_language">Tukar Bahasa</string>
+    <string name="accessibility_settings">Tetapan Kebolehcapaian</string>
+    <string name="ai_information">Maklumat AI</string>
+    <string name="calendar">Kalendar</string>
+    <string name="account">Akaun</string>
 
+    <!-- Tax Plan UI strings -->
+    <string name="ai_tax_plan_generator">Penjana Pelan Cukai AI</string>
+    <string name="ai_feature_description">Ciri ini menggunakan AI untuk menganalisis pendapatan dan jenis pekerjaan anda untuk menjana cadangan penjimatan cukai yang diperibadikan.</string>
+    <string name="how_it_works">Bagaimana ia berfungsi:</string>
+    <string name="ai_step_1">1. AI menganalisis tahap pendapatan dan jenis pekerjaan anda</string>
+    <string name="ai_step_2">2. Ia mengenal pasti kategori pelepasan cukai yang berkaitan dengan situasi anda</string>
+    <string name="ai_step_3">3. Ia menjana cadangan khusus dengan anggaran penjimatan</string>
+    <string name="ai_note">Nota: Pastikan maklumat pendapatan dan pekerjaan anda dalam profil anda dikemas kini untuk cadangan yang paling tepat.</string>
+    <string name="got_it">Faham</string>
+
+    <!-- Tax Plan List screen -->
+    <string name="no_tax_plans">Tiada pelan cukai lagi</string>
+    <string name="generate_to_start">Jana pelan cukai untuk memulakan</string>
+    <string name="ai_generating">AI Sedang Menjana Pelan Cukai...</string>
+    <string name="view_plan">Lihat pelan</string>
+    <string name="delete_plan">Padam pelan</string>
+    <string name="potential_savings">Potensi Penjimatan: %1$s</string>
+    <string name="suggestions_count">%1$d cadangan</string>
+
+    <!-- Tax Plan Detail screen -->
+    <string name="plan_not_found">Pelan tidak dijumpai</string>
+    <string name="tax_saving_suggestions">Cadangan Penjimatan Cukai</string>
+    <string name="no_suggestions_available">Tiada cadangan tersedia</string>
+    <string name="implemented">Telah Dilaksanakan</string>
+    <string name="not_implemented">Belum dilaksanakan</string>
+    <string name="potential_tax_savings">Potensi Penjimatan Cukai: %1$s</string>
+
+    <!-- Create/Delete Tax Plan Dialog -->
+    <string name="create_new_tax_plan">Cipta Pelan Cukai Baru</string>
+    <string name="generate_ai_plan">Jana pelan cukai berkuasa AI baru dengan pilihan tersuai.</string>
+    <string name="plan_name_optional">Nama Pelan (Pilihan)</string>
+    <string name="plan_name_placeholder">contoh: Pelan Cukai Saya 2025</string>
+    <string name="select_plan_type">Pilih Jenis Pelan:</string>
+    <string name="standard_tax_plan">Pelan Cukai Standard</string>
+    <string name="future_income_plan">Pelan Pendapatan Masa Depan (20% pendapatan lebih tinggi)</string>
+    <string name="business_venture_plan">Pelan Usaha Perniagaan</string>
+    <string name="generate_plan">Jana Pelan</string>
+    <string name="delete_tax_plan">Padam Pelan Cukai</string>
+
+    <!-- Success/Error messages -->
+    <string name="tax_plan_generated">Pelan cukai berjaya dijana</string>
+    <string name="tax_plan_deleted">Pelan cukai berjaya dipadamkan</string>
+    <string name="version_requirement">Ciri ini memerlukan Android N atau lebih tinggi</string>
+    <string name="user_not_authenticated">Sila log masuk untuk menjana pelan cukai</string>
+    <string name="error_loading_plans">Ralat memuat pelan cukai</string>
+    <string name="error_viewing_plan">Ralat melihat pelan cukai</string>
+    <string name="error_generating_plan">Ralat menjana pelan cukai</string>
+    <string name="error_deleting_plan">Ralat memadam pelan cukai</string>
+    <string name="unknown_error">Ralat tidak diketahui</string>
+    <string name="ai_service_unavailable">Perkhidmatan AI tidak tersedia</string>
+    <string name="internet_required">Sambungan internet diperlukan</string>
+
+    <!-- Plan Type Descriptions -->
+    <string name="standard_plan">Pelan Standard</string>
+    <string name="future_income_plan_title">Pelan Pendapatan Masa Depan</string>
+    <string name="business_plan_title">Pelan Perniagaan</string>
+    <string name="standard_plan_description">Pelan cukai peribadi berdasarkan pendapatan semasa dan status pekerjaan anda</string>
+    <string name="future_plan_description">Pelan cukai yang dioptimumkan untuk pertumbuhan pendapatan masa depan dan kecekapan cukai jangka panjang</string>
+    <string name="business_plan_description">Pelan cukai yang direka untuk usaha perniagaan dengan fokus pada potongan perniagaan</string>
+
+    <!-- Tax Plan Category Names -->
+    <string name="category_lifestyle">Gaya Hidup</string>
+    <string name="category_medical">Perubatan</string>
+    <string name="category_education">Pendidikan</string>
+    <string name="category_epf">Sumbangan KWSP</string>
+    <string name="category_sspn">Simpanan SSPN</string>
+    <string name="category_donation">Derma</string>
+    <string name="category_insurance">Premium Insurans</string>
+    <string name="category_business_expenses">Perbelanjaan Perniagaan</string>
+    <string name="category_home_office">Pejabat Di Rumah</string>
+    <string name="category_investment">Pelaburan</string>
+    <string name="category_retirement">Perancangan Persaraan</string>
+    <string name="category_capital_investment">Pelaburan Modal</string>
+    <string name="category_business_structure">Struktur Perniagaan</string>
+
+    <!-- Default Tax Suggestions -->
+    <string name="lifestyle_suggestion">Maksimumkan pelepasan gaya hidup RM2,500 anda dengan menyimpan resit untuk buku, elektronik, peralatan sukan, dan langganan internet.</string>
+    <string name="medical_suggestion">Jejaki perbelanjaan perubatan untuk diri sendiri dan tanggungan untuk pelepasan sehingga RM8,000.</string>
+    <string name="employee_epf_suggestion">Pastikan anda memaksimumkan sumbangan KWSP wajib 11% anda untuk pelepasan cukai sehingga RM4,000.</string>
+    <string name="self_employed_epf_suggestion">Buat sumbangan KWSP secara sukarela sehingga RM4,000 setahun untuk pelepasan cukai.</string>
+    <string name="education_suggestion">Tuntut pelepasan pendidikan sehingga RM7,000 untuk kursus pembangunan kemahiran atau pendidikan lanjutan.</string>
+    <string name="donation_suggestion">Buat derma kepada organisasi yang diluluskan untuk potongan cukai.</string>
+    <string name="investment_suggestion">Pertimbangkan kenderaan pelaburan cekap cukai seperti unit amanah dengan insentif cukai.</string>
+    <string name="education_future_suggestion">Melabur dalam kursus pembangunan kemahiran dengan pelepasan cukai sehingga RM7,000 untuk meningkatkan potensi pendapatan masa depan.</string>
+    <string name="retirement_suggestion">Lengkapkan KWSP anda dengan sumbangan Skim Persaraan Swasta (PRS) untuk pelepasan cukai tambahan sehingga RM3,000.</string>
+    <string name="business_expenses_suggestion">Jejak dan dokumen semua perbelanjaan berkaitan perniagaan termasuk bekalan pejabat, utiliti, dan perkhidmatan profesional.</string>
+    <string name="home_office_suggestion">Jika anda bekerja dari rumah, peruntukkan sebahagian dari sewa, utiliti dan internet sebagai perbelanjaan perniagaan.</string>
+    <string name="capital_investment_suggestion">Rancang pelaburan modal untuk memanfaatkan elaun modal dan insentif untuk pengembangan perniagaan.</string>
+    <string name="business_structure_suggestion">Semak struktur perniagaan anda (pemilikan tunggal vs. Sdn Bhd) untuk mengoptimumkan layanan cukai berdasarkan pertumbuhan anda yang diunjurkan.</string>
+    <string name="sspn_suggestion">Pertimbangkan simpanan SSPN untuk pendidikan anak-anak dengan pelepasan cukai sehingga RM8,000.</string>
+
+    <string name="tax_plan_screen">Halaman Rancangan Cukai</string>
+    <string name="tax_plan_detail_screen">Halaman Perincian Pelan Cukai</string>
 </resources>

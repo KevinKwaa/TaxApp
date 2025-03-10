@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
@@ -53,7 +54,8 @@ fun AddEventScreen(
     date: LocalDate,
     onNavigateBack: () -> Unit,
     onEventSaved: (Event) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavHostController
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -166,35 +168,37 @@ fun AddEventScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        IconButton(onClick = { onNavigateBack() }) {
+                        IconButton(onClick = { navController.navigate("home") }) {
                             Icon(
                                 Icons.Filled.Home,
-                                contentDescription = "Home"
+                                contentDescription = "Home",
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
-                        IconButton(onClick = { /* Navigate to calendar */ }) {
+                        IconButton(onClick = { onNavigateBack() }) {
                             Icon(
                                 Icons.Filled.CalendarMonth,
-                                contentDescription = "Calendar"
+                                contentDescription = "Calendar",
+                                tint = MaterialTheme.colorScheme.primary // Highlight current screen
                             )
                         }
 
-                        IconButton(onClick = { /* Navigate to receipt */ }) {
+                        IconButton(onClick = { navController.navigate("uploadReceipt") }) {
                             Icon(
                                 Icons.Filled.Receipt,
                                 contentDescription = "Upload Receipt"
                             )
                         }
 
-                        IconButton(onClick = { /* Navigate to category */ }) {
+                        IconButton(onClick = { navController.navigate("category") }) {
                             Icon(
                                 Icons.Filled.Category,
                                 contentDescription = "Categories"
                             )
                         }
 
-                        IconButton(onClick = { /* Navigate to profile */ }) {
+                        IconButton(onClick = { navController.navigate("editProfile") }) {
                             Icon(
                                 Icons.Filled.AccountCircle,
                                 contentDescription = "Account"

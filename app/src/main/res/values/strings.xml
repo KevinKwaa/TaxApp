@@ -269,4 +269,106 @@
     <string name="is_saving">Saving...</string>
     <string name="add_item">Add Item</string>
     <string name="save_item">Save Item</string>
+    <string name="generate_tax_plan">Generate AI Tax Plan</string>
+
+    <!-- Navigation and Action strings -->
+    <string name="change_language">Change Language</string>
+    <string name="accessibility_settings">Accessibility Settings</string>
+    <string name="ai_information">AI Information</string>
+    <string name="calendar">Calendar</string>
+    <string name="account">Account</string>
+
+    <!-- Tax Plan UI strings -->
+    <string name="ai_tax_plan_generator">AI Tax Plan Generator</string>
+    <string name="ai_feature_description">This feature uses AI to analyze your income and employment type to generate personalized tax-saving suggestions.</string>
+    <string name="how_it_works">How it works:</string>
+    <string name="ai_step_1">1. The AI analyzes your income level and employment type</string>
+    <string name="ai_step_2">2. It identifies applicable tax relief categories for your situation</string>
+    <string name="ai_step_3">3. It generates specific suggestions with estimated savings</string>
+    <string name="ai_note">Note: Make sure your income and employment information are up-to-date in your profile for the most accurate suggestions.</string>
+    <string name="got_it">Got it</string>
+
+    <!-- Tax Plan List screen -->
+    <string name="no_tax_plans">No tax plans yet</string>
+    <string name="generate_to_start">Generate a tax plan to get started</string>
+    <string name="ai_generating">AI Generating Tax Plan...</string>
+    <string name="view_plan">View plan</string>
+    <string name="delete_plan">Delete plan</string>
+    <string name="potential_savings">Potential Savings: %1$s</string>
+    <string name="suggestions_count">%1$d suggestions</string>
+
+    <!-- Tax Plan Detail screen -->
+    <string name="plan_not_found">Plan not found</string>
+    <string name="tax_saving_suggestions">Tax Saving Suggestions</string>
+    <string name="no_suggestions_available">No suggestions available</string>
+    <string name="implemented">Implemented</string>
+    <string name="not_implemented">Not implemented yet</string>
+    <string name="potential_tax_savings">Potential Tax Savings: %1$s</string>
+
+    <!-- Create/Delete Tax Plan Dialog -->
+    <string name="create_new_tax_plan">Create New Tax Plan</string>
+    <string name="generate_ai_plan">Generate a new AI-powered tax plan with custom options.</string>
+    <string name="plan_name_optional">Plan Name (Optional)</string>
+    <string name="plan_name_placeholder">e.g., My Tax Plan 2025</string>
+    <string name="select_plan_type">Select Plan Type:</string>
+    <string name="standard_tax_plan">Standard Tax Plan</string>
+    <string name="future_income_plan">Future Income Plan (20% higher income)</string>
+    <string name="business_venture_plan">Business Venture Plan</string>
+    <string name="generate_plan">Generate Plan</string>
+    <string name="delete_tax_plan">Delete Tax Plan</string>
+
+    <!-- Success/Error messages -->
+    <string name="tax_plan_generated">Tax plan generated successfully</string>
+    <string name="tax_plan_deleted">Tax plan deleted successfully</string>
+    <string name="version_requirement">This feature requires Android N or higher</string>
+    <string name="user_not_authenticated">Please sign in to generate a tax plan</string>
+    <string name="error_loading_plans">Error loading tax plans</string>
+    <string name="error_viewing_plan">Error viewing tax plan</string>
+    <string name="error_generating_plan">Error generating tax plan</string>
+    <string name="error_deleting_plan">Error deleting tax plan</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="ai_service_unavailable">AI service unavailable</string>
+    <string name="internet_required">Internet connection required</string>
+
+    <!-- Plan Type Descriptions -->
+    <string name="standard_plan">Standard Plan</string>
+    <string name="future_income_plan_title">Future Income Plan</string>
+    <string name="business_plan_title">Business Plan</string>
+    <string name="standard_plan_description">Personalized tax plan based on your current income and employment status</string>
+    <string name="future_plan_description">Tax plan optimized for future income growth and long-term tax efficiency</string>
+    <string name="business_plan_description">Tax plan designed for business ventures with focus on business deductions</string>
+
+    <!-- Tax Plan Category Names -->
+    <string name="category_lifestyle">Lifestyle</string>
+    <string name="category_medical">Medical</string>
+    <string name="category_education">Education</string>
+    <string name="category_epf">EPF Contribution</string>
+    <string name="category_sspn">SSPN Savings</string>
+    <string name="category_donation">Donation</string>
+    <string name="category_insurance">Insurance Premium</string>
+    <string name="category_business_expenses">Business Expenses</string>
+    <string name="category_home_office">Home Office</string>
+    <string name="category_investment">Investment</string>
+    <string name="category_retirement">Retirement Planning</string>
+    <string name="category_capital_investment">Capital Investment</string>
+    <string name="category_business_structure">Business Structure</string>
+
+    <!-- Default Tax Suggestions -->
+    <string name="lifestyle_suggestion">Maximize your RM2,500 lifestyle relief by keeping receipts for books, electronics, sports equipment, and internet subscriptions.</string>
+    <string name="medical_suggestion">Track medical expenses for yourself and dependents for relief up to RM8,000.</string>
+    <string name="employee_epf_suggestion">Ensure you\'re maximizing your mandatory EPF contribution of 11% for tax relief up to RM4,000.</string>
+    <string name="self_employed_epf_suggestion">Make voluntary EPF contributions up to RM4,000 annually for tax relief.</string>
+    <string name="education_suggestion">Claim education relief of up to RM7,000 for skills development courses or further education.</string>
+    <string name="donation_suggestion">Make donations to approved organizations for tax deductions.</string>
+    <string name="investment_suggestion">Consider tax-efficient investment vehicles like unit trusts with tax incentives.</string>
+    <string name="education_future_suggestion">Invest in skill development courses with tax relief up to RM7,000 to increase future earning potential.</string>
+    <string name="retirement_suggestion">Supplement your EPF with Private Retirement Scheme (PRS) contributions for additional tax relief up to RM3,000.</string>
+    <string name="business_expenses_suggestion">Track and document all business-related expenses including office supplies, utilities, and professional services.</string>
+    <string name="home_office_suggestion">If you work from home, allocate a portion of rent, utilities and internet as business expenses.</string>
+    <string name="capital_investment_suggestion">Plan capital investments to take advantage of capital allowances and incentives for business expansion.</string>
+    <string name="business_structure_suggestion">Review your business structure (sole proprietorship vs. LLC) to optimize tax treatment based on your projected growth.</string>
+    <string name="sspn_suggestion">Consider SSPN savings for children\'s education with tax relief up to RM8,000.</string>
+
+    <string name="tax_plan_screen">Tax Plan Screen</string>
+    <string name="tax_plan_detail_screen">Tax Plan Detail Screen</string>
 </resources>

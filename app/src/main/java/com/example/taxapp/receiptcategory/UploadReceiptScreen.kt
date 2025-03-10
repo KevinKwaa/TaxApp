@@ -211,11 +211,11 @@ fun UploadReceiptScreen(
                         )
                     }
 
-                    IconButton(onClick = { navController.navigate("uploadReceipt") }) {
+                    IconButton(onClick = { /* Already on Receipt */ })  {
                         Icon(
                             Icons.Filled.Receipt,
                             contentDescription = "Upload Receipt",
-                            //tint = MaterialTheme.colorScheme.outline // Highlight current screen
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
 

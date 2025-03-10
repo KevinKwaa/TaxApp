@@ -7,7 +7,11 @@ import com.example.taxapp.utils.NetworkUtil
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.ai.client.generativeai.type.RequestOptions
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -69,8 +73,11 @@ class GeminiTaxPlanService(private val context: Context) {
                 else -> incomeValue
             }
 
-            // Build a comprehensive prompt
-            val prompt = buildTaxPlanPrompt(adjustedIncome, employmentType, name, planType)
+            // Get existing plans to ensure uniqueness
+            val existingPlanData = fetchExistingTaxPlans()
+
+            // Build a comprehensive prompt with uniqueness requirements
+            val prompt = buildTaxPlanPrompt(adjustedIncome, employmentType, name, planType, existingPlanData)
             Log.d(TAG, "Tax plan prompt: $prompt")
 
             // Generate content with explicit error handling
@@ -89,7 +96,7 @@ class GeminiTaxPlanService(private val context: Context) {
             val taxPlan = parseTaxPlanResponse(response, adjustedIncome, employmentType, planType)
 
             // Validate the tax plan
-            val validatedPlan = validateTaxPlan(taxPlan, adjustedIncome, employmentType, planType)
+            val validatedPlan = validateTaxPlan(taxPlan, adjustedIncome, employmentType, planType, existingPlanData)
 
             Result.success(validatedPlan)
         } catch (e: Exception) {
@@ -99,15 +106,98 @@ class GeminiTaxPlanService(private val context: Context) {
     }
 
     /**
+     * Fetch existing tax plans to ensure uniqueness of new plans
+     */
+    private suspend fun fetchExistingTaxPlans(): List<ExistingPlanData> {
+        val result = mutableListOf<ExistingPlanData>()
+
+        try {
+            val userId = com.example.taxapp.firebase.FirebaseManager.getCurrentUserId() ?: return result
+
+            // Fetch plans from Firestore
+            val snapshot = Firebase.firestore.collection("tax_plans")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            // Extract relevant data for uniqueness
+            snapshot.documents.forEach { doc ->
+                val plan = doc.toObject(TaxPlan::class.java) ?: return@forEach
+
+                // Add details to analyze for uniqueness
+                val planData = ExistingPlanData(
+                    planType = plan.planType,
+                    categories = plan.suggestions.map { it.category },
+                    suggestionTexts = plan.suggestions.map { it.suggestion.take(100) } // Only need beginning for comparison
+                )
+
+                result.add(planData)
+            }
+
+            Log.d(TAG, "Found ${result.size} existing plans for uniqueness comparison")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching existing plans for uniqueness check", e)
+            // Continue without existing data if there's an error
+        }
+
+        return result
+    }
+
+    /**
+     * Data class to help track existing plan details for uniqueness
+     */
+    data class ExistingPlanData(
+        val planType: String,
+        val categories: List<String>,
+        val suggestionTexts: List<String>
+    )
+
+    /**
      * Build a prompt for the AI to generate a tax plan
      */
-    private fun buildTaxPlanPrompt(income: Double, employmentType: String, name: String = "", planType: String = "standard"): String {
+    private fun buildTaxPlanPrompt(
+        income: Double,
+        employmentType: String,
+        name: String = "",
+        planType: String = "standard",
+        existingPlans: List<ExistingPlanData> = emptyList()
+    ): String {
         val greeting = if (name.isNotBlank()) "for $name" else ""
         val planTypeDesc = when (planType) {
             "future" -> "future income planning (assuming 20% income growth)"
             "business" -> "business venture planning"
             else -> "standard tax planning"
         }
+
+        // Add uniqueness requirement based on existing plans
+        val uniquenessRequirement = if (existingPlans.isNotEmpty()) {
+            val planTypeCounts = existingPlans.groupingBy { it.planType }.eachCount()
+            val commonCategories = existingPlans.flatMap { it.categories }
+                .groupingBy { it }
+                .eachCount()
+                .filter { it.value > 1 }
+                .keys
+                .take(5)
+                .joinToString(", ")
+
+            // Create a uniqueness instruction
+            """
+            UNIQUENESS REQUIREMENT:
+            - The user already has ${existingPlans.size} tax plans.
+            - ${if (planTypeCounts[planType] ?: 0 > 0) "They already have ${planTypeCounts[planType]} plans of this type." else "This is their first plan of this type."}
+            - Common categories in existing plans: ${if (commonCategories.isNotBlank()) commonCategories else "None"}
+            - YOU MUST GENERATE A UNIQUE PLAN with different approaches and suggestions from existing plans.
+            - Focus on DIFFERENT TAX STRATEGIES that weren't emphasized in previous plans.
+            - Use creative and alternative approaches that achieve the same tax saving goals.
+            - The VARIATION FOCUS for this specific plan should be: ${getVariationFocus(planType, existingPlans.size)}
+            """
+        } else {
+            // First plan, no uniqueness needed yet
+            ""
+        }
+
+        // Get a specialized focus for this plan for more variation
+        val specializedFocus = getSpecializedFocus(planType, existingPlans.size)
 
         return """
         You are a Malaysian Tax Planning Expert AI for a tax app. Generate a detailed, personalized tax plan for ${planTypeDesc} ${greeting} with the following information:
@@ -120,6 +210,11 @@ class GeminiTaxPlanService(private val context: Context) {
         1. A brief analysis of the user's tax situation based on their income level and employment type
         2. 5-7 actionable tax-saving suggestions organized by specific categories
         3. Realistic estimated potential savings for each suggestion in Malaysian Ringgit (RM)
+        
+        $uniquenessRequirement
+        
+        SPECIALIZED FOCUS FOR THIS PLAN:
+        $specializedFocus
         
         DETAILED MALAYSIAN TAX CONTEXT:
         - Individual income tax rates (2024):
@@ -163,6 +258,7 @@ class GeminiTaxPlanService(private val context: Context) {
         
         IMPORTANT GUIDELINES:
         - MAKE ALL SUGGESTIONS SPECIFIC AND ACTIONABLE.
+        - USE UNIQUE APPROACHES DIFFERENT FROM STANDARD TAX ADVICE when possible.
         - ENSURE EACH SUGGESTION HAS A REALISTIC SAVINGS AMOUNT IN RM.
         - Savings amounts must be proportional to income and tax bracket.
         - For employee (${employmentType == "employee"}), focus on tax reliefs.
@@ -183,6 +279,65 @@ class GeminiTaxPlanService(private val context: Context) {
         
         MAKE SURE ALL POTENTIAL SAVINGS ADD UP CORRECTLY IN THE FINAL TOTAL.
         """.trimIndent()
+    }
+
+    /**
+     * Get a specialized focus based on plan type and number of existing plans
+     * This ensures that different plans emphasize different aspects
+     */
+    private fun getSpecializedFocus(planType: String, existingPlanCount: Int): String {
+        // Primary focus areas by plan type
+        val focusOptions = when (planType) {
+            "future" -> listOf(
+                "Focus on long-term tax efficiency strategies and investments that minimize future tax burden.",
+                "Emphasize education and skill development investments for future income growth.",
+                "Concentrate on retirement planning and tax-efficient wealth accumulation.",
+                "Highlight property investment strategies and associated tax benefits.",
+                "Focus on career advancement expenses that qualify for tax relief."
+            )
+            "business" -> listOf(
+                "Emphasize business expense optimization and record-keeping strategies.",
+                "Focus on tax-efficient business structure and registration options.",
+                "Concentrate on capital investment strategies and associated tax incentives.",
+                "Highlight employee benefits and compensation structures that optimize tax position.",
+                "Focus on digital transformation expenses that qualify for tax incentives."
+            )
+            else -> listOf(
+                "Focus on maximizing personal and family-related tax reliefs.",
+                "Emphasize healthcare and medical expense optimization for tax purposes.",
+                "Concentrate on education and continuous learning tax benefits.",
+                "Highlight lifestyle and technology-related tax reliefs.",
+                "Focus on charity and donation strategies for tax optimization."
+            )
+        }
+
+        // Select different focus based on how many plans exist
+        val focusIndex = existingPlanCount % focusOptions.size
+
+        return focusOptions[focusIndex]
+    }
+
+    /**
+     * Generate a variation focus based on plan type and existing plan count
+     * This helps create uniqueness in the suggestions
+     */
+    private fun getVariationFocus(planType: String, existingPlanCount: Int): String {
+        val variationOptions = listOf(
+            "Optimization based on TIMING of expenses and contributions",
+            "Focus on DOCUMENTATION and record-keeping for maximum deductions",
+            "Emphasis on AUTOMATION of tax-saving strategies",
+            "Concentration on FAMILY-BASED tax optimization strategies",
+            "Focus on DIGITAL TRANSFORMATION tax incentives",
+            "Emphasis on GREEN/SUSTAINABLE initiatives with tax benefits",
+            "Focus on EDUCATION and PROFESSIONAL DEVELOPMENT",
+            "Concentration on RETIREMENT and LONG-TERM planning",
+            "Emphasis on HEALTHCARE and WELLNESS expense optimization"
+        )
+
+        // Select variation based on count to ensure different plans have different focus
+        val variationIndex = (existingPlanCount + planType.hashCode()) % variationOptions.size
+
+        return variationOptions[variationIndex]
     }
 
     /**
@@ -250,7 +405,9 @@ class GeminiTaxPlanService(private val context: Context) {
             description = planDescription,
             suggestions = suggestions,
             potentialSavings = totalSavings,
-            planType = planType
+            planType = planType,
+            createdAt = Timestamp.now(),
+            updatedAt = Timestamp.now()
         )
     }
 
@@ -422,8 +579,15 @@ class GeminiTaxPlanService(private val context: Context) {
 
     /**
      * Validate the tax plan and make any necessary adjustments
+     * Enhanced to ensure uniqueness when compared to existing plans
      */
-    private fun validateTaxPlan(plan: TaxPlan, income: Double, employmentType: String, planType: String): TaxPlan {
+    private fun validateTaxPlan(
+        plan: TaxPlan,
+        income: Double,
+        employmentType: String,
+        planType: String,
+        existingPlans: List<ExistingPlanData> = emptyList()
+    ): TaxPlan {
         // Sanity checks
         val suggestions = plan.suggestions.toMutableList()
         var totalSavings = plan.potentialSavings
@@ -431,7 +595,7 @@ class GeminiTaxPlanService(private val context: Context) {
         // If we have no suggestions or total savings is zero, regenerate
         if (suggestions.isEmpty() || totalSavings <= 0) {
             suggestions.clear()
-            generateComprehensiveSuggestions(suggestions, income, employmentType, planType)
+            generateComprehensiveSuggestions(suggestions, income, employmentType, planType, existingPlans)
             totalSavings = suggestions.sumOf { it.potentialSaving }
         }
 
@@ -439,16 +603,53 @@ class GeminiTaxPlanService(private val context: Context) {
         // Tax bracket estimation
         val taxRate = calculateEstimatedTaxRate(income)
 
-        // Check each suggestion
+        // Check each suggestion for:
+        // 1. Reasonable savings amount
+        // 2. Uniqueness compared to existing plans
         for (i in suggestions.indices) {
             val suggestion = suggestions[i]
+            var needsReplacement = false
 
-            // If saving is unreasonably high (>30% of income) or zero, recalculate
+            // Check if saving is unreasonably high (>30% of income) or zero
             if (suggestion.potentialSaving <= 0 || suggestion.potentialSaving > income * 0.3) {
-                // Generate a more reasonable saving estimate based on category
-                val reasonableSaving = generateReasonableSaving(suggestion.category, income, taxRate, employmentType)
+                needsReplacement = true
+            }
 
-                suggestions[i] = suggestion.copy(potentialSaving = reasonableSaving)
+            // Check for duplicate suggestions in existing plans
+            if (!needsReplacement && existingPlans.isNotEmpty()) {
+                val suggestionStart = suggestion.suggestion.take(50).lowercase()
+
+                // Look for similar suggestions in existing plans
+                val isDuplicate = existingPlans.any { plan ->
+                    plan.suggestionTexts.any { existingSuggestion ->
+                        existingSuggestion.lowercase().contains(suggestionStart) ||
+                                suggestionStart.contains(existingSuggestion.take(50).lowercase())
+                    }
+                }
+
+                if (isDuplicate) {
+                    needsReplacement = true
+                }
+            }
+
+            // Replace if needed
+            if (needsReplacement) {
+                // Generate a more unique suggestion
+                val (uniqueCategory, uniqueSuggestion) = generateUniqueSuggestion(
+                    suggestion.category,
+                    income,
+                    employmentType,
+                    planType,
+                    existingPlans
+                )
+
+                val reasonableSaving = generateReasonableSaving(uniqueCategory, income, taxRate, employmentType)
+
+                suggestions[i] = suggestion.copy(
+                    category = uniqueCategory,
+                    suggestion = uniqueSuggestion,
+                    potentialSaving = reasonableSaving
+                )
             }
         }
 
@@ -457,20 +658,27 @@ class GeminiTaxPlanService(private val context: Context) {
 
         // Ensure we have enough suggestions
         if (suggestions.size < 5) {
-            // Add more suggestions to reach at least 5
-            val additionalCategories = setOf(
-                "Education Relief", "Medical Relief", "SSPN Savings", "Donation", "Insurance Premium"
-            ).minus(suggestions.map { it.category }.toSet())
+            // Get categories already in plan
+            val existingCategories = suggestions.map { it.category }.toSet()
+
+            // Get categories from other plans to avoid
+            val existingPlanCategories = existingPlans.flatMap { it.categories }.toSet()
+
+            // Find unique categories not yet used in this plan or common in other plans
+            val additionalCategories = TAX_CATEGORIES
+                .filter { it !in existingCategories && (it !in existingPlanCategories || Math.random() > 0.7) }
+                .shuffled()
+                .take(5 - suggestions.size)
 
             for (category in additionalCategories) {
-                if (suggestions.size >= 5) break
-
-                val saving = generateReasonableSaving(category, income, taxRate, employmentType)
-                val suggestion = generateDefaultSuggestion(category, income, employmentType, taxRate)
+                val (uniqueCategory, uniqueSuggestion) = generateUniqueSuggestion(
+                    category, income, employmentType, planType, existingPlans
+                )
+                val saving = generateReasonableSaving(uniqueCategory, income, taxRate, employmentType)
 
                 suggestions.add(TaxPlanSuggestion(
-                    category = category,
-                    suggestion = suggestion,
+                    category = uniqueCategory,
+                    suggestion = uniqueSuggestion,
                     potentialSaving = saving
                 ))
             }
@@ -483,6 +691,180 @@ class GeminiTaxPlanService(private val context: Context) {
             suggestions = suggestions,
             potentialSavings = totalSavings
         )
+    }
+
+    /**
+     * Generate a truly unique suggestion for a category
+     */
+    private fun generateUniqueSuggestion(
+        baseCategory: String,
+        income: Double,
+        employmentType: String,
+        planType: String,
+        existingPlans: List<ExistingPlanData>
+    ): Pair<String, String> {
+        // Sometimes modify the category name to create variety
+        val uniqueCategory = if (Math.random() > 0.7) {
+            when (baseCategory.lowercase()) {
+                "lifestyle", "lifestyle relief" -> listOf(
+                    "Tech & Entertainment Relief", "Lifestyle Optimization", "Personal Expenses Relief"
+                ).random()
+
+                "education", "education relief" -> listOf(
+                    "Professional Development", "Skills Enhancement", "Education Investment"
+                ).random()
+
+                "medical", "medical relief", "medical expenses" -> listOf(
+                    "Healthcare Optimization", "Wellness Benefits", "Medical Tax Planning"
+                ).random()
+
+                "donation", "donations" -> listOf(
+                    "Charitable Giving", "Social Impact Relief", "Philanthropy"
+                ).random()
+
+                else -> baseCategory
+            }
+        } else {
+            baseCategory
+        }
+
+        // Generate variations for the suggestion text
+        val variations = getSuggestionVariations(uniqueCategory, income, employmentType, planType)
+
+        // If we have existing plans, choose a suggestion that's not too similar to existing ones
+        if (existingPlans.isNotEmpty()) {
+            // Try to find a suggestion that doesn't closely match existing ones
+            for (variation in variations.shuffled()) {
+                val variationStart = variation.take(50).lowercase()
+                val isDuplicate = existingPlans.any { plan ->
+                    plan.suggestionTexts.any { existingSuggestion ->
+                        existingSuggestion.lowercase().contains(variationStart) ||
+                                variationStart.contains(existingSuggestion.take(50).lowercase())
+                    }
+                }
+
+                if (!isDuplicate) {
+                    return Pair(uniqueCategory, variation)
+                }
+            }
+        }
+
+        // If no unique match found or no existing plans, just use a random variation
+        return Pair(uniqueCategory, variations.random())
+    }
+
+    /**
+     * Get a list of varied suggestion texts for a category
+     */
+    private fun getSuggestionVariations(
+        category: String,
+        income: Double,
+        employmentType: String,
+        planType: String
+    ): List<String> {
+        // Calculate some values for personalizing suggestions
+        val epfAmount = (income * 0.11).toInt()
+        val isHighIncome = income > 100000
+
+        return when (category.lowercase()) {
+            "lifestyle", "lifestyle relief", "tech & entertainment relief", "lifestyle optimization", "personal expenses relief" -> listOf(
+                "Maximize your RM2,500 lifestyle relief by keeping digital receipts for books, electronics, sports equipment, and internet subscriptions.",
+                "Create a spreadsheet to track lifestyle expenses up to RM2,500 including smartphones, tablets, books, and sports equipment.",
+                "Set up automatic monthly transfers of RM210 to a dedicated account for lifestyle purchases that qualify for the RM2,500 relief.",
+                "Subscribe to apps that automatically categorize lifestyle purchases and remind you when you're approaching the RM2,500 relief limit.",
+                "Strategically time larger lifestyle purchases (electronics, gym memberships) to fully utilize the RM2,500 annual relief."
+            )
+
+            "education", "education relief", "professional development", "skills enhancement", "education investment" -> listOf(
+                "Claim education relief of up to RM7,000 for skills development courses related to emerging technologies or management training.",
+                "Invest in certified professional courses with tax-deductible tuition up to RM7,000, focusing on skills that can increase your market value.",
+                "Enroll in qualifying online learning platforms with annual subscriptions that can be claimed under the RM7,000 education relief.",
+                "Consider part-time diploma or degree programs relevant to your industry that qualify for the full RM7,000 education relief.",
+                "Create a 3-year education plan with courses spread strategically to maximize the RM7,000 relief each tax year."
+            )
+
+            "medical", "medical relief", "medical expenses", "healthcare optimization", "wellness benefits", "medical tax planning" -> listOf(
+                "Maintain digital records of all medical expenses for yourself and dependents to easily claim relief up to RM8,000 annually.",
+                "Schedule preventive healthcare check-ups strategically to maximize the RM8,000 medical relief each tax year.",
+                "Consider a family healthcare account to consolidate and track all qualifying medical expenses up to the RM8,000 limit.",
+                "Ensure you include often-forgotten medical expenses like specialized treatments, preventive screenings, and mobility aids toward your RM8,000 relief.",
+                "Create a health spending strategy that optimizes timing of elective procedures to maximize tax relief across multiple years."
+            )
+
+            "epf", "epf contribution", "kwsp" -> {
+                if (employmentType == "employee") {
+                    listOf(
+                        "Ensure you're not opting out of any portion of your 11% EPF contribution to maximize tax relief up to RM4,000 annually.",
+                        "Check your EPF contribution statement quarterly to verify you're on track for the maximum RM4,000 tax relief.",
+                        "Consider restructuring your compensation package to optimize the EPF-eligible portion, targeting the full RM4,000 relief.",
+                        "If your income allows contributions over RM4,000 annually to EPF, ensure you claim the maximum tax relief of RM4,000.",
+                        "Set up automatic notification alerts to track your EPF contributions and ensure you reach the optimal tax relief amount of RM4,000."
+                    )
+                } else {
+                    listOf(
+                        "Establish a systematic voluntary EPF contribution plan of RM${(4000/12).toInt()} monthly to reach the maximum RM4,000 tax relief.",
+                        "Create a quarterly schedule for voluntary EPF contributions to reach the RM4,000 maximum while managing cash flow for your business.",
+                        "Consider timing larger voluntary EPF contributions during your business's high-revenue months to reach the RM4,000 tax relief.",
+                        "Set up automatic recurring transfers to EPF to ensure you consistently build toward the RM4,000 tax relief threshold.",
+                        "Allocate a percentage of each client payment directly to voluntary EPF contributions to systematically reach the RM4,000 relief."
+                    )
+                }
+            }
+
+            "business expenses", "operating expenses" -> {
+                if (employmentType == "self-employed") {
+                    listOf(
+                        "Implement a digital receipt management system to track and categorize all business expenses, which could represent approximately RM${(income * 0.15).toInt()} in deductions.",
+                        "Schedule quarterly expense reviews with your accountant to identify overlooked business deductions, potentially worth RM${(income * 0.02).toInt()} annually.",
+                        "Create dedicated business accounts and cards to automatically separate personal and business expenses for cleaner tax filing.",
+                        "Develop a comprehensive business expense policy that includes often-overlooked categories like professional development, subscriptions, and industry memberships.",
+                        "Implement a cloud-based accounting system that automatically categorizes expenses and flags tax-deductible items."
+                    )
+                } else {
+                    listOf(
+                        "Track employment-related expenses that your employer doesn't reimburse, which may qualify for deductions under certain circumstances.",
+                        "Document transportation expenses related to work duties (excluding commuting) that may qualify for deductions.",
+                        "Maintain records of professional subscriptions and memberships related to your employment that may be tax-deductible.",
+                        "Keep receipts for work-specific equipment or tools you purchase for your job that your employer doesn't provide.",
+                        "Track professional development expenses directly related to maintaining skills required in your current position."
+                    )
+                }
+            }
+
+            else -> {
+                // For any other category, provide generic but somewhat tailored advice
+                when {
+                    planType == "future" -> listOf(
+                        "Create a tax-optimized investment strategy focusing on vehicles with preferential tax treatment for long-term growth.",
+                        "Establish automated systems to maximize tax advantages as your income grows over the next several years.",
+                        "Develop a 5-year tax planning roadmap that adapts to projected income increases and changing tax brackets.",
+                        "Consider tax-advantaged investment vehicles like unit trusts or retirement schemes that offer compound growth potential.",
+                        "Establish tax-efficient income diversification strategies to optimize your tax position as your earnings increase."
+                    )
+                    planType == "business" -> listOf(
+                        "Establish proper entity structure and documentation to optimize tax treatment for your business activities.",
+                        "Create a comprehensive business expense tracking system with quarterly tax position reviews.",
+                        "Develop a strategic reinvestment plan for business profits that optimizes both growth and tax efficiency.",
+                        "Consider implementing a tax-optimized employee compensation structure as your business expands.",
+                        "Establish a detailed capital expenditure schedule that maximizes available tax incentives and timing advantages."
+                    )
+                    isHighIncome -> listOf(
+                        "Create a comprehensive tax planning calendar with specific action items for each quarter of the tax year.",
+                        "Establish a systematic approach to tracking and maximizing all available tax reliefs relevant to your income level.",
+                        "Consider tax-efficient wealth preservation strategies appropriate for your high-income bracket.",
+                        "Develop a balanced portfolio of investments and charitable giving that optimizes both growth and tax efficiency.",
+                        "Implement advanced tax planning techniques with regular reviews by a qualified tax professional."
+                    )
+                    else -> listOf(
+                        "Create a simple but effective system to track all potential tax relief categories throughout the year.",
+                        "Establish a monthly routine to organize and digitize receipts for all potential tax-deductible expenses.",
+                        "Develop a basic tax planning calendar with reminders for key actions and deadlines.",
+                        "Consider strategic timing of major purchases and investments to maximize available tax benefits.",
+                        "Implement a systematic approach to identifying and utilizing all tax reliefs available at your income level."
+                    )
+                }
+            }
+        }
     }
 
     /**
@@ -508,72 +890,103 @@ class GeminiTaxPlanService(private val context: Context) {
      * Generate a reasonable saving amount based on category and income
      */
     private fun generateReasonableSaving(category: String, income: Double, taxRate: Double, employmentType: String): Double {
-        return when (category.lowercase()) {
-            "lifestyle", "lifestyle relief" -> 2500 * taxRate
-            "education", "education relief" -> 7000 * taxRate
-            "medical", "medical relief", "medical expenses" -> 5000 * taxRate
-            "epf", "epf contribution", "kwsp" -> minOf(income * 0.11, 4000.0) * taxRate
-            "insurance", "insurance premium" -> 3000 * taxRate
-            "donation", "donations", "charitable donations" -> 1000 * taxRate
-            "sspn", "sspn savings" -> 3000 * taxRate
-            "business expenses", "operating expenses" ->
-                if (employmentType == "self-employed") income * 0.15 * taxRate else 0.0
-            "home office" ->
-                if (employmentType == "self-employed") 2400 * taxRate else 0.0
-            "socso", "perkeso" -> 350 * taxRate
-            "housing loan", "housing loan interest" -> 3000 * taxRate
-            else -> income * 0.01 * taxRate // Default 1% of income as tax saving
-        }
-    }
+        // Add some randomization for more variety between plans
+        val variationFactor = 0.8 + (Math.random() * 0.4) // Between 0.8 and 1.2
 
-    /**
-     * Generate default suggestion text based on category
-     */
-    private fun generateDefaultSuggestion(category: String, income: Double, employmentType: String, taxRate: Double): String {
-        return when (category.lowercase()) {
-            "lifestyle", "lifestyle relief" ->
-                "Maximize your RM2,500 lifestyle relief by keeping receipts for books, electronics, sports equipment, and internet subscriptions."
+        val baseSaving = when (category.lowercase()) {
+            "lifestyle", "lifestyle relief", "tech & entertainment relief", "lifestyle optimization", "personal expenses relief" ->
+                2500 * taxRate
 
-            "education", "education relief" ->
-                "Claim education relief of up to RM7,000 for skills development courses or further education."
+            "education", "education relief", "professional development", "skills enhancement", "education investment" ->
+                7000 * taxRate
 
-            "medical", "medical relief", "medical expenses" ->
-                "Track medical expenses for yourself and dependents for relief up to RM8,000. This includes medical check-ups, treatment, and special needs equipment."
+            "medical", "medical relief", "medical expenses", "healthcare optimization", "wellness benefits", "medical tax planning" ->
+                5000 * taxRate
 
-            "epf", "epf contribution", "kwsp" -> {
-                val epfAmount = minOf(income * 0.11, 4000.0).toInt()
-                "Maximize your EPF contribution ${if (employmentType == "employee") "of 11%" else "through voluntary contributions"} for tax relief up to RM4,000. For your income level, this could be approximately RM$epfAmount."
-            }
+            "epf", "epf contribution", "kwsp" ->
+                minOf(income * 0.11, 4000.0) * taxRate
 
             "insurance", "insurance premium" ->
-                "Ensure you claim relief for life insurance premiums up to RM3,000 and medical/education insurance premiums up to RM3,000."
+                3000 * taxRate
 
-            "donation", "donations", "charitable donations" ->
-                "Make donations to approved organizations for tax deductions. These organizations include registered charities, educational institutions, and sports bodies approved by the Malaysian government."
+            "donation", "donations", "charitable giving", "social impact relief", "philanthropy" ->
+                1000 * taxRate
 
-            "sspn", "sspn savings" ->
-                "Consider SSPN savings for children's education with tax relief up to RM8,000. This national education savings scheme offers both tax benefits and competitive returns."
+            "sspn", "sspn savings", "education savings" ->
+                3000 * taxRate
 
             "business expenses", "operating expenses" ->
-                "Track and document all business-related expenses including office supplies, utilities, professional services, and business travel. These can be directly deducted from your business income."
+                if (employmentType == "self-employed") income * 0.15 * taxRate else 1000 * taxRate
 
-            "home office" ->
-                "If you work from home, allocate a portion of rent, utilities and internet as business expenses. Calculate based on the percentage of your home used exclusively for business."
+            "home office", "workspace" ->
+                if (employmentType == "self-employed") 2400 * taxRate else 800 * taxRate
 
             "socso", "perkeso" ->
-                "Ensure you claim the full SOCSO/PERKESO contributions of up to RM350 as a tax relief."
+                350 * taxRate
 
-            "housing loan", "housing loan interest" ->
-                "If you have a housing loan for your first home, claim interest payments as tax relief up to RM10,000 per year for the first three years."
+            "housing loan", "housing loan interest", "mortgage interest" ->
+                3000 * taxRate
 
-            else -> "Implement tax-efficient strategies appropriate for your income level and employment status to maximize available tax benefits."
+            "investment", "investments" ->
+                income * 0.02 * taxRate
+
+            "retirement planning", "retirement", "prs" ->
+                3000 * taxRate
+
+            "capital investment" ->
+                income * 0.04 * taxRate
+
+            "business structure" ->
+                income * 0.035 * taxRate
+
+            else -> income * 0.01 * taxRate // Default 1% of income as tax saving
         }
+
+        // Apply variation and round to nearest 10
+        // Fixed version: Convert Long to Double after rounding
+        return Math.round((baseSaving * variationFactor) / 10).toDouble() * 10
     }
+
+    // List of categories for generating unique tax plans
+    private val TAX_CATEGORIES = listOf(
+        "Lifestyle Relief",
+        "Medical Relief",
+        "Education Relief",
+        "EPF Contribution",
+        "Insurance Premium",
+        "SSPN Savings",
+        "Donation",
+        "SOCSO Contribution",
+        "Housing Loan Interest",
+        "Business Expenses",
+        "Home Office",
+        "Investment",
+        "Retirement Planning",
+        "Capital Investment",
+        "Business Structure",
+        "Technology Adoption",
+        "Green Initiatives",
+        "Professional Memberships",
+        "Work-Related Travel",
+        "Family Tax Planning",
+        "Zakat",
+        "Child Relief",
+        "Parental Care Relief",
+        "Disability Relief",
+        "Intellectual Property"
+    )
 
     /**
      * Generate comprehensive default suggestions if AI parsing fails
+     * Enhanced to create more varied suggestions for unique plans
      */
-    private fun generateComprehensiveSuggestions(suggestions: MutableList<TaxPlanSuggestion>, income: Double, employmentType: String, planType: String) {
+    private fun generateComprehensiveSuggestions(
+        suggestions: MutableList<TaxPlanSuggestion>,
+        income: Double,
+        employmentType: String,
+        planType: String,
+        existingPlans: List<ExistingPlanData> = emptyList()
+    ) {
         // Clear existing suggestions
         suggestions.clear()
 
@@ -581,122 +994,63 @@ class GeminiTaxPlanService(private val context: Context) {
         val taxRate = calculateEstimatedTaxRate(income)
         Log.d(TAG, "Generating default suggestions with income: $income, tax rate: $taxRate, employment: $employmentType")
 
-        // Standard reliefs and deductions with estimated savings
-        suggestions.add(TaxPlanSuggestion(
-            category = "Lifestyle Relief",
-            suggestion = "Maximize your RM2,500 lifestyle relief by keeping receipts for books, electronics, sports equipment, and internet subscriptions.",
-            potentialSaving = 2500 * taxRate
-        ))
+        // Decide how many plans exist of this type to add variation
+        val planTypeCount = existingPlans.count { it.planType == planType }
 
-        suggestions.add(TaxPlanSuggestion(
-            category = "Education Relief",
-            suggestion = "Claim education relief of up to RM7,000 for skills development courses or further education that can enhance your career prospects.",
-            potentialSaving = 7000 * taxRate
-        ))
+        // Choose categories based on plan type and what existing plans already have
+        val existingPlanCategories = existingPlans.flatMap { it.categories }.groupingBy { it }.eachCount()
 
-        suggestions.add(TaxPlanSuggestion(
-            category = "Medical Relief",
-            suggestion = "Track medical expenses for yourself and dependents for relief up to RM8,000. This includes medical check-ups, treatment, and special needs equipment.",
-            potentialSaving = 5000 * taxRate
-        ))
-
-        // EPF suggestion varies based on employment type
-        val epfAmount = minOf(income * 0.11, 4000.0)
-        suggestions.add(TaxPlanSuggestion(
-            category = "EPF Contribution",
-            suggestion = if (employmentType == "employee") {
-                "Ensure you're maximizing your mandatory EPF contribution of 11% for tax relief up to RM4,000. For your income level of RM$income, this equals approximately RM${epfAmount.toInt()} annually."
-            } else {
-                "Make voluntary EPF contributions up to RM4,000 annually for tax relief. This not only reduces your tax but also builds your retirement savings."
-            },
-            potentialSaving = epfAmount * taxRate
-        ))
-
-        // Add employment-specific suggestions
-        if (employmentType == "self-employed") {
-            // Business expense suggestion
-            val businessExpenseAmount = income * 0.15
-            suggestions.add(TaxPlanSuggestion(
-                category = "Business Expenses",
-                suggestion = "Track and document all business-related expenses including office supplies, utilities, professional services, and business travel. For your income level, this could represent approximately RM${businessExpenseAmount.toInt()} in deductions.",
-                potentialSaving = businessExpenseAmount * taxRate
-            ))
-
-            // Home office suggestion
-            suggestions.add(TaxPlanSuggestion(
-                category = "Home Office",
-                suggestion = "If you work from home, allocate a portion of rent, utilities and internet as business expenses. Calculate based on the percentage of your home used exclusively for business.",
-                potentialSaving = 2400 * taxRate
-            ))
-
-            // Professional development
-            if (planType == "future") {
-                suggestions.add(TaxPlanSuggestion(
-                    category = "Professional Development",
-                    suggestion = "Invest in professional courses and certifications that can be categorized as business expenses. This improves both your skills and tax position.",
-                    potentialSaving = 3500 * taxRate
-                ))
+        // Select categories less commonly used in existing plans
+        val selectedCategories = TAX_CATEGORIES
+            .filter { category ->
+                (existingPlanCategories[category] ?: 0) < 2 || Math.random() > 0.7
             }
-        } else {
-            // Employee-specific suggestions
-            suggestions.add(TaxPlanSuggestion(
-                category = "SSPN Savings",
-                suggestion = "Consider SSPN savings for children's education with tax relief up to RM8,000. This national education savings scheme offers both tax benefits and competitive returns.",
-                potentialSaving = 3000 * taxRate
-            ))
+            .shuffled()
+            .take(7)
 
-            // SOCSO/PERKESO
+        // Generate unique suggestions
+        for (category in selectedCategories) {
+            val (uniqueCategory, uniqueSuggestion) = generateUniqueSuggestion(
+                category, income, employmentType, planType, existingPlans
+            )
+            val saving = generateReasonableSaving(uniqueCategory, income, taxRate, employmentType)
+
             suggestions.add(TaxPlanSuggestion(
-                category = "SOCSO Contribution",
-                suggestion = "Ensure you claim the full SOCSO/PERKESO contributions of up to RM350 as a tax relief.",
-                potentialSaving = 350 * taxRate
+                category = uniqueCategory,
+                suggestion = uniqueSuggestion,
+                potentialSaving = saving
             ))
         }
 
-        // Plan type specific suggestions
-        when (planType) {
-            "future" -> {
-                suggestions.add(TaxPlanSuggestion(
-                    category = "Long-term Investment",
-                    suggestion = "Consider tax-efficient investment vehicles like unit trusts with tax incentives to prepare for future income growth.",
-                    potentialSaving = income * 0.03 * taxRate
-                ))
-
-                suggestions.add(TaxPlanSuggestion(
-                    category = "Retirement Planning",
-                    suggestion = "Supplement your EPF with Private Retirement Scheme (PRS) contributions for additional tax relief up to RM3,000.",
-                    potentialSaving = 3000 * taxRate
-                ))
-            }
-            "business" -> {
-                suggestions.add(TaxPlanSuggestion(
-                    category = "Capital Investment",
-                    suggestion = "Plan capital investments to take advantage of capital allowances and incentives for business expansion.",
-                    potentialSaving = income * 0.04 * taxRate
-                ))
-
-                suggestions.add(TaxPlanSuggestion(
-                    category = "Business Structure",
-                    suggestion = "Review your business structure (sole proprietorship vs. LLC) to optimize tax treatment based on your projected growth.",
-                    potentialSaving = income * 0.035 * taxRate
-                ))
-            }
-            else -> {
-                // Common suggestion for all plans
-                suggestions.add(TaxPlanSuggestion(
-                    category = "Donation",
-                    suggestion = "Make donations to approved organizations for tax deductions. These organizations include registered charities, educational institutions, and sports bodies approved by the Malaysian government.",
-                    potentialSaving = 1000 * taxRate
-                ))
+        // Add some plan-type specific suggestions if we don't have enough
+        if (suggestions.size < 5) {
+            when (planType) {
+                "future" -> {
+                    // Future income plan - focus on tax brackets and investment strategies
+                    suggestions.add(TaxPlanSuggestion(
+                        category = "Investment Planning",
+                        suggestion = "Develop a tax-efficient investment strategy targeting long-term growth with periodic reviews to optimize as your income increases.",
+                        potentialSaving = income * 0.02 * taxRate
+                    ))
+                }
+                "business" -> {
+                    // Business venture plan - focus on business deductions
+                    suggestions.add(TaxPlanSuggestion(
+                        category = "Business Structure Optimization",
+                        suggestion = "Review your business structure (sole proprietorship vs. LLC) to optimize tax treatment based on your projected growth and specific business activities.",
+                        potentialSaving = income * 0.035 * taxRate
+                    ))
+                }
+                else -> {
+                    // Standard plan
+                    suggestions.add(TaxPlanSuggestion(
+                        category = "Tax Calendar Planning",
+                        suggestion = "Create a comprehensive tax planning calendar with key dates and actions to optimize your tax position throughout the year.",
+                        potentialSaving = income * 0.01 * taxRate
+                    ))
+                }
             }
         }
-
-        // Insurance suggestion for all
-        suggestions.add(TaxPlanSuggestion(
-            category = "Insurance Premium",
-            suggestion = "Claim relief for life insurance premiums up to RM3,000 and medical/education insurance premiums up to RM3,000.",
-            potentialSaving = 3000 * taxRate
-        ))
 
         // Log the generated suggestions
         Log.d(TAG, "Generated ${suggestions.size} default suggestions with total savings: ${suggestions.sumOf { it.potentialSaving }}")

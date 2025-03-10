@@ -270,4 +270,106 @@
     <string name="is_saving">保存中。。。</string>
     <string name="add_item">添加物品</string>
     <string name="save_item">保存</string>
+    <string name="generate_tax_plan">生成人工智能税务计划</string>
+
+    <!-- Navigation and Action strings -->
+    <string name="change_language">更改语言</string>
+    <string name="accessibility_settings">无障碍设置</string>
+    <string name="ai_information">AI 信息</string>
+    <string name="calendar">日历</string>
+    <string name="account">账户</string>
+
+    <!-- Tax Plan UI strings -->
+    <string name="ai_tax_plan_generator">AI 税务计划生成器</string>
+    <string name="ai_feature_description">此功能使用 AI 分析您的收入和就业类型，生成个性化的节税建议。</string>
+    <string name="how_it_works">工作原理：</string>
+    <string name="ai_step_1">1. AI 分析您的收入水平和就业类型</string>
+    <string name="ai_step_2">2. 识别适用于您情况的税务减免类别</string>
+    <string name="ai_step_3">3. 生成具体建议并估算节省金额</string>
+    <string name="ai_note">注意：请确保您的个人资料中的收入和就业信息是最新的，以获得最准确的建议。</string>
+    <string name="got_it">明白了</string>
+
+    <!-- Tax Plan List screen -->
+    <string name="no_tax_plans">暂无税务计划</string>
+    <string name="generate_to_start">生成税务计划以开始</string>
+    <string name="ai_generating">AI 正在生成税务计划...</string>
+    <string name="view_plan">查看计划</string>
+    <string name="delete_plan">删除计划</string>
+    <string name="potential_savings">潜在节省：%1$s</string>
+    <string name="suggestions_count">%1$d 条建议</string>
+
+    <!-- Tax Plan Detail screen -->
+    <string name="plan_not_found">找不到计划</string>
+    <string name="tax_saving_suggestions">节税建议</string>
+    <string name="no_suggestions_available">暂无可用建议</string>
+    <string name="implemented">已实施</string>
+    <string name="not_implemented">尚未实施</string>
+    <string name="potential_tax_savings">潜在税务节省：%1$s</string>
+
+    <!-- Create/Delete Tax Plan Dialog -->
+    <string name="create_new_tax_plan">创建新税务计划</string>
+    <string name="generate_ai_plan">使用自定义选项生成新的 AI 驱动税务计划。</string>
+    <string name="plan_name_optional">计划名称（可选）</string>
+    <string name="plan_name_placeholder">例如：我的 2025 年税务计划</string>
+    <string name="select_plan_type">选择计划类型：</string>
+    <string name="standard_tax_plan">标准税务计划</string>
+    <string name="future_income_plan">未来收入计划（收入增加 20%）</string>
+    <string name="business_venture_plan">商业创业计划</string>
+    <string name="generate_plan">生成计划</string>
+    <string name="delete_tax_plan">删除税务计划</string>
+
+    <!-- Success/Error messages -->
+    <string name="tax_plan_generated">税务计划生成成功</string>
+    <string name="tax_plan_deleted">税务计划删除成功</string>
+    <string name="version_requirement">此功能需要 Android N 或更高版本</string>
+    <string name="user_not_authenticated">请登录以生成税务计划</string>
+    <string name="error_loading_plans">加载税务计划时出错</string>
+    <string name="error_viewing_plan">查看税务计划时出错</string>
+    <string name="error_generating_plan">生成税务计划时出错</string>
+    <string name="error_deleting_plan">删除税务计划时出错</string>
+    <string name="unknown_error">未知错误</string>
+    <string name="ai_service_unavailable">AI 服务不可用</string>
+    <string name="internet_required">需要互联网连接</string>
+
+    <!-- Plan Type Descriptions -->
+    <string name="standard_plan">标准计划</string>
+    <string name="future_income_plan_title">未来收入计划</string>
+    <string name="business_plan_title">商业计划</string>
+    <string name="standard_plan_description">基于您当前收入和就业状态的个性化税务计划</string>
+    <string name="future_plan_description">针对未来收入增长和长期税务效率优化的税务计划</string>
+    <string name="business_plan_description">专为商业创业设计的税务计划，重点关注商业扣除</string>
+
+    <!-- Tax Plan Category Names -->
+    <string name="category_lifestyle">生活方式</string>
+    <string name="category_medical">医疗</string>
+    <string name="category_education">教育</string>
+    <string name="category_epf">公积金缴纳</string>
+    <string name="category_sspn">SSPN 储蓄</string>
+    <string name="category_donation">捐赠</string>
+    <string name="category_insurance">保险费</string>
+    <string name="category_business_expenses">商业支出</string>
+    <string name="category_home_office">家庭办公</string>
+    <string name="category_investment">投资</string>
+    <string name="category_retirement">退休规划</string>
+    <string name="category_capital_investment">资本投资</string>
+    <string name="category_business_structure">商业结构</string>
+
+    <!-- Default Tax Suggestions -->
+    <string name="lifestyle_suggestion">通过保留书籍、电子产品、体育设备和互联网订阅的收据，最大化您的 RM2,500 生活方式减免。</string>
+    <string name="medical_suggestion">追踪您自己和家属的医疗费用，获取高达 RM8,000 的减免。</string>
+    <string name="employee_epf_suggestion">确保您最大化 11% 的强制性公积金缴纳，获取高达 RM4,000 的税务减免。</string>
+    <string name="self_employed_epf_suggestion">每年自愿向公积金缴纳高达 RM4,000，获取税务减免。</string>
+    <string name="education_suggestion">申请高达 RM7,000 的教育减免，用于技能发展课程或继续教育。</string>
+    <string name="donation_suggestion">向获批准的组织捐款以获取税务扣除。</string>
+    <string name="investment_suggestion">考虑具有税收优惠的税务高效投资工具，如单位信托基金。</string>
+    <string name="education_future_suggestion">投资于具有高达 RM7,000 税务减免的技能发展课程，提高未来收入潜力。</string>
+    <string name="retirement_suggestion">通过私人退休计划 (PRS) 缴纳补充您的公积金，获取高达 RM3,000 的额外税务减免。</string>
+    <string name="business_expenses_suggestion">追踪并记录所有商业相关支出，包括办公用品、水电费和专业服务。</string>
+    <string name="home_office_suggestion">如果您在家工作，将部分租金、水电费和互联网费用分配为商业支出。</string>
+    <string name="capital_investment_suggestion">规划资本投资，利用资本津贴和商业扩张激励措施。</string>
+    <string name="business_structure_suggestion">根据您的预期增长，审查您的商业结构（独资企业与有限公司）以优化税务处理。</string>
+    <string name="sspn_suggestion">考虑为子女教育设立 SSPN 储蓄，获取高达 RM8,000 的税务减免。</string>
+
+    <string name="tax_plan_screen">税务计划页面</string>
+    <string name="tax_plan_detail_screen">税务计划详情页面</string>
 </resources>
