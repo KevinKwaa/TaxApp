@@ -102,7 +102,7 @@
     <string name="receipt_date">日期</string>
     <string name="receipt_total">总金额：</string>
     <string name="receipt_category">类别</string>
-    <string name="expense_items">支出项目 %1$s</string>
+    <string name="expense_items">支出物品 %1$s</string>
     <string name="confirm_save">确认并保存</string>
 
     <!-- Categories -->
@@ -111,6 +111,7 @@
     <string name="total_expenses">总支出：%1$s</string>
     <string name="number_of_categories">类别数量：%1$d</string>
     <string name="number_of_receipts">收据数量：%1$d</string>
+    <string name="number_of_expense_items">费用物品数: %1$d</string>
 
     <!-- Tax Plan -->
     <string name="tax_plan_title">税务规划</string>
@@ -127,10 +128,12 @@
     <string name="category">类别</string>
     <string name="no_item">该类别中没有商品</string>
     <string name="from">从:</string>
+    <string name="from_colon">从: %1$s</string>
     <string name="edit_receipt">编辑收据</string>
     <string name="date">日期（日/月/年）</string>
     <string name="total_amount">总金额</string>
     <string name="items">物品</string>
+    <string name="item">物品</string>
     <string name="no_item_add">没有添加任何物品</string>
     <string name="amount">金额 (RM)</string>
     <string name="cate">类别: %1$s</string>
@@ -372,4 +375,15 @@
 
     <string name="tax_plan_screen">税务计划页面</string>
     <string name="tax_plan_detail_screen">税务计划详情页面</string>
+    <string name="delete_confirm">删除确认</string>
+    <string name="delete_item_message">您确定要删除此费用物品吗？此操作无法撤消。</string>
+    <string name="delete_receipt_message">您确定要删除此收据吗？此操作无法撤消。</string>
+    <string name="edit_expense_item">编辑费用物品</string>
+    <string name="save">保存</string>
+    <string name="save_num_items">保存 %1$s 物品</string>
+    <string name="discard_changes">放弃更改？</string>
+    <string name="cancel_confirmation_message">您确定要取消吗？所有费用物品将会丢失。</string>
+    <string name="discard">放弃</string>
+    <string name="keep_editing">继续更改</string>
+    <string name="delete_item_confirmation">您确实要删除此费用物品吗？</string>
 </resources>

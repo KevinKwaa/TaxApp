@@ -329,15 +329,6 @@ fun CalendarScreen(
                     .padding(innerPadding) // Use the inner padding
                     .padding(16.dp)
             ) {
-                // Date format
-                if (isDarkMode) {
-                    Text(
-                        text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = accessibleColors.calendarText.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
 
                 // Calendar card
                 Card(

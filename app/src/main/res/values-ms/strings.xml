@@ -111,6 +111,7 @@
     <string name="total_expenses">Jumlah Perbelanjaan: %1$s</string>
     <string name="number_of_categories">Bilangan Kategori: %1$d</string>
     <string name="number_of_receipts">Bilangan Resit: %1$d</string>
+    <string name="number_of_expense_items">Bilangan item perbelanjaan: %1$d</string>
 
     <!-- Tax Plan -->
     <string name="tax_plan_title">Perancangan Cukai</string>
@@ -127,10 +128,12 @@
     <string name="category">Kategori</string>
     <string name="no_item">Tiada item dalam kategori ini</string>
     <string name="from">Dari:</string>
+    <string name="from_colon">Dari: %1$s</string>
     <string name="edit_receipt">Edit resit</string>
     <string name="date">Tarikh (DD/MM/YYYY)</string>
     <string name="total_amount">Jumlah</string>
     <string name="items">Barang</string>
+    <string name="item">Barang</string>
     <string name="no_item_add">Tiada item ditambah</string>
     <string name="amount">Jumlah (RM)</string>
     <string name="cate">Kategori: %1$s</string>
@@ -373,4 +376,15 @@
 
     <string name="tax_plan_screen">Halaman Rancangan Cukai</string>
     <string name="tax_plan_detail_screen">Halaman Perincian Pelan Cukai</string>
+    <string name="delete_confirm">Padamkan Pengesahan</string>
+    <string name="delete_item_message">Adakah anda pasti mahu memadamkan item perbelanjaan ini? Tindakan ini tidak boleh dibuat asal.</string>
+    <string name="delete_receipt_message">Adakah anda pasti mahu memadamkan resit ini? Tindakan ini tidak boleh dibuat asal.</string>
+    <string name="edit_expense_item">Edit Item Perbelanjaan</string>
+    <string name="save">Simpan</string>
+    <string name="save_num_items">Simpan %1$s Item</string>
+    <string name="discard_changes">Buang Perubahan?</string>
+    <string name="cancel_confirmation_message">Adakah anda pasti mahu membatalkan? Semua barang perbelanjaan akan hilang.</string>
+    <string name="discard">Buang</string>
+    <string name="keep_editing">Teruskan Mengedit</string>
+    <string name="delete_item_confirmation">Adakah anda pasti mahu memadamkan item perbelanjaan ini?</string>
 </resources>

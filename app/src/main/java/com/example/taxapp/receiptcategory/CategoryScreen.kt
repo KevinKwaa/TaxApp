@@ -530,7 +530,7 @@ fun CategoryScreenContent(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "Total Expenses: ${categoryViewModel.formatCurrency(categorySummary.values.sum())}",
+                                    text = stringResource(id = R.string.total_expenses,categoryViewModel.formatCurrency(categorySummary.values.sum())),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = accessibleColors.headerText
                                 )
@@ -538,7 +538,7 @@ fun CategoryScreenContent(
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(
-                                    text = "Number of Categories: ${categoryData.size}",
+                                    text = stringResource(id = R.string.number_of_categories,categoryData.size),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = accessibleColors.headerText
                                 )
@@ -547,7 +547,7 @@ fun CategoryScreenContent(
 
                                 val totalItems = categoryData.values.sumOf { it.size }
                                 Text(
-                                    text = "Number of Expense Items: $totalItems",
+                                    text = stringResource(id = R.string.number_of_expense_items, totalItems),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = accessibleColors.headerText
                                 )
@@ -656,7 +656,7 @@ fun CategoryItemsSection(
                     )
 
                     Text(
-                        text = "${expenseItems.size} ${if (expenseItems.size == 1) "item" else "items"}",
+                        text = "${expenseItems.size} ${if (expenseItems.size == 1) stringResource(id = R.string.item) else stringResource(id = R.string.items)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = accessibleColors.headerText,
                     )
@@ -763,7 +763,7 @@ fun ExpenseItemCard(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Text(
-                            text = "From: ${expenseItem.merchantName}",
+                            text = stringResource(id = R.string.from_colon, expenseItem.merchantName),
                             style = MaterialTheme.typography.bodySmall,
                             color = accessibleColors.headerText,
                             maxLines = 1,
@@ -832,14 +832,16 @@ fun DeleteConfirmationDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "Delete Confirmation")
+            Text(text = stringResource(id = R.string.delete_confirm))
         },
         text = {
             Text(
                 text = if (isExpenseItem)
-                    "Are you sure you want to delete this expense item? This action cannot be undone."
+                    stringResource(id = R.string.delete_item_message)
+                    //"Are you sure you want to delete this expense item? This action cannot be undone."
                 else
-                    "Are you sure you want to delete this receipt? This action cannot be undone."
+                    stringResource(id = R.string.delete_receipt_message)
+                    //"Are you sure you want to delete this receipt? This action cannot be undone."
             )
         },
         confirmButton = {
@@ -849,12 +851,12 @@ fun DeleteConfirmationDialog(
                     containerColor = MaterialTheme.colorScheme.error
                 )
             ) {
-                Text(text = "Delete")
+                Text(text = stringResource(id = R.string.delete))
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss) {
-                Text(text = "Cancel")
+                Text(text = stringResource(id = R.string.cancel))
             }
         }
     )
@@ -886,7 +888,7 @@ fun EditExpenseItemDialog(
             ) {
                 // Dialog title
                 Text(
-                    text = "Edit Expense Item",
+                    text = stringResource(id = R.string.edit_expense_item),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -896,7 +898,7 @@ fun EditExpenseItemDialog(
                 OutlinedTextField(
                     value = categoryViewModel.editExpenseDescription,
                     onValueChange = { categoryViewModel.editExpenseDescription = it },
-                    label = { Text("Description") },
+                    label = { Text(text = stringResource(id = R.string.item_description)) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -906,7 +908,7 @@ fun EditExpenseItemDialog(
                 OutlinedTextField(
                     value = categoryViewModel.editExpenseMerchant,
                     onValueChange = { categoryViewModel.editExpenseMerchant = it },
-                    label = { Text("Merchant") },
+                    label = { Text(stringResource(id = R.string.merchant)) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -916,7 +918,7 @@ fun EditExpenseItemDialog(
                 OutlinedTextField(
                     value = categoryViewModel.editExpenseDate,
                     onValueChange = { categoryViewModel.editExpenseDate = it },
-                    label = { Text("Date (DD/MM/YYYY)") },
+                    label = { Text(stringResource(id = R.string.date)) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -926,7 +928,7 @@ fun EditExpenseItemDialog(
                 OutlinedTextField(
                     value = categoryViewModel.editExpenseAmount,
                     onValueChange = { categoryViewModel.editExpenseAmount = it },
-                    label = { Text("Amount (RM)") },
+                    label = { Text(stringResource(id = R.string.amount)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -945,7 +947,7 @@ fun EditExpenseItemDialog(
                         value = categoryViewModel.editExpenseCategory,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Category") },
+                        label = { Text(stringResource(id = R.string.receipt_category)) },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
                         },
@@ -983,7 +985,7 @@ fun EditExpenseItemDialog(
                         onClick = onCancel,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(id = R.string.cancel))
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -992,7 +994,7 @@ fun EditExpenseItemDialog(
                         onClick = onSave,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Save")
+                        Text(stringResource(id = R.string.save))
                     }
                 }
                 // Add bottom spacing for scrollable content

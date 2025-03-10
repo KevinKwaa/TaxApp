@@ -109,6 +109,7 @@
     <string name="total_expenses">Total Expenses: %1$s</string>
     <string name="number_of_categories">Number of Categories: %1$d</string>
     <string name="number_of_receipts">Number of Receipts: %1$d</string>
+    <string name="number_of_expense_items">Number of Expense Items: %1$d</string>
 
     <!-- Tax Plan -->
     <string name="tax_plan_title">Tax Planning</string>
@@ -124,10 +125,12 @@
     <string name="category">Category</string>
     <string name="no_item">No item in this category</string>
     <string name="from">From:</string>
+    <string name="from_colon">From: %1$s</string>
     <string name="edit_receipt">Edit receipt</string>
     <string name="date">Date (DD/MM/YYYY)</string>
     <string name="total_amount">Total amount: </string>
     <string name="items">Items</string>
+    <string name="item">Item</string>
     <string name="no_item_add">No items added</string>
     <string name="amount">Amount (RM)</string>
     <string name="cate">Category: %1$s</string>
@@ -371,4 +374,15 @@
 
     <string name="tax_plan_screen">Tax Plan Screen</string>
     <string name="tax_plan_detail_screen">Tax Plan Detail Screen</string>
+    <string name="delete_confirm">Delete Confirmation</string>
+    <string name="delete_item_message">Are you sure you want to delete this expense item? This action cannot be undone.</string>
+    <string name="delete_receipt_message">Are you sure you want to delete this receipt? This action cannot be undone.</string>
+    <string name="edit_expense_item">Edit Expense Item</string>
+    <string name="save">Save</string>
+    <string name="save_num_items">Save %1$s Items</string>
+    <string name="discard_changes">Discard Changes?</string>
+    <string name="cancel_confirmation_message">Are you sure you want to cancel? All expense items will be lost.</string>
+    <string name="discard">Discard</string>
+    <string name="keep_editing">Keep Editing</string>
+    <string name="delete_item_confirmation">Are you sure you want to delete this expense item?</string>
 </resources>

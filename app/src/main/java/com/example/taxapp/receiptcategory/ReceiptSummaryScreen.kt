@@ -551,7 +551,8 @@ fun ReceiptSummaryContent(
                         ) {
                             Text(
                                 text = if (receiptViewModel.expenseItems.size > 1)
-                                    "Save ${receiptViewModel.expenseItems.size} Items"
+                                    stringResource(id = R.string.save_num_items, receiptViewModel.expenseItems.size)
+                                    //"Save ${receiptViewModel.expenseItems.size} Items"
                                 else
                                     stringResource(id = R.string.save_item),
                                 fontSize = 18.sp
@@ -595,8 +596,10 @@ fun ReceiptSummaryContent(
         if (showCancelConfirmation) {
             AlertDialog(
                 onDismissRequest = { showCancelConfirmation = false },
-                title = { Text("Discard Changes?") },
-                text = { Text("Are you sure you want to cancel? All expense items will be lost.") },
+                title = { Text(stringResource(id = R.string.discard_changes)) },
+                text = { Text(stringResource(id = R.string.cancel_confirmation_message)
+                    //"Are you sure you want to cancel? All expense items will be lost."
+                ) },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -607,14 +610,14 @@ fun ReceiptSummaryContent(
                             containerColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text("Discard")
+                        Text(stringResource(id = R.string.discard))
                     }
                 },
                 dismissButton = {
                     OutlinedButton(
                         onClick = { showCancelConfirmation = false }
                     ) {
-                        Text("Keep Editing")
+                        Text(stringResource(id = R.string.keep_editing))
                     }
                 }
             )
@@ -716,8 +719,8 @@ fun EditableExpenseItemCard(
             if (showDeleteConfirmation) {
                 AlertDialog(
                     onDismissRequest = { showDeleteConfirmation = false },
-                    title = { Text(text = "Delete Item") },
-                    text = { Text(text = "Are you sure you want to delete this expense item?") },
+                    title = { Text(text = stringResource(id = R.string.delete_item)) },
+                    text = { Text(text = stringResource(id = R.string.delete_item_confirmation)) },
                     confirmButton = {
                         Button(
                             onClick = {
@@ -728,14 +731,14 @@ fun EditableExpenseItemCard(
                                 containerColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text(text = "Delete")
+                            Text(text = stringResource(id = R.string.delete))
                         }
                     },
                     dismissButton = {
                         OutlinedButton(
                             onClick = { showDeleteConfirmation = false }
                         ) {
-                            Text(text = "Cancel")
+                            Text(text = stringResource(id = R.string.cancel))
                         }
                     }
                 )
@@ -795,7 +798,7 @@ fun EditableExpenseItemCard(
 
                 if (!isValidAmount) {
                     Text(
-                        text = "Please enter a valid amount",
+                        text = stringResource(id = R.string.valid_amount),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -807,7 +810,7 @@ fun EditableExpenseItemCard(
                     .padding(vertical = 4.dp)
                 ) {
                     Text(
-                        text = "Category: ${item.category}",
+                        text = stringResource(id = R.string.cate, item.category),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable { categoryMenuExpanded = true }
@@ -855,7 +858,7 @@ fun EditableExpenseItemCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "From: ${item.merchantName}",
+                        text = stringResource(id = R.string.from_colon, item.merchantName),
                         style = MaterialTheme.typography.bodySmall
                     )
 
@@ -869,7 +872,7 @@ fun EditableExpenseItemCard(
 
                 Box {
                     Text(
-                        text = "Category: ${item.category}",
+                        text = stringResource(id = R.string.cate, item.category),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable { categoryMenuExpanded = true }
@@ -899,7 +902,7 @@ fun EditableExpenseItemCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Subtotal",
+                        text = stringResource(id = R.string.subtotal),
                         style = MaterialTheme.typography.bodyMedium
                     )
 
