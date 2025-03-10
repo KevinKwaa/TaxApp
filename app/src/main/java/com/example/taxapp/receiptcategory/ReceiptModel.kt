@@ -21,7 +21,10 @@ data class ExpenseItem(
     val id: String = UUID.randomUUID().toString(), // Added ID field with auto-generation
     val description: String = "",
     val amount: Double = 0.0,
-    val category: String = ""
+    val category: String = "",
+    // Added fields to make each expense item standalone
+    val merchantName: String = "",
+    val date: Date = Date()
 )
 
 data class ExpenseItemWithReceipt(

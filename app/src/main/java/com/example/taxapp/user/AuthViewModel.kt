@@ -52,6 +52,7 @@ class AuthViewModel : ViewModel() {
                 FirebaseManager.refreshCurrentUser()
 
                 if (userId != null) {
+                    // Store the password in the user model for later display in profile
                     val userModel = UserModel(email, userId)
                     firestore.collection("users").document(userId)
                         .set(userModel)
@@ -75,6 +76,32 @@ class AuthViewModel : ViewModel() {
     }
 
     fun userProfile(name: String, phone: String, dob: String, income: String, employment: String = "employee", onResult: (Boolean, String?) -> Unit) {
+        // First perform validation before proceeding with saving
+        val nameValidation = ValidationUtil.validateName(name)
+        if (!nameValidation.isValid) {
+            onResult(false, nameValidation.errorMessage)
+            return
+        }
+
+        val phoneValidation = ValidationUtil.validatePhone(phone)
+        if (!phoneValidation.isValid) {
+            onResult(false, phoneValidation.errorMessage)
+            return
+        }
+
+        val dobValidation = ValidationUtil.validateDOB(dob)
+        if (!dobValidation.isValid) {
+            onResult(false, dobValidation.errorMessage)
+            return
+        }
+
+        val incomeValidation = ValidationUtil.validateIncome(income)
+        if (!incomeValidation.isValid) {
+            onResult(false, incomeValidation.errorMessage)
+            return
+        }
+
+        // If we reach here, all validations have passed
         val userId = FirebaseManager.getCurrentUserId()
         Log.d(TAG, "Updating profile for user ID: $userId")
 

@@ -35,6 +35,11 @@ class EditProfileViewModel : ViewModel() {
     var employment by mutableStateOf("employee")
     private var originalEmployment = "employee" // Track the original value
 
+    // Add this property to EditProfileViewModel
+    var password by mutableStateOf("••••••••") // Default masked value
+    private var actualPassword = "" // Store the actual password
+
+
     var email by mutableStateOf("")
     var name by mutableStateOf("")
     var phone by mutableStateOf("")
@@ -140,6 +145,8 @@ class EditProfileViewModel : ViewModel() {
                     phone = document.getString("phone") ?: ""
                     dob = document.getString("dob") ?: ""
                     income = document.getString("income") ?: ""
+                    //password = "••••••••" // Always show masked in UI
+                    //actualPassword = document.getString("password") ?: "" // Store actual value
 
                     // Get tax filing preference with default value "employee"
                     val employmentFromDoc = document.getString("employment") ?: "employee"
@@ -174,6 +181,36 @@ class EditProfileViewModel : ViewModel() {
     }
 
     fun updateUserProfile(onResult: (Boolean, String?) -> Unit) {
+        // First validate all the fields
+        val nameValidation = ValidationUtil.validateName(name)
+        if (!nameValidation.isValid) {
+            errorMessage = nameValidation.errorMessage
+            onResult(false, nameValidation.errorMessage)
+            return
+        }
+
+        val phoneValidation = ValidationUtil.validatePhone(phone)
+        if (!phoneValidation.isValid) {
+            errorMessage = phoneValidation.errorMessage
+            onResult(false, phoneValidation.errorMessage)
+            return
+        }
+
+        val dobValidation = ValidationUtil.validateDOB(dob)
+        if (!dobValidation.isValid) {
+            errorMessage = dobValidation.errorMessage
+            onResult(false, dobValidation.errorMessage)
+            return
+        }
+
+        val incomeValidation = ValidationUtil.validateIncome(income)
+        if (!incomeValidation.isValid) {
+            errorMessage = incomeValidation.errorMessage
+            onResult(false, incomeValidation.errorMessage)
+            return
+        }
+
+        // If we reach here, all validations have passed
         val userId = FirebaseManager.getCurrentUserId()
         Log.d(TAG, "Updating profile for user ID: $userId")
 
@@ -184,10 +221,12 @@ class EditProfileViewModel : ViewModel() {
                 "phone" to phone,
                 "dob" to dob,
                 "income" to income,
-                "employment" to employment // This is the important field for tax deadlines
+                "employment" to employment, // This is the important field for tax deadlines
+                //"password" to actualPassword // Keep the stored password
             )
 
             isLoading = true
+            errorMessage = null // Clear any previous errors
             Log.d(TAG, "Saving user details: $userDetails")
 
             // Check if employment changed
@@ -278,11 +317,13 @@ class EditProfileViewModel : ViewModel() {
                     Log.e(TAG, "Error updating user profile", exception)
                     _taxEventUpdateState.value = TaxEventUpdateState.Failed
                     isLoading = false
+                    errorMessage = exception.localizedMessage
                     onResult(false, exception.localizedMessage)
                 }
         } else {
             Log.e(TAG, "updateUserProfile failed: User not logged in")
             _taxEventUpdateState.value = TaxEventUpdateState.Failed
+            errorMessage = "User not logged in"
             onResult(false, "User not logged in")
         }
     }

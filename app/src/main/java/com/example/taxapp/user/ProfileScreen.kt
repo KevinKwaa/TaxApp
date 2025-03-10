@@ -25,11 +25,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -79,6 +82,39 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
     var income by remember { mutableStateOf("") }
     var employment by remember { mutableStateOf("employee") }
 
+    // Validation state
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
+    var dobError by remember { mutableStateOf<String?>(null) }
+    var incomeError by remember { mutableStateOf<String?>(null) }
+
+    // Overall form validation state
+    var isFormValid by remember { mutableStateOf(false) }
+
+    // Function to validate all fields and update form state
+    fun validateForm() {
+        // Validate each field
+        val nameValidation = ValidationUtil.validateName(name)
+        val phoneValidation = ValidationUtil.validatePhone(phone)
+        val dobValidation = ValidationUtil.validateDOB(dob)
+        val incomeValidation = ValidationUtil.validateIncome(income)
+
+        // Update error messages
+        nameError = if (!nameValidation.isValid) nameValidation.errorMessage else null
+        phoneError = if (!phoneValidation.isValid) phoneValidation.errorMessage else null
+        dobError = if (!dobValidation.isValid) dobValidation.errorMessage else null
+        incomeError = if (!incomeValidation.isValid) incomeValidation.errorMessage else null
+
+        // Form is valid if all fields are valid
+        isFormValid = nameValidation.isValid && phoneValidation.isValid &&
+                dobValidation.isValid && incomeValidation.isValid
+    }
+
+    // Validate on each change
+    LaunchedEffect(name, phone, dob, income, employment) {
+        validateForm()
+    }
+
     var isProfileUpdated by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -123,136 +159,226 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Home Screen")
+    ScreenReader("Profile Screen")
     val ttsManager = LocalTtsManager.current
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
 
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .background(accessibleColors.calendarBackground)
                 .verticalScroll(rememberScrollState())
                 .padding(32.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Replace the existing Row and Text components with this Row that combines both
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 64.dp, bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Language button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showLanguageSelector = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "🌐",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
-                }
+                // Heading text on the left side
+                Text(
+                    text = stringResource(id = R.string.complete_profile),
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = accessibleColors.headerText,
+                    modifier = Modifier.weight(1f)
+                )
 
-                // Accessibility button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showAccessibilitySettings = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
+                // Accessibility buttons on the right side
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        "⚙️",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
+                    // Language button with improved styling
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                accessibleColors.buttonText,
+                                CircleShape
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = accessibleColors.buttonText,
+                                shape = CircleShape
+                            )
+                            .clip(CircleShape)
+                            .clickable { showLanguageSelector = true }
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "🌐",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = accessibleColors.buttonText
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Accessibility button with improved styling
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                accessibleColors.buttonText,
+                                CircleShape
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = accessibleColors.buttonText,
+                                shape = CircleShape
+                            )
+                            .clip(CircleShape)
+                            .clickable { showAccessibilitySettings = true }
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "⚙️",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = accessibleColors.buttonText
+                        )
+                    }
                 }
             }
 
-            Text(
-                text = stringResource(id = R.string.complete_profile),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                style = TextStyle(
-                    fontSize = 24.sp,
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-
+            // Name field with validation
             OutlinedTextField(
                 value = name,
                 onValueChange = {
                     name = it
+                    ttsManager?.speak("Entering name")
                 },
                 label = {
-                    Text(text = stringResource(id = R.string.name),)
+                    Text(text = stringResource(id = R.string.name),
+                        color = accessibleColors.calendarText)
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = nameError != null,
+                supportingText = {
+                    nameError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = if (nameError != null) MaterialTheme.colorScheme.error else accessibleColors.selectedDay,
+                    unfocusedBorderColor = if (nameError != null) MaterialTheme.colorScheme.error else accessibleColors.calendarBorder,
+                    focusedTextColor = accessibleColors.calendarText,
+                    unfocusedTextColor = accessibleColors.calendarText
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Phone field with validation
             OutlinedTextField(
                 value = phone,
                 onValueChange = {
                     phone = it
+                    ttsManager?.speak("Entering phone number")
                 },
                 label = {
-                    Text(text = stringResource(id = R.string.phone),)
+                    Text(text = stringResource(id = R.string.phone),
+                        color = accessibleColors.calendarText)
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = phoneError != null,
+                supportingText = {
+                    phoneError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = if (phoneError != null) MaterialTheme.colorScheme.error else accessibleColors.selectedDay,
+                    unfocusedBorderColor = if (phoneError != null) MaterialTheme.colorScheme.error else accessibleColors.calendarBorder,
+                    focusedTextColor = accessibleColors.calendarText,
+                    unfocusedTextColor = accessibleColors.calendarText
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Date of Birth with validation
             OutlinedTextField(
                 value = dob,
                 onValueChange = {
                     dob = it
+                    ttsManager?.speak("Entering date of birth")
                 },
                 label = {
-                    Text(text = stringResource(id = R.string.date_of_birth),)
+                    Text(text = stringResource(id = R.string.date_of_birth),
+                        color = accessibleColors.calendarText)
                 },
-                modifier = Modifier.fillMaxWidth()
+                placeholder = {
+                    Text(
+                        text = "MM/DD/YYYY",
+                        color = accessibleColors.calendarText.copy(alpha = 0.5f)
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                isError = dobError != null,
+                supportingText = {
+                    dobError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = if (dobError != null) MaterialTheme.colorScheme.error else accessibleColors.selectedDay,
+                    unfocusedBorderColor = if (dobError != null) MaterialTheme.colorScheme.error else accessibleColors.calendarBorder,
+                    focusedTextColor = accessibleColors.calendarText,
+                    unfocusedTextColor = accessibleColors.calendarText
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Income with validation
             OutlinedTextField(
                 value = income,
                 onValueChange = {
                     income = it
+                    ttsManager?.speak("Entering income")
                 },
                 label = {
-                    Text(text = stringResource(id = R.string.total_income),)
+                    Text(text = stringResource(id = R.string.total_income),
+                        color = accessibleColors.calendarText)
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = incomeError != null,
+                supportingText = {
+                    incomeError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = if (incomeError != null) MaterialTheme.colorScheme.error else accessibleColors.selectedDay,
+                    unfocusedBorderColor = if (incomeError != null) MaterialTheme.colorScheme.error else accessibleColors.calendarBorder,
+                    focusedTextColor = accessibleColors.calendarText,
+                    unfocusedTextColor = accessibleColors.calendarText
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -288,6 +414,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                                 .fillMaxWidth()
                                 .clickable {
                                     employment = "employee"
+                                    ttsManager?.speak("Selected employee option")
                                 }
                                 .padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -296,6 +423,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                                 selected = employment == "employee",
                                 onClick = {
                                     employment = "employee"
+                                    ttsManager?.speak("Selected employee option")
                                 }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -320,6 +448,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                                 .fillMaxWidth()
                                 .clickable {
                                     employment = "self-employed"
+                                    ttsManager?.speak("Selected self-employed option")
                                 }
                                 .padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -328,6 +457,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                                 selected = employment == "self-employed",
                                 onClick = {
                                     employment = "self-employed"
+                                    ttsManager?.speak("Selected self-employed option")
                                 }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -349,25 +479,61 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Display general form error message if needed
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+
             Button(
                 onClick = {
-                    isLoading = true
-                    authViewModel.userProfile(name, phone, dob, income) { success, errormessage ->
-                        ttsManager?.speak("Profile saved")
-                        isLoading = false
-                        if (success) {
-                            navController.navigate("home") {
-                                popUpTo("auth") { inclusive = true }
+                    // Validate once more before submission
+                    validateForm()
+
+                    if (isFormValid) {
+                        isLoading = true
+                        ttsManager?.speak("Saving profile")
+                        authViewModel.userProfile(name, phone, dob, income, employment) { success, error ->
+                            isLoading = false
+                            if (success) {
+                                ttsManager?.speak("Profile saved successfully")
+                                navController.navigate("home") {
+                                    popUpTo("auth") { inclusive = true }
+                                }
+                            } else {
+                                ttsManager?.speak("Failed to save profile. ${error ?: "Please try again"}")
+                                errorMessage = error ?: "Something went wrong while saving your profile"
+                                AppUtil.showToast(context, error ?: "Something Went Wrong...")
                             }
-                        } else {
-                            AppUtil.showToast(context, errorMessage ?: "Something Went Wrong...")
                         }
+                    } else {
+                        // Form is invalid - provide feedback with TTS
+                        ttsManager?.speak("Please correct the errors in the form before continuing")
+                        AppUtil.showToast(context, "Please correct the form errors before continuing")
                     }
                 },
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth()
+                enabled = !isLoading && isFormValid,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accessibleColors.buttonBackground,
+                    contentColor = accessibleColors.buttonText,
+                    disabledContainerColor = accessibleColors.buttonBackground.copy(alpha = 0.5f),
+                    disabledContentColor = accessibleColors.buttonText.copy(alpha = 0.5f)
+                )
             ) {
-                Text(if (isLoading) "Saving..." else "Save Profile")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = accessibleColors.buttonText,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(text = if (isLoading) "Saving..." else "Save Profile")
             }
 
             if (isDarkMode) {

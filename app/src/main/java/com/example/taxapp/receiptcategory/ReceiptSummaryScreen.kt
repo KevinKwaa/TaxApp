@@ -24,47 +24,50 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -93,6 +96,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Date
 import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -104,27 +108,103 @@ fun ReceiptSummaryScreen(
     receiptViewModel: ReceiptViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+
+    // Access shared repositories
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+
+    // Observe the current language
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
+    }
+
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
+    // Clean up TTS when not needed
+    DisposableEffect(accessibilityState.textToSpeech) {
+        onDispose {
+            tts?.shutdown()
+        }
+    }
+
+    // Get the custom colors
+    val accessibleColors = LocalThemeColors.current
+    val isDarkMode = LocalDarkMode.current
+    ScreenReader("Home Screen")
+    val ttsManager = LocalTtsManager.current
+
+    // Today's date
+    val today = LocalDate.now()
+    val formattedDate = today.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy"))
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = stringResource(id = R.string.receipt_summary),
-                        style = TextStyle(
-                            fontSize = 24.sp,
-                            fontFamily = FontFamily.SansSerif,
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    //titleContentColor = MaterialTheme.colorScheme.onTertiary
+                ),
+                actions = {
+                    // Language button with improved styling
+                    IconButton(
+                        onClick = { showLanguageSelector = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Language, // Use the standard language icon
+                            contentDescription = "Change Language",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // Accessibility button with improved styling
+                    IconButton(
+                        onClick = { showAccessibilitySettings = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,  // Standard settings icon
+                            contentDescription = "Accessibility Settings",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
             )
@@ -134,6 +214,29 @@ fun ReceiptSummaryScreen(
             modifier = modifier.padding(innerPadding),
             navController = navController,
             receiptViewModel = receiptViewModel
+        )
+    }
+
+    if (showLanguageSelector) {
+        LanguageSelector(
+            currentLanguageCode = currentLanguageCode,
+            onLanguageSelected = { languageCode ->
+                currentLanguageCode = languageCode
+            },
+            onDismiss = { showLanguageSelector = false },
+            activity = activity
+        )
+    }
+
+    if (showAccessibilitySettings) {
+        AccessibilitySettings(
+            currentSettings = accessibilityState,
+            onSettingsChanged = { newSettings ->
+                coroutineScope.launch {
+                    accessibilityRepository.updateSettings(newSettings)
+                }
+            },
+            onDismiss = { showAccessibilitySettings = false }
         )
     }
 }
@@ -151,6 +254,15 @@ fun ReceiptSummaryContent(
 
     var showLanguageSelector by remember { mutableStateOf(false) }
     var showAccessibilitySettings by remember { mutableStateOf(false) }
+    var showCancelConfirmation by remember { mutableStateOf(false) }
+
+    // Total sum of all expense items
+    val totalAmount by remember {
+        derivedStateOf {
+            receiptViewModel.expenseItems.sumOf { it.amount }
+        }
+    }
+
     // Access shared repositories
     val languageManager = remember { AppLanguageManager.getInstance(context) }
     val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
@@ -180,570 +292,330 @@ fun ReceiptSummaryContent(
             tts?.shutdown()
         }
     }
+
     // Add debug logging to verify data is available
     LaunchedEffect(Unit) {
         Log.d("ReceiptSummaryContent", "Starting receipt summary screen with viewModel: $receiptViewModel")
-        Log.d("ReceiptSummaryContent", "Receipt data available: URI=${receiptViewModel.currentReceiptUri}, merchant=${receiptViewModel.merchantName}, total=${receiptViewModel.total}")
+        Log.d("ReceiptSummaryContent", "Receipt data available: URI=${receiptViewModel.currentReceiptUri}, merchant=${receiptViewModel.merchantName}")
     }
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Receipt Screen")
+    ScreenReader("Receipt Items Screen")
     val ttsManager = LocalTtsManager.current
+
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 16.dp)
+        Column(
+            modifier = modifier.fillMaxSize()
         ) {
-            // Language button with improved styling
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                        CircleShape
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = accessibleColors.calendarBorder,
-                        shape = CircleShape
-                    )
-                    .clip(CircleShape)
-                    .clickable { showLanguageSelector = true }
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "🌐",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = accessibleColors.buttonText
-                )
-            }
-
-            // Accessibility button with improved styling
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                        CircleShape
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = accessibleColors.calendarBorder,
-                        shape = CircleShape
-                    )
-                    .clip(CircleShape)
-                    .clickable { showAccessibilitySettings = true }
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "⚙️",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = accessibleColors.buttonText
-                )
-            }
-        }
-
-        receiptViewModel.errorMessage?.let { error ->
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(16.dp)
+            receiptViewModel.errorMessage?.let { error ->
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = stringResource(id = R.string.error, error),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = {
-                        ttsManager?.speak("Going Back")
-                        navController.navigateUp() }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        Text(text = stringResource(id = R.string.back),)
+                        Text(
+                            text = "Error: $error",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = {
+                            ttsManager?.speak("Going Back")
+                            navController.navigateUp()
+                        }) {
+                            Text(text = "Go Back")
+                        }
                     }
                 }
+                return@LanguageProvider
             }
-            return@LanguageProvider
-        }
 
-        // Loading indicator
-        if (receiptViewModel.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            // Loading indicator
+            if (receiptViewModel.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 4.dp
+                    )
+                }
+                return@LanguageProvider
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 4.dp
-                )
-            }
-            return@LanguageProvider
-        }
+                // Receipt image
+                item {
+                    receiptViewModel.currentReceiptUri?.let { uri ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = accessibleColors.calendarText
+                            )
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(uri),
+                                contentDescription = "Receipt Image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    }
+                }
 
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Receipt image
-            item {
-                receiptViewModel.currentReceiptUri?.let { uri ->
+                // Common merchant info
+                item {
                     Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Receipt Information",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Merchant: ",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = receiptViewModel.merchantName,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Date: ",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = receiptViewModel.purchaseDate,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Total Amount: ",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "RM ${String.format("%.2f", totalAmount)}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Expense items section header
+                item {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Image(
-                            painter = rememberAsyncImagePainter(uri),
-                            contentDescription = "Receipt Image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
+                        Text(
+                            text = "Expense Items (${receiptViewModel.expenseItems.size})",
+                            style = MaterialTheme.typography.titleMedium
                         )
+
+                        // Add new item button
+                        Button(
+                            onClick = {
+                                receiptViewModel.addExpenseItem()
+                                ttsManager?.speak("Added new expense item")
+                            }
+                        ) {
+                            Icon(Icons.Filled.Add, contentDescription = "Add Item")
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "Add Item")
+                        }
                     }
                 }
-            }
 
-            // Receipt details
-            item {
-                ReceiptDetailsSection(receiptViewModel)
-            }
+                // List of expense items
+                items(receiptViewModel.expenseItems) { item ->
+                    EditableExpenseItemCard(
+                        item = item,
+                        availableCategories = receiptViewModel.availableCategories,
+                        onCategoryChange = { newCategory ->
+                            // Update the category for this item
+                            receiptViewModel.updateExpenseItemCategory(item, newCategory)
+                        },
+                        onNameChange = { newName ->
+                            // Update the name/description of this item
+                            receiptViewModel.updateExpenseItemName(item, newName)
+                        },
+                        onAmountChange = { newAmount ->
+                            // Update the amount of this item
+                            receiptViewModel.updateExpenseItemAmount(item, newAmount)
+                        },
+                        onMerchantChange = { newMerchant ->
+                            // Update the merchant name for this item
+                            receiptViewModel.updateExpenseItemMerchant(item, newMerchant)
+                        },
+                        onDateChange = { newDate ->
+                            // Update the date for this item
+                            receiptViewModel.updateExpenseItemDate(item, newDate)
+                        },
+                        onDeleteItem = { expenseItem ->
+                            // Delete this expense item
+                            receiptViewModel.deleteExpenseItem(expenseItem)
+                        }
+                    )
+                }
 
-            // Expense items
-            item {
-                Text(
-                    text = stringResource(id = R.string.expense_items),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
+                // Save and Cancel buttons
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp)
+                    ) {
+                        // Save button
+                        Button(
+                            onClick = {
+                                ttsManager?.speak("Saving Expenses")
+                                receiptViewModel.saveReceipt(
+                                    onSuccess = { receiptId ->
+                                        AppUtil.showToast(context, "Expenses saved successfully")
+                                        navController.navigate("home") {
+                                            popUpTo("home") { inclusive = false }
+                                        }
+                                    },
+                                    onError = { error ->
+                                        AppUtil.showToast(context, error)
+                                    }
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            enabled = receiptViewModel.expenseItems.isNotEmpty(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text(
+                                text = if (receiptViewModel.expenseItems.size > 1)
+                                    "Save ${receiptViewModel.expenseItems.size} Items"
+                                else
+                                    "Save Item",
+                                fontSize = 18.sp
+                            )
+                        }
 
-            // List of expense items
-            items(receiptViewModel.expenseItems) { item ->
-                EditableExpenseItemCard(
-                    item = item,
-                    availableCategories = receiptViewModel.availableCategories,
-                    onCategoryChange = { newCategory ->
-                        // Update the category for this item
-                        receiptViewModel.updateExpenseItemCategory(item, newCategory)
-                    },
-                    onNameChange = { newName ->
-                        // Update the name/description of this item
-                        receiptViewModel.updateExpenseItemName(item, newName)
-                    },
-                    onAmountChange = { newAmount ->
-                        // Update the amount of this item
-                        receiptViewModel.updateExpenseItemAmount(item, newAmount)
-                    },
-                    onDeleteItem = { expenseItem ->
-                        // Delete this expense item
-                        receiptViewModel.deleteExpenseItem(expenseItem)
-                    }
-                )
-            }
+                        Spacer(modifier = Modifier.height(12.dp))
 
-            // Save button
-            item {
-                Button(
-                    onClick = {
-                        ttsManager?.speak("Saving Receipt")
-                        receiptViewModel.saveReceipt(
-                            onSuccess = { receiptId ->
-                                AppUtil.showToast(context, "Receipt saved successfully")
-                                navController.navigate("home") {
-                                    popUpTo("home") { inclusive = false }
+                        // Cancel button
+                        Button(
+                            onClick = {
+                                ttsManager?.speak("Cancelling")
+                                // Show confirmation dialog if there are items to prevent accidental cancellation
+                                if (receiptViewModel.expenseItems.isNotEmpty()) {
+                                    // Set up the confirmation dialog state
+                                    showCancelConfirmation = true
+                                } else {
+                                    // If no items, just navigate back directly
+                                    navController.popBackStack()
                                 }
                             },
-                            onError = { error ->
-                                AppUtil.showToast(context, error)
-                            }
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                        .height(56.dp)
-                ) {
-                    Text(text = stringResource(id = R.string.confirm_save), fontSize = 18.sp)
-                }
-            }
-        }
-
-        if (isDarkMode) {
-            Text(
-                text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                style = MaterialTheme.typography.bodyMedium,
-                color = accessibleColors.calendarText.copy(alpha = 0.7f)
-            )
-        }
-
-        if (showLanguageSelector) {
-            LanguageSelector(
-                currentLanguageCode = currentLanguageCode,
-                onLanguageSelected = { languageCode ->
-                    currentLanguageCode = languageCode
-                },
-                onDismiss = { showLanguageSelector = false },
-                activity = activity  // Pass the activity
-            )
-        }
-
-        if (showAccessibilitySettings) {
-            AccessibilitySettings(
-                currentSettings = accessibilityState,
-                onSettingsChanged = { newSettings ->
-                    coroutineScope.launch {
-                        accessibilityRepository.updateSettings(newSettings)
-                    }
-                },
-                onDismiss = { showAccessibilitySettings = false }
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ReceiptDetailsSection(receiptViewModel: ReceiptViewModel) {
-    var isEditingMerchant by remember { mutableStateOf(false) }
-    var isEditingTotal by remember { mutableStateOf(false) }
-    var isEditingDate by remember { mutableStateOf(false) }
-    var isEditingCategory by remember { mutableStateOf(false) }
-    var categoryMenuExpanded by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val activity = context as? ComponentActivity
-
-    var showLanguageSelector by remember { mutableStateOf(false) }
-    var showAccessibilitySettings by remember { mutableStateOf(false) }
-    // Access shared repositories
-    val languageManager = remember { AppLanguageManager.getInstance(context) }
-    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
-
-    // Observe the current language
-    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
-        mutableStateOf(languageManager.getCurrentLanguageCode())
-    }
-
-    // Observe accessibility settings
-    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
-        initial = AccessibilityState()
-    )
-
-    // Create a TTS instance if text-to-speech is enabled
-    val tts = remember(accessibilityState.textToSpeech) {
-        if (accessibilityState.textToSpeech) {
-            TextToSpeech(context) { status ->
-                // Initialize TTS engine
-            }
-        } else null
-    }
-
-    // Clean up TTS when not needed
-    DisposableEffect(accessibilityState.textToSpeech) {
-        onDispose {
-            tts?.shutdown()
-        }
-    }
-
-    // Get the custom colors
-    val accessibleColors = LocalThemeColors.current
-    val isDarkMode = LocalDarkMode.current
-    ScreenReader("Receipt Screen")
-    val ttsManager = LocalTtsManager.current
-
-    LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 16.dp)
-        ) {
-            // Language button with improved styling
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                        CircleShape
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = accessibleColors.calendarBorder,
-                        shape = CircleShape
-                    )
-                    .clip(CircleShape)
-                    .clickable { showLanguageSelector = true }
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "🌐",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = accessibleColors.buttonText
-                )
-            }
-
-            // Accessibility button with improved styling
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                        CircleShape
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = accessibleColors.calendarBorder,
-                        shape = CircleShape
-                    )
-                    .clip(CircleShape)
-                    .clickable { showAccessibilitySettings = true }
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "⚙️",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = accessibleColors.buttonText
-                )
-            }
-        }
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = stringResource(id = R.string.receipt_details),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-                // Merchant Name
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Face,
-                        contentDescription = "Merchant",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    if (isEditingMerchant) {
-                        OutlinedTextField(
-                            value = receiptViewModel.merchantName,
-                            onValueChange = { receiptViewModel.merchantName = it },
-                            label = { Text(text = stringResource(id = R.string.merchant_name),) },
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        IconButton(onClick = { isEditingMerchant = false }) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Save",
-                                tint = MaterialTheme.colorScheme.primary
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
                             )
-                        }
-                    } else {
-                        Text(
-                            text = stringResource(
-                                id = R.string.merchant_colon,
-                                receiptViewModel.merchantName
-                            ),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        IconButton(onClick = { isEditingMerchant = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Merchant",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-
-                // Date
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = "Date",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    if (isEditingDate) {
-                        OutlinedTextField(
-                            value = receiptViewModel.date,
-                            onValueChange = { receiptViewModel.date = it },
-                            label = { Text(text = stringResource(id = R.string.date),) },
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        IconButton(onClick = { isEditingDate = false }) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Save",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    } else {
-                        Text(
-                            text = stringResource(id = R.string.date_colon, receiptViewModel.date),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        IconButton(onClick = { isEditingDate = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Date",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-
-                // Total
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.rm),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-
-                    if (isEditingTotal) {
-                        OutlinedTextField(
-                            value = receiptViewModel.total,
-                            onValueChange = { receiptViewModel.total = it },
-                            label = { Text(text = stringResource(id = R.string.total_amount),) },
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
-
-                        IconButton(onClick = { isEditingTotal = false }) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Save",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    } else {
-                        Text(
-                            text = stringResource(
-                                id = R.string.total_colon,
-                                receiptViewModel.total
-                            ),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        IconButton(onClick = { isEditingTotal = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Total",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-
-                // Category
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        if (isEditingCategory) {
-                            OutlinedTextField(
-                                value = receiptViewModel.category,
-                                onValueChange = {},
-                                label = { Text(text = stringResource(id = R.string.category),) },
-                                modifier = Modifier.fillMaxWidth(),
-                                readOnly = true,
-                                trailingIcon = {
-                                    IconButton(onClick = { categoryMenuExpanded = true }) {
-                                        Icon(Icons.Default.Edit, "Select Category")
-                                    }
-                                }
-                            )
-
-                            DropdownMenu(
-                                expanded = categoryMenuExpanded,
-                                onDismissRequest = { categoryMenuExpanded = false }
-                            ) {
-                                receiptViewModel.availableCategories.forEach { category ->
-                                    DropdownMenuItem(
-                                        text = { Text(category) },
-                                        onClick = {
-                                            receiptViewModel.category = category
-                                            categoryMenuExpanded = false
-                                            isEditingCategory = false
-                                        }
-                                    )
-                                }
-                            }
-                        } else {
+                        ) {
                             Text(
-                                text = stringResource(
-                                    id = R.string.cate,
-                                    receiptViewModel.category
-                                ),
-                                style = MaterialTheme.typography.bodyLarge
+                                text = "Cancel",
+                                fontSize = 18.sp,
+                                color = Color.White
                             )
-                        }
-                    }
-
-                    if (!isEditingCategory) {
-                        IconButton(onClick = { isEditingCategory = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Category",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    } else {
-                        IconButton(onClick = { isEditingCategory = false }) {
-                            Text(text = stringResource(id = R.string.done),)
                         }
                     }
                 }
             }
         }
+
+        if (showCancelConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showCancelConfirmation = false },
+                title = { Text("Discard Changes?") },
+                text = { Text("Are you sure you want to cancel? All expense items will be lost.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showCancelConfirmation = false
+                            navController.popBackStack()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Discard")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { showCancelConfirmation = false }
+                    ) {
+                        Text("Keep Editing")
+                    }
+                }
+            )
+        }
+
         if (showLanguageSelector) {
             LanguageSelector(
                 currentLanguageCode = currentLanguageCode,
@@ -777,12 +649,16 @@ fun EditableExpenseItemCard(
     onCategoryChange: (String) -> Unit,
     onNameChange: (String) -> Unit,
     onAmountChange: (Double) -> Unit,
+    onMerchantChange: (String) -> Unit,
+    onDateChange: (String) -> Unit,
     onDeleteItem: (ExpenseItem) -> Unit
 ) {
     var categoryMenuExpanded by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(false) }
     var editedName by remember(item.description) { mutableStateOf(item.description) }
     var editedAmount by remember(item.amount) { mutableStateOf(item.amount.toString()) }
+    var editedMerchant by remember(item.merchantName) { mutableStateOf(item.merchantName) }
+    var editedDate by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(item.date)) }
     var isValidAmount by remember { mutableStateOf(true) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
@@ -824,8 +700,8 @@ fun EditableExpenseItemCard(
                     // Edit button
                     IconButton(onClick = { isEditing = !isEditing }) {
                         Icon(
-                            imageVector = if (isEditing) Icons.Default.Edit else Icons.Default.Edit,
-                            contentDescription = if (isEditing) "Cancel Editing" else "Edit Item",
+                            imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
+                            contentDescription = if (isEditing) "Save Edits" else "Edit Item",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -836,8 +712,8 @@ fun EditableExpenseItemCard(
             if (showDeleteConfirmation) {
                 AlertDialog(
                     onDismissRequest = { showDeleteConfirmation = false },
-                    title = { Text(text = stringResource(id = R.string.delete_item),) },
-                    text = { Text(text = stringResource(id = R.string.delete_confirmation),) },
+                    title = { Text(text = "Delete Item") },
+                    text = { Text(text = "Are you sure you want to delete this expense item?") },
                     confirmButton = {
                         Button(
                             onClick = {
@@ -848,37 +724,64 @@ fun EditableExpenseItemCard(
                                 containerColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text(text = stringResource(id = R.string.delete),)
+                            Text(text = "Delete")
                         }
                     },
                     dismissButton = {
                         OutlinedButton(
                             onClick = { showDeleteConfirmation = false }
                         ) {
-                            Text(text = stringResource(id = R.string.cancel),)
+                            Text(text = "Cancel")
                         }
                     }
                 )
             }
 
             if (isEditing) {
-                // Edit mode - show text fields
+                // Merchant field
                 OutlinedTextField(
-                    value = editedName,
-                    onValueChange = { editedName = it },
-                    label = { Text(text = stringResource(id = R.string.item_description),) },
+                    value = editedMerchant,
+                    onValueChange = { editedMerchant = it },
+                    label = { Text(text = "Merchant") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
                 )
 
+                // Date field
+                OutlinedTextField(
+                    value = editedDate,
+                    onValueChange = { editedDate = it },
+                    label = { Text(text = "Date (DD/MM/YYYY)") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Date format"
+                        )
+                    }
+                )
+
+                // Item name field
+                OutlinedTextField(
+                    value = editedName,
+                    onValueChange = { editedName = it },
+                    label = { Text(text = "Item Description") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                )
+
+                // Amount field
                 OutlinedTextField(
                     value = editedAmount,
                     onValueChange = {
                         editedAmount = it
                         isValidAmount = it.toDoubleOrNull() != null
                     },
-                    label = { Text(text = stringResource(id = R.string.amount),) },
+                    label = { Text(text = "Amount (RM)") },
                     isError = !isValidAmount,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier
@@ -888,7 +791,7 @@ fun EditableExpenseItemCard(
 
                 if (!isValidAmount) {
                     Text(
-                        text = stringResource(id = R.string.valid_amount), //please enter a valid amount
+                        text = "Please enter a valid amount",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -900,7 +803,7 @@ fun EditableExpenseItemCard(
                     .padding(vertical = 4.dp)
                 ) {
                     Text(
-                        text = stringResource(id = R.string.cate,item.category),
+                        text = "Category: ${item.category}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable { categoryMenuExpanded = true }
@@ -927,6 +830,8 @@ fun EditableExpenseItemCard(
                     onClick = {
                         if (isValidAmount) {
                             onNameChange(editedName)
+                            onMerchantChange(editedMerchant)
+                            onDateChange(editedDate)
                             editedAmount.toDoubleOrNull()?.let { onAmountChange(it) }
                             isEditing = false
                         }
@@ -936,13 +841,31 @@ fun EditableExpenseItemCard(
                         .align(Alignment.End)
                         .padding(top = 8.dp)
                 ) {
-                    Text(text = stringResource(id = R.string.save_changes),)
+                    Text(text = "Save Changes")
                 }
             } else {
                 // Display mode - show item details
+                // Merchant and date info
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "From: ${item.merchantName}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    Text(
+                        text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(item.date),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Box {
                     Text(
-                        text = stringResource(id = R.string.cate,item.category),
+                        text = "Category: ${item.category}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable { categoryMenuExpanded = true }
@@ -972,7 +895,7 @@ fun EditableExpenseItemCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = stringResource(id = R.string.subtotal),
+                        text = "Subtotal",
                         style = MaterialTheme.typography.bodyMedium
                     )
 

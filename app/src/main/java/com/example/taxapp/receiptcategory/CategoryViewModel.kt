@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
 class CategoryViewModel : ViewModel() {
     private val repository = ReceiptRepository()
@@ -24,7 +25,7 @@ class CategoryViewModel : ViewModel() {
     var receiptToDelete by mutableStateOf<ReceiptModel?>(null)
     var expenseToDelete by mutableStateOf<ExpenseItem?>(null)
 
-    // Edit state
+    // Edit receipt state (legacy support)
     var isEditingReceipt by mutableStateOf(false)
     var currentEditReceipt by mutableStateOf<ReceiptModel?>(null)
     var editMerchantName by mutableStateOf("")
@@ -32,6 +33,16 @@ class CategoryViewModel : ViewModel() {
     var editDate by mutableStateOf("")
     var editCategory by mutableStateOf("")
     var editExpenseItems by mutableStateOf<List<ExpenseItem>>(emptyList())
+
+    // Edit expense item state (new, focused on individual items)
+    var isEditingExpenseItem by mutableStateOf(false)
+    var currentEditExpenseItem by mutableStateOf<ExpenseItem?>(null)
+    var editExpenseDescription by mutableStateOf("")
+    var editExpenseAmount by mutableStateOf("")
+    var editExpenseCategory by mutableStateOf("")
+    var editExpenseMerchant by mutableStateOf("")
+    var editExpenseDate by mutableStateOf("")
+    var parentReceiptId by mutableStateOf("")
 
     // Data state
     var categoryData by mutableStateOf<Map<String, List<ExpenseItemWithReceipt>>>(emptyMap())
@@ -106,7 +117,9 @@ class CategoryViewModel : ViewModel() {
                         val defaultItem = ExpenseItem(
                             description = receipt.merchantName,
                             amount = receipt.total,
-                            category = receipt.category
+                            category = receipt.category,
+                            merchantName = receipt.merchantName,
+                            date = receipt.date
                         )
 
                         val itemsList = itemsByCategory.getOrDefault(receipt.category, mutableListOf())
@@ -121,7 +134,11 @@ class CategoryViewModel : ViewModel() {
 
                 // Update state
                 categoryData = itemsByCategory.mapValues { entry ->
-                    entry.value.sortedByDescending { it.receipt.date }
+                    // Sort by date descending, then by merchant name
+                    entry.value.sortedWith(
+                        compareByDescending<ExpenseItemWithReceipt> { it.item.date }
+                            .thenBy { it.item.merchantName }
+                    )
                 }
                 categorySummary = categorySums
 
@@ -172,6 +189,173 @@ class CategoryViewModel : ViewModel() {
         }
     }
 
+    // Start editing an expense item (new, focused on individual item)
+    fun startEditingExpenseItem(item: ExpenseItem) {
+        currentEditExpenseItem = item
+        editExpenseDescription = item.description
+        editExpenseAmount = item.amount.toString()
+        editExpenseCategory = item.category
+        editExpenseMerchant = item.merchantName
+        editExpenseDate = formatDate(item.date)
+
+        // Find parent receipt for this item
+        val parentReceipt = findParentReceipt(item)
+        parentReceiptId = parentReceipt?.id ?: ""
+
+        isEditingExpenseItem = true
+    }
+
+    // Find which receipt contains this expense item
+    private fun findParentReceipt(item: ExpenseItem): ReceiptModel? {
+        for ((_, itemsWithReceipt) in categoryData) {
+            for (itemWithReceipt in itemsWithReceipt) {
+                if (itemWithReceipt.item.id == item.id) {
+                    return itemWithReceipt.receipt
+                }
+            }
+        }
+        return null
+    }
+
+    // Cancel editing expense item
+    fun cancelEditingExpenseItem() {
+        isEditingExpenseItem = false
+        currentEditExpenseItem = null
+        clearEditExpenseFields()
+    }
+
+    // Clear edit expense item fields
+    private fun clearEditExpenseFields() {
+        editExpenseDescription = ""
+        editExpenseAmount = ""
+        editExpenseCategory = ""
+        editExpenseMerchant = ""
+        editExpenseDate = ""
+        parentReceiptId = ""
+    }
+
+    // Save edited expense item
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun saveEditedExpenseItem(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val parentReceipt = findParentReceipt(currentEditExpenseItem ?: return)
+        if (parentReceipt == null) {
+            onError("Could not find parent receipt for this expense item")
+            return
+        }
+
+        viewModelScope.launch {
+            isLoading = true
+
+            try {
+                // Parse values
+                val expenseAmount = editExpenseAmount.replace(",", ".").toDoubleOrNull() ?: 0.0
+                val expenseDate = parseDate(editExpenseDate)
+
+                // Create updated expense item
+                val updatedItem = currentEditExpenseItem!!.copy(
+                    description = editExpenseDescription,
+                    amount = expenseAmount,
+                    category = editExpenseCategory,
+                    merchantName = editExpenseMerchant,
+                    date = expenseDate
+                )
+
+                // Find and update the item in the receipt's items list
+                val updatedItems = parentReceipt.items.map {
+                    if (it.id == updatedItem.id) updatedItem else it
+                }
+
+                // Create updated receipt with the modified item
+                val updatedReceipt = parentReceipt.copy(
+                    items = updatedItems,
+                    // Optionally update receipt total
+                    total = updatedItems.sumOf { it.amount },
+                    updatedAt = Timestamp.now()
+                )
+
+                // Update receipt in Firestore
+                val result = repository.updateReceipt(updatedReceipt)
+                if (result.isFailure) {
+                    throw result.exceptionOrNull() ?: Exception("Failed to update expense item")
+                }
+
+                // Refresh data
+                loadCategoryData()
+
+                // Reset edit state
+                isEditingExpenseItem = false
+                currentEditExpenseItem = null
+                clearEditExpenseFields()
+
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("CategoryViewModel", "Error updating expense item", e)
+                onError(e.localizedMessage ?: "Failed to update expense item")
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    // Confirm delete expense item
+    fun confirmDeleteExpenseItem(item: ExpenseItem) {
+        expenseToDelete = item
+        showDeleteConfirmation = true
+    }
+
+    // Delete expense item
+    fun deleteExpenseItem() {
+        val item = expenseToDelete ?: return
+        val parentReceipt = findParentReceipt(item) ?: return
+
+        viewModelScope.launch {
+            isLoading = true
+
+            try {
+                // Remove the item from the receipt's items
+                val updatedItems = parentReceipt.items.filter { it.id != item.id }
+
+                // Create updated receipt with the item removed
+                val updatedReceipt = parentReceipt.copy(
+                    items = updatedItems,
+                    // Update receipt total
+                    total = updatedItems.sumOf { it.amount },
+                    updatedAt = Timestamp.now()
+                )
+
+                // If there are no items left, delete the entire receipt
+                if (updatedItems.isEmpty()) {
+                    val deleteResult = repository.deleteReceipt(parentReceipt.id)
+                    if (deleteResult.isFailure) {
+                        throw deleteResult.exceptionOrNull() ?: Exception("Failed to delete receipt")
+                    }
+                } else {
+                    // Otherwise update the receipt with the item removed
+                    val updateResult = repository.updateReceipt(updatedReceipt)
+                    if (updateResult.isFailure) {
+                        throw updateResult.exceptionOrNull() ?: Exception("Failed to update receipt")
+                    }
+                }
+
+                // Refresh data
+                loadCategoryData()
+
+                // Reset state
+                showDeleteConfirmation = false
+                expenseToDelete = null
+
+            } catch (e: Exception) {
+                Log.e("CategoryViewModel", "Error deleting expense item", e)
+                // Show error but don't reset state to allow retry
+                errorMessage = e.localizedMessage ?: "Failed to delete expense item"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    // Legacy methods for receipt editing (supporting backward compatibility)
+
     // Start editing receipt
     fun startEditingReceipt(receipt: ReceiptModel) {
         currentEditReceipt = receipt
@@ -179,7 +363,7 @@ class CategoryViewModel : ViewModel() {
         editTotal = receipt.total.toString()
         editDate = formatDate(receipt.date)
         editCategory = receipt.category
-        editExpenseItems = receipt.items ?: emptyList()
+        editExpenseItems = receipt.items
         isEditingReceipt = true
     }
 
@@ -287,57 +471,6 @@ class CategoryViewModel : ViewModel() {
     fun cancelDelete() {
         showDeleteConfirmation = false
         receiptToDelete = null
-        expenseToDelete = null
-    }
-
-    // Update expense item name
-    fun updateExpenseItemName(expenseItem: ExpenseItem, newName: String) {
-        editExpenseItems = editExpenseItems.map {
-            if (it.id == expenseItem.id) it.copy(description = newName) else it
-        }
-    }
-
-    // Update expense item amount
-    fun updateExpenseItemAmount(expenseItem: ExpenseItem, newAmount: Double) {
-        editExpenseItems = editExpenseItems.map {
-            if (it.id == expenseItem.id) it.copy(amount = newAmount) else it
-        }
-
-        // Recalculate total
-        updateTotalFromItems()
-    }
-
-    // Update expense item category
-    fun updateExpenseItemCategory(expenseItem: ExpenseItem, newCategory: String) {
-        editExpenseItems = editExpenseItems.map {
-            if (it.id == expenseItem.id) it.copy(category = newCategory) else it
-        }
-    }
-
-    // Recalculate total amount from all expense items
-    private fun updateTotalFromItems() {
-        val sum = editExpenseItems.sumOf { it.amount }
-        editTotal = String.format(Locale.getDefault(), "%.2f", sum)
-    }
-
-    // Confirm delete expense item
-    fun confirmDeleteExpenseItem(expenseItem: ExpenseItem) {
-        expenseToDelete = expenseItem
-        showDeleteConfirmation = true
-    }
-
-    // Delete expense item
-    fun deleteExpenseItem() {
-        val expense = expenseToDelete ?: return
-
-        // Remove expense from list
-        editExpenseItems = editExpenseItems.filter { it.id != expense.id }
-
-        // Recalculate total
-        updateTotalFromItems()
-
-        // Reset delete state
-        showDeleteConfirmation = false
         expenseToDelete = null
     }
 }

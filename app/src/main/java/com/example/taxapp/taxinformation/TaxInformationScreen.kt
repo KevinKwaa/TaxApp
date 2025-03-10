@@ -10,9 +10,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -84,29 +90,55 @@ fun TaxInformationScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = stringResource(id = R.string.tax_information),
-                        style = TextStyle(
-                            fontSize = 24.sp,
-                            fontFamily = FontFamily.SansSerif,
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        ttsManager?.speak("Going back home")
-                        navController.navigateUp()
-                    }) {
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    //titleContentColor = MaterialTheme.colorScheme.onTertiary
+                ),
+                actions = {
+                    // Language button with improved styling
+                    IconButton(
+                        onClick = { showLanguageSelector = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.back_to_home)
+                            imageVector = Icons.Default.Language, // Use the standard language icon
+                            contentDescription = "Change Language",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // Accessibility button with improved styling
+                    IconButton(
+                        onClick = { showAccessibilitySettings = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,  // Standard settings icon
+                            contentDescription = "Accessibility Settings",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -114,85 +146,66 @@ fun TaxInformationScreen(
         },
         bottomBar = {
             BottomAppBar(
-                actions = {
-                    // Home
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
                     IconButton(onClick = {
+                        ttsManager?.speak("Home")
                         navController.navigate("home")
-                        ttsManager?.speak("Returning to home")
                     }) {
                         Icon(
-                            Icons.Filled.Home,
-                            contentDescription = stringResource(R.string.home),
-                            tint = MaterialTheme.colorScheme.primary
+                            imageVector = Icons.Filled.Home,
+                            contentDescription = "Home",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Language selector
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                                androidx.compose.foundation.shape.CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.calendarBorder,
-                                shape = androidx.compose.foundation.shape.CircleShape
-                            )
-                            .clip(androidx.compose.foundation.shape.CircleShape)
-                            .clickable { showLanguageSelector = true }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "🌐",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.buttonText
-                        )
-                    }
-
-                    // Accessibility button with improved styling
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.calendarBorder,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
-                            .clickable { showAccessibilitySettings = true }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "⚙️",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.buttonText
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Profile
                     IconButton(onClick = {
-                        navController.navigate("editProfile")
-                        ttsManager?.speak("Going to profile")
+                        ttsManager?.speak("Calendar")
+                        navController.navigate("calendar")
                     }) {
                         Icon(
-                            Icons.Filled.Face,
-                            contentDescription = stringResource(R.string.profile),
+                            imageVector = Icons.Filled.CalendarMonth,
+                            contentDescription = "Calendar"
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        ttsManager?.speak("Upload Receipt")
+                        navController.navigate("uploadReceipt")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Receipt,
+                            contentDescription = "Upload Receipt"
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        ttsManager?.speak("Categories")
+                        navController.navigate("category")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Category,
+                            contentDescription = "Categories"
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        ttsManager?.speak("Account")
+                        navController.navigate("editProfile")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.AccountCircle,
+                            contentDescription = "Account"
                         )
                     }
                 }
-            )
+            }
         }
     ) { innerPadding ->
         LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
@@ -266,7 +279,7 @@ fun TaxInformationContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = accessibleColors.selectedDay.copy(alpha = 0.15f)
+                    containerColor = MaterialTheme.colorScheme.surface
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
@@ -336,7 +349,11 @@ fun TaxInformationContent(
         SpeakableContent(text = stringResource(R.string.malaysia_income_tax_rates)) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = Color.Black
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -451,7 +468,11 @@ fun TaxInformationContent(
         SpeakableContent(text = stringResource(R.string.malaysia_tax_regulations)) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = Color.Black
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -508,7 +529,11 @@ fun TaxInformationContent(
         SpeakableContent(text = stringResource(R.string.tax_relief_categories)) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = Color.Black
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -615,7 +640,7 @@ fun TaxReliefCategoryItem(
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = accessibleColors.cardBackground.copy(alpha = 0.7f)
+            containerColor = MaterialTheme.colorScheme.onPrimary
         )
     ) {
         Column(

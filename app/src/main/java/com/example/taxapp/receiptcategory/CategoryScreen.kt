@@ -8,6 +8,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,15 +30,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
@@ -45,12 +50,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,9 +66,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -75,6 +83,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -95,11 +104,17 @@ import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.accessibility.ScreenReader
+import com.example.taxapp.accessibility.isLight
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
 import com.example.taxapp.user.AppUtil
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -110,70 +125,165 @@ fun CategoryScreen(
     categoryViewModel: CategoryViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+
+    // Access shared repositories
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+
+    // Observe the current language
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
+    }
+
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
+    // Clean up TTS when not needed
+    DisposableEffect(accessibilityState.textToSpeech) {
+        onDispose {
+            tts?.shutdown()
+        }
+    }
+
+    // Get the custom colors
+    val accessibleColors = LocalThemeColors.current
+    val isDarkMode = LocalDarkMode.current
+    ScreenReader("Home Screen")
+    val ttsManager = LocalTtsManager.current
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(id = R.string.categories),
-                        style = TextStyle(
-                            fontSize = 24.sp,
-                            fontFamily = FontFamily.SansSerif,
+                        text = stringResource(id = R.string.category),
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
                     )
                 },
-
-            )
-        },
-        bottomBar = {
-            BottomAppBar(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    //titleContentColor = MaterialTheme.colorScheme.onTertiary
+                ),
                 actions = {
-                    //home
-                    IconButton(onClick = { navController.navigate("home") }) {
+                    // Language button with improved styling
+                    IconButton(
+                        onClick = { showLanguageSelector = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
                         Icon(
-                            Icons.Filled.Home,
-                            contentDescription = "Home",
-                            tint = MaterialTheme.colorScheme.primary
+                            imageVector = Icons.Default.Language, // Use the standard language icon
+                            contentDescription = "Change Language",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    //upload receipt
-                    IconButton(onClick = { navController.navigate("uploadReceipt") }) {
+                    // Accessibility button with improved styling
+                    IconButton(
+                        onClick = { showAccessibilitySettings = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
                         Icon(
-                            Icons.Filled.AddCircle,
-                            contentDescription = "Upload Receipt",
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    //category
-                    IconButton(onClick = { navController.navigate("category") }) {
-                        Icon(
-                            Icons.Filled.Star,
-                            contentDescription = "Profile",
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    //profile
-                    IconButton(onClick = { navController.navigate("editProfile") }) {
-                        Icon(
-                            Icons.Filled.Face,
-                            contentDescription = "Profile",
+                            imageVector = Icons.Default.Settings,  // Standard settings icon
+                            contentDescription = "Accessibility Settings",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
             )
+        },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    IconButton(onClick = {
+                        ttsManager?.speak("Home")
+                        navController.navigate("home")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Home,
+                            contentDescription = "Home",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        ttsManager?.speak("Calendar")
+                        navController.navigate("calendar")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.CalendarMonth,
+                            contentDescription = "Calendar"
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        ttsManager?.speak("Upload Receipt")
+                        navController.navigate("uploadReceipt")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Receipt,
+                            contentDescription = "Upload Receipt"
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        ttsManager?.speak("Categories")
+                        navController.navigate("category")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Category,
+                            contentDescription = "Categories"
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        ttsManager?.speak("Account")
+                        navController.navigate("editProfile")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.AccountCircle,
+                            contentDescription = "Account"
+                        )
+                    }
+                }
+            }
         }
     ) { innerPadding ->
         CategoryScreenContent(
@@ -181,6 +291,29 @@ fun CategoryScreen(
             categoryViewModel = categoryViewModel,
             navController = navController
         )
+
+        if (showLanguageSelector) {
+            LanguageSelector(
+                currentLanguageCode = currentLanguageCode,
+                onLanguageSelected = { languageCode ->
+                    currentLanguageCode = languageCode
+                },
+                onDismiss = { showLanguageSelector = false },
+                activity = activity
+            )
+        }
+
+        if (showAccessibilitySettings) {
+            AccessibilitySettings(
+                currentSettings = accessibilityState,
+                onSettingsChanged = { newSettings ->
+                    coroutineScope.launch {
+                        accessibilityRepository.updateSettings(newSettings)
+                    }
+                },
+                onDismiss = { showAccessibilitySettings = false }
+            )
+        }
     }
 
     // Delete confirmation dialog
@@ -207,14 +340,14 @@ fun CategoryScreen(
         )
     }
 
-    // Edit receipt dialog
-    if (categoryViewModel.isEditingReceipt) {
-        EditReceiptDialog(
+    // Edit expense item dialog
+    if (categoryViewModel.isEditingExpenseItem) {
+        EditExpenseItemDialog(
             categoryViewModel = categoryViewModel,
             onSave = {
-                categoryViewModel.saveEditedReceipt(
+                categoryViewModel.saveEditedExpenseItem(
                     onSuccess = {
-                        AppUtil.showToast(context, "Receipt updated successfully")
+                        AppUtil.showToast(context, "Expense item updated successfully")
                     },
                     onError = { error ->
                         AppUtil.showToast(context, error)
@@ -222,7 +355,7 @@ fun CategoryScreen(
                 )
             },
             onCancel = {
-                categoryViewModel.cancelEditing()
+                categoryViewModel.cancelEditingExpenseItem()
             }
         )
     }
@@ -240,6 +373,7 @@ fun CategoryScreenContent(
     val categoryData = categoryViewModel.categoryData
     val categorySummary = categoryViewModel.categorySummary
     val expandedCategories = categoryViewModel.expandedCategories
+
 
     // Create scroll state for scrollable content
     val scrollState = rememberScrollState()
@@ -291,71 +425,15 @@ fun CategoryScreenContent(
             modifier = modifier
                 .fillMaxSize()
                 .background(accessibleColors.calendarBackground)
-                .padding(32.dp),
-            verticalArrangement = Arrangement.Center,
+                .padding(20.dp), // Match HomeScreen padding
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                // Language button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showLanguageSelector = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "🌐",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
-                }
 
-                // Accessibility button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showAccessibilitySettings = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "⚙️",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
-                }
-            }
-
-            Box(modifier = modifier.fillMaxSize()) {
                 // Show loading indicator
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
+                        modifier = Modifier.size(48.dp),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -368,34 +446,51 @@ fun CategoryScreenContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.no_item_found),
+                            contentDescription = "no item found",
+                        )
                         Text(
                             text = stringResource(id = R.string.no_item_found),
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.error
+                            color = Color.Black
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Define a common width for both buttons - can adjust the fraction as needed
+                        val buttonModifier = Modifier
+                            .fillMaxWidth(0.7f)  // Both buttons will use 70% of available width
+                            .height(48.dp)       // Fixed height for consistency
+
                         ElevatedButton(
+                            modifier = buttonModifier,
                             onClick = { categoryViewModel.loadCategoryData() }
                         ) {
-                            Text(text = stringResource(id = R.string.retry),)
+                            Text(
+                                text = stringResource(id = R.string.retry),
+                                color = Color.Black
+                                )
                         }
 
                         if (navController != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             ElevatedButton(
+                                modifier = buttonModifier,
                                 onClick = { navController.navigate("uploadReceipt") }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
                                     contentDescription = "Add Receipt",
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(20.dp),
+                                    tint = Color.Black
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = stringResource(id = R.string.add_receipt),)
+                                Text(text = stringResource(id = R.string.add_receipt), color = Color.Black)
                             }
                         }
                     }
@@ -404,22 +499,24 @@ fun CategoryScreenContent(
                 else {
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp)
-                            .verticalScroll(scrollState)
+                            .fillMaxWidth()
+                            .verticalScroll(scrollState),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         // Summary Card
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                .padding(vertical = 8.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = Color.Black
                             )
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp)
+                                modifier = Modifier.padding(12.dp)
                             ) {
                                 Text(
                                     text = stringResource(id = R.string.categories_summary),
@@ -430,29 +527,22 @@ fun CategoryScreenContent(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = stringResource(
-                                        id = R.string.categories_summary,
-                                        categoryViewModel.formatCurrency(categorySummary.values.sum())
-                                    ),
+                                    text = "Total Expenses: ${categoryViewModel.formatCurrency(categorySummary.values.sum())}",
                                     style = MaterialTheme.typography.titleMedium
                                 )
 
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(
-                                    text = stringResource(
-                                        id = R.string.number_of_categories,
-                                        categoryData.size
-                                    ),
+                                    text = "Number of Categories: ${categoryData.size}",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
 
                                 Spacer(modifier = Modifier.height(4.dp))
 
+                                val totalItems = categoryData.values.sumOf { it.size }
                                 Text(
-                                    text = stringResource(
-                                        id = R.string.number_of_receipts,
-                                        categoryData.values.sumOf { it.size }),
+                                    text = "Number of Expense Items: $totalItems",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -471,28 +561,24 @@ fun CategoryScreenContent(
                                         category
                                     )
                                 },
-                                formatDate = { date -> categoryViewModel.formatDate(date) },
-                                formatCurrency = { amount -> categoryViewModel.formatCurrency(amount) },
-                                onEditReceipt = { receipt ->
-                                    categoryViewModel.startEditingReceipt(
-                                        receipt
-                                    )
+                                onEditExpenseItem = { item ->
+                                    categoryViewModel.startEditingExpenseItem(item)
                                 },
-                                onDeleteReceipt = { receipt ->
-                                    categoryViewModel.confirmDeleteReceipt(
-                                        receipt
-                                    )
-                                }
+                                onDeleteExpenseItem = { item ->
+                                    categoryViewModel.confirmDeleteExpenseItem(item)
+                                },
+                                formatCurrency = { amount -> categoryViewModel.formatCurrency(amount) },
+                                formatDate = { date -> categoryViewModel.formatDate(date) }
                             )
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            //Spacer(modifier = Modifier.height(8.dp))
                         }
 
                         // Space to ensure bottom items are visible
                         Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
-            }
+
         }
 
         if (showLanguageSelector) {
@@ -527,16 +613,21 @@ fun CategoryItemsSection(
     totalAmount: Double,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
-    formatDate: (java.util.Date) -> String,
+    onEditExpenseItem: (ExpenseItem) -> Unit,
+    onDeleteExpenseItem: (ExpenseItem) -> Unit,
     formatCurrency: (Double) -> String,
-    onEditReceipt: (ReceiptModel) -> Unit,
-    onDeleteReceipt: (ReceiptModel) -> Unit
+    formatDate: (Date) -> String
 ) {
     val rotationState by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.onPrimary,
+            contentColor = Color.Black
+        )
+
     ) {
         // Category Header
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -551,7 +642,7 @@ fun CategoryItemsSection(
                 // Category name and count
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = stringResource(id = R.string.category),
+                        text = category,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -607,10 +698,10 @@ fun CategoryItemsSection(
                         expenseItems.forEach { expenseWithReceipt ->
                             ExpenseItemCard(
                                 expenseItem = expenseWithReceipt.item,
-                                receipt = expenseWithReceipt.receipt,
-                                formatDate = formatDate,
                                 formatCurrency = formatCurrency,
-                                onEdit = { onEditReceipt(expenseWithReceipt.receipt) }
+                                formatDate = formatDate,
+                                onEdit = { onEditExpenseItem(expenseWithReceipt.item) },
+                                onDelete = { onDeleteExpenseItem(expenseWithReceipt.item) }
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -625,22 +716,22 @@ fun CategoryItemsSection(
 @Composable
 fun ExpenseItemCard(
     expenseItem: ExpenseItem,
-    receipt: ReceiptModel,
-    formatDate: (java.util.Date) -> String,
     formatCurrency: (Double) -> String,
-    onEdit: () -> Unit
+    formatDate: (Date) -> String,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.onPrimary
         ),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(6.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(8.dp)
         ) {
             // Expense item details
             Row(
@@ -651,7 +742,7 @@ fun ExpenseItemCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = expenseItem.description.ifEmpty { "Unnamed Item" },
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -662,7 +753,7 @@ fun ExpenseItemCard(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Text(
-                            text = stringResource(id = R.string.from ,receipt.merchantName),
+                            text = "From: ${expenseItem.merchantName}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                             maxLines = 1,
@@ -673,7 +764,7 @@ fun ExpenseItemCard(
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Text(
-                            text = formatDate(receipt.date),
+                            text = formatDate(expenseItem.date),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -688,17 +779,33 @@ fun ExpenseItemCard(
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
 
-                // Edit button
-                IconButton(
-                    onClick = onEdit,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Receipt",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
+                // Action buttons
+                Row {
+                    // Edit button
+                    IconButton(
+                        onClick = onEdit,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Item",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // Delete button
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Item",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }
@@ -714,12 +821,12 @@ fun DeleteConfirmationDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = stringResource(id = R.string.delete_confirmation),)
+            Text(text = "Delete Confirmation")
         },
         text = {
             Text(
                 text = if (isExpenseItem)
-                    "Are you sure you want to delete this expense item?"
+                    "Are you sure you want to delete this expense item? This action cannot be undone."
                 else
                     "Are you sure you want to delete this receipt? This action cannot be undone."
             )
@@ -731,12 +838,12 @@ fun DeleteConfirmationDialog(
                     containerColor = MaterialTheme.colorScheme.error
                 )
             ) {
-                Text(text = stringResource(id = R.string.delete),)
+                Text(text = "Delete")
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss) {
-                Text(text = stringResource(id = R.string.cancel),)
+                Text(text = "Cancel")
             }
         }
     )
@@ -744,267 +851,142 @@ fun DeleteConfirmationDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditReceiptDialog(
+fun EditExpenseItemDialog(
     categoryViewModel: CategoryViewModel,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
     Dialog(onDismissRequest = onCancel) {
+        val item = categoryViewModel.currentEditExpenseItem ?: return@Dialog
         val scrollState = rememberScrollState()
 
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .heightIn(max = 600.dp), // Set maximum height for the card
+                .fillMaxWidth()  // Increased from default to take 95% of screen width
+                .heightIn(min = 450.dp)  // Set a minimum height
+                .padding(16.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                    .verticalScroll(scrollState) // Make the entire content scrollable
+                    .padding(16.dp)
+                    .verticalScroll(scrollState)  // Make content scrollable
             ) {
-                // Dialog title with close button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.edit_receipt),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                // Dialog title
+                Text(
+                    text = "Edit Expense Item",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
 
-                    IconButton(onClick = onCancel) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close"
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Merchant name field
+                // Item Description
                 OutlinedTextField(
-                    value = categoryViewModel.editMerchantName,
-                    onValueChange = { categoryViewModel.editMerchantName = it },
-                    label = { Text(text = stringResource(id = R.string.merchant_name),) },
+                    value = categoryViewModel.editExpenseDescription,
+                    onValueChange = { categoryViewModel.editExpenseDescription = it },
+                    label = { Text("Description") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Date field
+                // Merchant Name
                 OutlinedTextField(
-                    value = categoryViewModel.editDate,
-                    onValueChange = { categoryViewModel.editDate = it },
-                    label = { Text(text = stringResource(id = R.string.date),) },
+                    value = categoryViewModel.editExpenseMerchant,
+                    onValueChange = { categoryViewModel.editExpenseMerchant = it },
+                    label = { Text("Merchant") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Total amount field
+                // Date
                 OutlinedTextField(
-                    value = categoryViewModel.editTotal,
-                    onValueChange = { categoryViewModel.editTotal = it },
-                    label = { Text(text = stringResource(id = R.string.total_amount),) },
+                    value = categoryViewModel.editExpenseDate,
+                    onValueChange = { categoryViewModel.editExpenseDate = it },
+                    label = { Text("Date (DD/MM/YYYY)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Amount
+                OutlinedTextField(
+                    value = categoryViewModel.editExpenseAmount,
+                    onValueChange = { categoryViewModel.editExpenseAmount = it },
+                    label = { Text("Amount (RM)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Category dropdown
-                var categoryMenuExpanded by remember { mutableStateOf(false) }
+                // Category Dropdown - FIXED VERSION
+                var isExpanded by remember { mutableStateOf(false) }
 
-                OutlinedTextField(
-                    value = categoryViewModel.editCategory,
-                    onValueChange = { },
-                    label = { Text(text = stringResource(id = R.string.category),) },
-                    readOnly = true,
-                    trailingIcon = {
-                        IconButton(onClick = { categoryMenuExpanded = true }) {
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowDown,
-                                contentDescription = "Choose Category"
-                            )
-                        }
-                    },
+                ExposedDropdownMenuBox(
+                    expanded = isExpanded,
+                    onExpandedChange = { isExpanded = it },
                     modifier = Modifier.fillMaxWidth()
-                )
-
-                DropdownMenu(
-                    expanded = categoryMenuExpanded,
-                    onDismissRequest = { categoryMenuExpanded = false }
                 ) {
-                    categoryViewModel.availableCategories.forEach { category ->
-                        DropdownMenuItem(
-                            text = { Text(category) },
-                            onClick = {
-                                categoryViewModel.editCategory = category
-                                categoryMenuExpanded = false
-                            }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Items section
-                Text(
-                    text = stringResource(id = R.string.items),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // List of expense items
-                val expenses = categoryViewModel.editExpenseItems
-
-                if (expenses.isEmpty()) {
-                    Text(
-                        text = stringResource(id = R.string.no_item_add),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                    OutlinedTextField(
+                        value = categoryViewModel.editExpenseCategory,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Category") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
+                        },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
                     )
-                } else {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        expenses.forEachIndexed { index, item ->
-                            ExpenseItemRow(
-                                item = item,
-                                availableCategories = categoryViewModel.availableCategories,
-                                onNameChange = { newName ->
-                                    categoryViewModel.updateExpenseItemName(item, newName)
-                                },
-                                onAmountChange = { newAmount ->
-                                    categoryViewModel.updateExpenseItemAmount(item, newAmount)
-                                },
-                                onCategoryChange = { newCategory ->
-                                    categoryViewModel.updateExpenseItemCategory(item, newCategory)
-                                },
-                                onDelete = {
-                                    categoryViewModel.confirmDeleteExpenseItem(item)
+
+                    ExposedDropdownMenu(
+                        expanded = isExpanded,
+                        onDismissRequest = { isExpanded = false },
+                        modifier = Modifier.exposedDropdownSize()
+                    ) {
+                        categoryViewModel.availableCategories.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(category) },
+                                onClick = {
+                                    categoryViewModel.editExpenseCategory = category
+                                    isExpanded = false
                                 }
                             )
-
-                            if (index < expenses.size - 1) {
-                                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                            }
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Save button - with bottom padding to ensure it's not cut off
-                Button(
-                    onClick = onSave,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = stringResource(id = R.string.save_changes),)
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ExpenseItemRow(
-    item: ExpenseItem,
-    availableCategories: List<String>,
-    onNameChange: (String) -> Unit,
-    onAmountChange: (Double) -> Unit,
-    onCategoryChange: (String) -> Unit,
-    onDelete: () -> Unit
-) {
-    var name by remember { mutableStateOf(item.description) }
-    var amount by remember { mutableStateOf(item.amount.toString()) }
-    var categoryMenuExpanded by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            // Item name field
-            OutlinedTextField(
-                value = name,
-                onValueChange = {
-                    name = it
-                    onNameChange(it)
-                },
-                label = { Text(text = stringResource(id = R.string.description),) },
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = MaterialTheme.typography.bodySmall
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Item amount field
-            OutlinedTextField(
-                value = amount,
-                onValueChange = {
-                    amount = it
-                    it.toDoubleOrNull()?.let { validAmount ->
-                        onAmountChange(validAmount)
+                    OutlinedButton(
+                        onClick = onCancel,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
                     }
-                },
-                label = { Text(text = stringResource(id = R.string.amount),) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = MaterialTheme.typography.bodySmall
-            )
 
-            Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
 
-            // Category selection
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(id = R.string.cate, item.category),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { categoryMenuExpanded = true }
-                )
-
-                DropdownMenu(
-                    expanded = categoryMenuExpanded,
-                    onDismissRequest = { categoryMenuExpanded = false }
-                ) {
-                    availableCategories.forEach { category ->
-                        DropdownMenuItem(
-                            text = { Text(category) },
-                            onClick = {
-                                onCategoryChange(category)
-                                categoryMenuExpanded = false
-                            }
-                        )
+                    Button(
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Save")
                     }
                 }
+                // Add bottom spacing for scrollable content
+                Spacer(modifier = Modifier.height(8.dp))
             }
-        }
-
-        // Delete button
-        IconButton(onClick = onDelete) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete Item",
-                tint = MaterialTheme.colorScheme.error
-            )
         }
     }
 }

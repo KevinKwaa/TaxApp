@@ -27,22 +27,34 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Badge
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -72,6 +84,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.NavHostController
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
@@ -89,7 +102,6 @@ import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.withTimeout
 import java.time.DayOfWeek
 import java.util.*
@@ -104,6 +116,7 @@ data class Event(
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     events: Map<LocalDate, List<Event>>,
@@ -112,7 +125,8 @@ fun CalendarScreen(
     onNavigateToAddEvent: (LocalDate) -> Unit,
     onNavigateToEventDetails: (Event) -> Unit,
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavHostController, // Add this parameter
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -221,299 +235,305 @@ fun CalendarScreen(
     ScreenReader("Calendar")
     val ttsManager = LocalTtsManager.current
 
-    // Rest of your UI code remains the same...
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(accessibleColors.calendarBackground)
-                .padding(16.dp)
-        ) {
-            // App Header with enhanced styling and back button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Title
-                SpeakableContent(text = stringResource(id = R.string.scheduler)) {
-                    Text(
-                        text = stringResource(id = R.string.scheduler),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
-                        ),
-                        color = accessibleColors.headerText
-                    )
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(id = R.string.scheduler),
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    actions = {
+                        // Language button
+                        IconButton(onClick = { showLanguageSelector = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Language,
+                                contentDescription = "Change Language",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        // Accessibility button
+                        IconButton(onClick = { showAccessibilitySettings = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Accessibility Settings",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                )
+            },
+            bottomBar = {
+                BottomAppBar(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    tonalElevation = 8.dp
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        IconButton(onClick = { onNavigateBack() }) {
+                            Icon(
+                                Icons.Filled.Home,
+                                contentDescription = "Home",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        IconButton(onClick = { /* Already on Calendar */ }) {
+                            Icon(
+                                Icons.Filled.CalendarMonth,
+                                contentDescription = "Calendar",
+                                tint = MaterialTheme.colorScheme.primary // Highlight current screen
+                            )
+                        }
+
+                        IconButton(onClick = { navController.navigate("uploadReceipt") }) {
+                            Icon(
+                                Icons.Filled.Receipt,
+                                contentDescription = "Upload Receipt"
+                            )
+                        }
+
+                        IconButton(onClick = { navController.navigate("category") }) {
+                            Icon(
+                                Icons.Filled.Category,
+                                contentDescription = "Categories"
+                            )
+                        }
+
+                        IconButton(onClick = { navController.navigate("editProfile") }) {
+                            Icon(
+                                Icons.Filled.AccountCircle,
+                                contentDescription = "Account"
+                            )
+                        }
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 16.dp)
+        ) { innerPadding ->
+            // Calendar content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(accessibleColors.calendarBackground)
+                    .padding(innerPadding) // Use the inner padding
+                    .padding(16.dp)
             ) {
-                // Language button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showLanguageSelector = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "🌐",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
-                }
-
-                // Accessibility button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showAccessibilitySettings = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "⚙️",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Back button
-                IconButton(
-                    onClick = {
-                        ttsManager?.speak("Going back to home")
-                        onNavigateBack()
-                    },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Home,
-                        contentDescription = "Back to home",
-                        tint = accessibleColors.buttonText,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                //Spacer(modifier = Modifier.width(16.dp))
-
+                // Date format
                 if (isDarkMode) {
                     Text(
                         text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = accessibleColors.calendarText.copy(alpha = 0.7f)
+                        color = accessibleColors.calendarText.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
-            }
 
-            // Rest of your Calendar UI remains the same
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = if (isDarkMode) 8.dp else 4.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = accessibleColors.cardBackground
-                ),
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = accessibleColors.cardBorder
-                )
-            ) {
-                Column(
+                // Calendar card
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(vertical = 4.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = if (isDarkMode) 8.dp else 4.dp
+                    ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = accessibleColors.cardBackground
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = accessibleColors.cardBorder
+                    )
                 ) {
-                    // Continue with existing calendar code...
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(16.dp)
                     ) {
-                        Box(
+                        // Month navigation
+                        Row(
                             modifier = Modifier
-                                .size(40.dp)
-                                .background(
-                                    accessibleColors.buttonBackground.copy(alpha = 0.6f),
-                                    CircleShape
-                                )
-                                .clip(CircleShape)
-                                .clickable { currentYearMonth = currentYearMonth.minusMonths(1) },
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(
+                                        accessibleColors.buttonBackground.copy(alpha = 0.6f),
+                                        CircleShape
+                                    )
+                                    .clip(CircleShape)
+                                    .clickable { currentYearMonth = currentYearMonth.minusMonths(1) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "<",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = accessibleColors.buttonText
+                                )
+                            }
+
+                            // Format the month name according to the current locale
+                            val locale = languageManager.getCurrentLocale()
+                            val monthYearFormat =
+                                DateTimeFormatter.ofPattern("MMMM yyyy", locale)
+
                             Text(
-                                "<",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = accessibleColors.buttonText
+                                text = currentYearMonth.format(monthYearFormat),
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp,
+                                    shadow = Shadow(
+                                        color = if (isDarkMode) Color.Black.copy(alpha = 0.5f)
+                                        else Color.Transparent,
+                                        offset = Offset(1f, 1f),
+                                        blurRadius = 2f
+                                    )
+                                ),
+                                color = accessibleColors.headerText
                             )
+
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(
+                                        accessibleColors.buttonBackground.copy(alpha = 0.6f),
+                                        CircleShape
+                                    )
+                                    .clip(CircleShape)
+                                    .clickable { currentYearMonth = currentYearMonth.plusMonths(1) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    ">",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = accessibleColors.buttonText
+                                )
+                            }
                         }
 
-                        // Format the month name according to the current locale
-                        val locale = languageManager.getCurrentLocale()
-                        val monthYearFormat =
-                            DateTimeFormatter.ofPattern("MMMM yyyy", locale)
-
-                        Text(
-                            text = currentYearMonth.format(monthYearFormat),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp,
-                                shadow = Shadow(
-                                    color = if (isDarkMode) Color.Black.copy(alpha = 0.5f)
-                                    else Color.Transparent,
-                                    offset = Offset(1f, 1f),
-                                    blurRadius = 2f
+                        // Weekday Headers with localized day names
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    if (isDarkMode)
+                                        accessibleColors.buttonBackground.copy(alpha = 0.3f)
+                                    else
+                                        MaterialTheme.colorScheme.primaryContainer
                                 )
-                            ),
-                            color = accessibleColors.headerText
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            // Get localized weekday abbreviations with better styling
+                            val locale = languageManager.getCurrentLocale()
+                            val calendar = Calendar.getInstance(locale)
+                            calendar.firstDayOfWeek = Calendar.SUNDAY
+
+                            for (i in Calendar.SUNDAY..Calendar.SATURDAY) {
+                                calendar.set(Calendar.DAY_OF_WEEK, i)
+                                val dayName = if (isDarkMode && !isSmallScreen()) {
+                                    calendar.getDisplayName(
+                                        Calendar.DAY_OF_WEEK,
+                                        Calendar.SHORT,
+                                        locale
+                                    )
+                                } else {
+                                    calendar.getDisplayName(
+                                        Calendar.DAY_OF_WEEK,
+                                        Calendar.SHORT,
+                                        locale
+                                    )?.substring(0, 1)
+                                } ?: "?"
+
+                                Text(
+                                    text = dayName,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = if (isDarkMode)
+                                        accessibleColors.calendarText
+                                    else
+                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        CalendarGrid(
+                            yearMonth = currentYearMonth,
+                            selectedDate = selectedDate,
+                            events = liveEvents,
+                            onDateSelect = { date ->
+                                selectedDate = date
+                                // Optional: Add subtle feedback when selecting a date
+                                if (accessibilityState.textToSpeech) {
+                                    val message =
+                                        "Selected ${date.format(DateTimeFormatter.ofPattern("MMMM d"))}"
+                                    tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+                                }
+                            }
                         )
 
-                        Box(
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Add Event Button
+                        Button(
+                            onClick = { onNavigateToAddEvent(selectedDate) },
                             modifier = Modifier
-                                .size(40.dp)
-                                .background(
-                                    accessibleColors.buttonBackground.copy(alpha = 0.6f),
-                                    CircleShape
-                                )
-                                .clip(CircleShape)
-                                .clickable { currentYearMonth = currentYearMonth.plusMonths(1) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                ">",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = accessibleColors.buttonText
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = accessibleColors.buttonBackground
                             )
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(stringResource(id = R.string.add_new_event))
+                            }
                         }
+
+                        // Selected Date Events Section with localized date format
+                        SelectedDateEvents(
+                            selectedDate = selectedDate,
+                            events = liveEvents[selectedDate] ?: mutableListOf(),
+                            onEventClick = { event ->
+                                // Use the captured ttsManager reference
+                                ttsManager?.speak("Opening event: ${event.title}")
+                                onNavigateToEventDetails(event)
+                            },
+                            onAddEventClick = {
+                                // Use the captured ttsManager reference
+                                ttsManager?.speak("Adding new event")
+                                onNavigateToAddEvent(selectedDate)
+                            },
+                            currentLanguageCode = currentLanguageCode
+                        )
                     }
                 }
-
-                // Weekday Headers with localized day names
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            if (isDarkMode)
-                                accessibleColors.buttonBackground.copy(alpha = 0.3f)
-                            else
-                                MaterialTheme.colorScheme.primaryContainer
-                        )
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    // Get localized weekday abbreviations with better styling
-                    val locale = languageManager.getCurrentLocale()
-                    val calendar = Calendar.getInstance(locale)
-                    calendar.firstDayOfWeek = Calendar.SUNDAY
-
-                    for (i in Calendar.SUNDAY..Calendar.SATURDAY) {
-                        calendar.set(Calendar.DAY_OF_WEEK, i)
-                        val dayName = if (isDarkMode && !isSmallScreen()) {
-                            calendar.getDisplayName(
-                                Calendar.DAY_OF_WEEK,
-                                Calendar.SHORT,
-                                locale
-                            )
-                        } else {
-                            calendar.getDisplayName(
-                                Calendar.DAY_OF_WEEK,
-                                Calendar.SHORT,
-                                locale
-                            )?.substring(0, 1)
-                        } ?: "?"
-
-                        Text(
-                            text = dayName,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = if (isDarkMode)
-                                accessibleColors.calendarText
-                            else
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                CalendarGrid(
-                    yearMonth = currentYearMonth,
-                    selectedDate = selectedDate,
-                    events = liveEvents,
-                    onDateSelect = { date ->
-                        selectedDate = date
-                        // Optional: Add subtle feedback when selecting a date
-                        if (accessibilityState.textToSpeech) {
-                            val message =
-                                "Selected ${date.format(DateTimeFormatter.ofPattern("MMMM d"))}"
-                            tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
-                        }
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Selected Date Events Section with localized date format
-                SelectedDateEvents(
-                    selectedDate = selectedDate,
-                    events = liveEvents[selectedDate] ?: mutableListOf(),
-                    onEventClick = { event ->
-                        // Use the captured ttsManager reference
-                        ttsManager?.speak("Opening event: ${event.title}")
-                        onNavigateToEventDetails(event)
-                    },
-                    onAddEventClick = {
-                        // Use the captured ttsManager reference
-                        ttsManager?.speak("Adding new event")
-                        onNavigateToAddEvent(selectedDate)
-                    },
-                    currentLanguageCode = currentLanguageCode
-                )
             }
         }
 
@@ -524,7 +544,7 @@ fun CalendarScreen(
                     currentLanguageCode = languageCode
                 },
                 onDismiss = { showLanguageSelector = false },
-                activity = activity  // Pass the activity
+                activity = activity
             )
         }
 
@@ -802,32 +822,6 @@ fun SelectedDateEvents(
                             EventListItem(event = event, onClick = { onEventClick(event) })
                         }
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Add event button
-            Button(
-                onClick = onAddEventClick,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = accessibleColors.buttonBackground,
-                    contentColor = accessibleColors.buttonText
-                )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(stringResource(id = R.string.add_new_event))
                 }
             }
         }

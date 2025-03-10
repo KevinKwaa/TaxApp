@@ -13,11 +13,10 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
 class ReceiptViewModel : ViewModel() {
     private val repository = ReceiptRepository()
@@ -28,11 +27,11 @@ class ReceiptViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
     var currentReceiptUri by mutableStateOf<Uri?>(null)
 
-    // Receipt data
+    // Receipt extraction metadata - temporary to support the extraction process
     var merchantName by mutableStateOf("")
-    var total by mutableStateOf("")
-    var date by mutableStateOf("")
-    var category by mutableStateOf("")
+    var purchaseDate by mutableStateOf("")
+
+    // Direct expense items list - this is our main focus now
     var expenseItems by mutableStateOf<List<ExpenseItem>>(emptyList())
 
     // Available categories
@@ -64,12 +63,34 @@ class ReceiptViewModel : ViewModel() {
                 if (result.isSuccess) {
                     val receiptData = result.getOrNull()
                     if (receiptData != null) {
-                        // Update the UI state with extracted data
+                        // Store only the common receipt metadata
                         merchantName = receiptData.merchantName
-                        total = receiptData.total.toString()
-                        date = formatDate(receiptData.date)
-                        category = receiptData.category
-                        expenseItems = receiptData.items
+                        purchaseDate = formatDate(receiptData.date)
+
+                        // Extract expense items, ensuring they have the merchant and date info
+                        expenseItems = if (receiptData.items.isNotEmpty()) {
+                            // Items already exist from extraction, make sure they have merchant and date
+                            receiptData.items.map { item ->
+                                item.copy(
+                                    // Generate a new ID for each item
+                                    id = UUID.randomUUID().toString(),
+                                    merchantName = receiptData.merchantName,
+                                    date = receiptData.date
+                                )
+                            }
+                        } else {
+                            // No items found, create a default one using the receipt total
+                            listOf(
+                                ExpenseItem(
+                                    id = UUID.randomUUID().toString(),
+                                    description = "Receipt item",
+                                    amount = receiptData.total,
+                                    category = receiptData.category,
+                                    merchantName = receiptData.merchantName,
+                                    date = receiptData.date
+                                )
+                            )
+                        }
 
                         onSuccess()
                     } else {
@@ -89,12 +110,23 @@ class ReceiptViewModel : ViewModel() {
     }
 
     // Format date for display
-    private fun formatDate(date: Date): String {
+    fun formatDate(date: Date): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         return sdf.format(date)
     }
 
-    // Save the processed receipt
+    // Parse date from string
+    fun parseDate(dateString: String): Date {
+        return try {
+            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            sdf.parse(dateString) ?: Date()
+        } catch (e: Exception) {
+            Log.e("ReceiptViewModel", "Error parsing date: $dateString", e)
+            Date()
+        }
+    }
+
+    // Save all extracted expense items as individual entities
     fun saveReceipt(onSuccess: (String) -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             isLoading = true
@@ -105,69 +137,54 @@ class ReceiptViewModel : ViewModel() {
                     throw Exception("No receipt image available")
                 }
 
-                // Convert total to Double
-                val totalAmount = try {
-                    total.replace(",", ".").toDouble()
-                } catch (e: NumberFormatException) {
-                    Log.w("ReceiptViewModel", "Error parsing total amount: $total", e)
-                    0.00
+                if (expenseItems.isEmpty()) {
+                    throw Exception("No expense items to save")
                 }
 
-                // Parse date
-                val receiptDate = try {
-                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    sdf.parse(date) ?: Date()
-                } catch (e: Exception) {
-                    Log.w("ReceiptViewModel", "Error parsing date: $date", e)
-                    Date()
-                }
-
-                // First save the receipt without the image URL
-                val receiptWithoutImage = ReceiptModel(
-                    merchantName = merchantName,
-                    total = totalAmount,
-                    date = receiptDate,
-                    category = category,
-                    imageUrl = "", // Will be updated after image upload
-                    items = expenseItems
-                )
-
-                // Save initial receipt to get an ID
-                val saveResult = repository.saveReceipt(receiptWithoutImage)
-                if (saveResult.isFailure) {
-                    throw saveResult.exceptionOrNull() ?: Exception("Failed to save receipt")
-                }
-
-                val receiptId = saveResult.getOrNull() ?: ""
-
-                // Upload the image
+                // Upload the image once to get a URL
                 val uploadResult = repository.uploadReceiptImage(currentReceiptUri!!)
                 var imageUrl = ""
 
                 if (uploadResult.isSuccess) {
                     imageUrl = uploadResult.getOrNull() ?: ""
-
-                    // Update the receipt with the image URL
-                    val updatedReceipt = receiptWithoutImage.copy(
-                        id = receiptId,
-                        imageUrl = imageUrl
-                    )
-
-                    // Update the receipt in Firestore
-                    repository.updateReceipt(updatedReceipt).getOrThrow()
                 } else {
-                    // If image upload fails, log it but continue with receipt saved
+                    // Log warning but continue - image is not critical
                     Log.w("ReceiptViewModel", "Image upload failed: ${uploadResult.exceptionOrNull()?.message}")
-                    // We'll still return success but with a warning
-                    errorMessage = "Receipt saved but image upload failed"
                 }
 
-                onSuccess(receiptId)
+                // Track IDs of saved items for return
+                val savedItemIds = mutableListOf<String>()
+
+                // Save each expense item individually
+                for (item in expenseItems) {
+                    // Create an expense-only receipt model for this item
+                    val expenseReceipt = ReceiptModel(
+                        merchantName = item.merchantName,
+                        total = item.amount,  // Individual item amount
+                        date = item.date,     // Using the item's date
+                        category = item.category,
+                        imageUrl = imageUrl,  // All items share the same receipt image
+                        items = listOf(item)  // Only one item per receipt now
+                    )
+
+                    // Save this individual expense
+                    val saveResult = repository.saveReceipt(expenseReceipt)
+                    if (saveResult.isSuccess) {
+                        val receiptId = saveResult.getOrNull() ?: ""
+                        savedItemIds.add(receiptId)
+                    } else {
+                        // If any item fails, throw exception
+                        throw saveResult.exceptionOrNull() ?: Exception("Failed to save expense item")
+                    }
+                }
+
+                // Success - all items were saved
+                onSuccess(savedItemIds.firstOrNull() ?: "")
 
                 // Reset state
                 resetState()
             } catch (e: Exception) {
-                Log.e("ReceiptViewModel", "Error saving receipt", e)
+                Log.e("ReceiptViewModel", "Error saving expense items", e)
                 errorMessage = e.message ?: "An error occurred"
                 onError(errorMessage ?: "Unknown error")
             } finally {
@@ -176,10 +193,33 @@ class ReceiptViewModel : ViewModel() {
         }
     }
 
+    // Add new expense item
+    fun addExpenseItem() {
+        // Extract date from first item or use current date
+        val itemDate = if (expenseItems.isNotEmpty()) {
+            expenseItems.first().date
+        } else {
+            parseDate(purchaseDate)
+        }
+
+        // Create new expense item with current merchant name
+        val newItem = ExpenseItem(
+            id = UUID.randomUUID().toString(),
+            description = "New item",
+            amount = 0.0,
+            category = if (expenseItems.isNotEmpty()) expenseItems.first().category else "Lifestyle Expenses",
+            merchantName = merchantName,
+            date = itemDate
+        )
+
+        // Add to list
+        expenseItems = expenseItems + newItem
+    }
+
     // Update expense item description/name
     fun updateExpenseItemName(item: ExpenseItem, newName: String) {
         expenseItems = expenseItems.map {
-            if (it == item) it.copy(description = newName) else it
+            if (it.id == item.id) it.copy(description = newName) else it
         }
         Log.d("ReceiptViewModel", "Updated item name to: $newName")
     }
@@ -187,71 +227,59 @@ class ReceiptViewModel : ViewModel() {
     // Update expense item amount
     fun updateExpenseItemAmount(item: ExpenseItem, newAmount: Double) {
         expenseItems = expenseItems.map {
-            if (it == item) it.copy(amount = newAmount) else it
+            if (it.id == item.id) it.copy(amount = newAmount) else it
         }
-
-        // Recalculate total
-        updateTotalFromItems()
-        Log.d("ReceiptViewModel", "Updated item amount to: $newAmount, new total: $total")
+        Log.d("ReceiptViewModel", "Updated item amount to: $newAmount")
     }
 
     // Update expense item category
     fun updateExpenseItemCategory(item: ExpenseItem, newCategory: String) {
         expenseItems = expenseItems.map {
-            if (it == item) it.copy(category = newCategory) else it
+            if (it.id == item.id) it.copy(category = newCategory) else it
         }
-
-        // If this is the only item, also update the receipt main category
-        if (expenseItems.size <= 1) {
-            category = newCategory
-        }
-
         Log.d("ReceiptViewModel", "Updated item category to: $newCategory")
+    }
+
+    // Update expense item merchant name
+    fun updateExpenseItemMerchant(item: ExpenseItem, newMerchant: String) {
+        expenseItems = expenseItems.map {
+            if (it.id == item.id) it.copy(merchantName = newMerchant) else it
+        }
+        // Update the common merchant name if this is the first item
+        if (expenseItems.isNotEmpty() && expenseItems.first().id == item.id) {
+            merchantName = newMerchant
+        }
+        Log.d("ReceiptViewModel", "Updated item merchant to: $newMerchant")
+    }
+
+    // Update expense item date
+    fun updateExpenseItemDate(item: ExpenseItem, newDateString: String) {
+        try {
+            val newDate = parseDate(newDateString)
+            expenseItems = expenseItems.map {
+                if (it.id == item.id) it.copy(date = newDate) else it
+            }
+            // Update the common date if this is the first item
+            if (expenseItems.isNotEmpty() && expenseItems.first().id == item.id) {
+                purchaseDate = formatDate(newDate)
+            }
+            Log.d("ReceiptViewModel", "Updated item date to: $newDateString")
+        } catch (e: Exception) {
+            Log.e("ReceiptViewModel", "Error updating date: $newDateString", e)
+        }
     }
 
     // Delete expense item
     fun deleteExpenseItem(item: ExpenseItem) {
-        expenseItems = expenseItems.filter { it != item }
-
-        // Recalculate total
-        updateTotalFromItems()
-
-        // If all items are deleted, set total to 0
-        if (expenseItems.isEmpty()) {
-            total = "0.00"
-        }
-
+        expenseItems = expenseItems.filter { it.id != item.id }
         Log.d("ReceiptViewModel", "Deleted expense item: ${item.description}, remaining items: ${expenseItems.size}")
-    }
-
-    // Recalculate total amount from all expense items
-    private fun updateTotalFromItems() {
-        val sum = expenseItems.sumOf { it.amount }
-        total = String.format(Locale.getDefault(), "%.2f", sum)
-    }
-
-    // Update receipt data
-    fun updateReceiptData(
-        newMerchantName: String,
-        newTotal: String,
-        newDate: String,
-        newCategory: String,
-        newItems: List<ExpenseItem>
-    ) {
-        merchantName = newMerchantName
-        total = newTotal
-        date = newDate
-        category = newCategory
-        expenseItems = newItems
     }
 
     // Reset the view model state
     fun resetState() {
         currentReceiptUri = null
         merchantName = ""
-        total = ""
-        date = ""
-        category = ""
+        purchaseDate = ""
         expenseItems = emptyList()
         errorMessage = null
     }

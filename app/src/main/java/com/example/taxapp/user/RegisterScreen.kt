@@ -2,6 +2,7 @@ package com.example.taxapp.user
 
 import android.os.Build
 import android.speech.tts.TextToSpeech
+import android.util.Patterns
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
@@ -19,9 +20,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,6 +38,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,6 +86,44 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
 
     var password by remember {
         mutableStateOf("")
+    }
+
+    // Add confirmation password state
+    var confirmPassword by remember {
+        mutableStateOf("")
+    }
+
+    // Add validation states
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+
+    // Form validation state
+    var isFormValid by remember { mutableStateOf(false) }
+
+    // Function to validate the form
+    fun validateForm() {
+        // Email basic validation
+        emailError = if (email.isBlank()) "Email cannot be empty"
+        else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) "Invalid email format"
+        else null
+
+        // Password validation
+        val passwordValidation = ValidationUtil.validatePassword(password)
+        passwordError = if (!passwordValidation.isValid) passwordValidation.errorMessage else null
+
+        // Confirm password validation
+        val confirmValidation = ValidationUtil.validatePasswordConfirmation(password, confirmPassword)
+        confirmPasswordError = if (!confirmValidation.isValid) confirmValidation.errorMessage else null
+
+        // Form is valid if all fields are valid
+        isFormValid = emailError == null && passwordError == null && confirmPasswordError == null &&
+                email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()
+    }
+
+    // Validate on each change
+    LaunchedEffect(email, password, confirmPassword) {
+        validateForm()
     }
 
     var context = LocalContext.current
@@ -141,95 +185,82 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .padding(32.dp),
+                    .padding(32.dp)
+                    .verticalScroll(rememberScrollState())  // Add scrolling for the longer form,
+                    .background(accessibleColors.calendarBackground),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Add back button at the top
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Add back button at the top
                     IconButton(
                         onClick = {
-                            ttsManager?.speak("Returning to previous screen")
+                            ttsManager?.speak("Returning")
                             navController.popBackStack()
                         },
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.2f),
+                                accessibleColors.buttonText,
                                 CircleShape
                             )
                             .border(
                                 width = 1.dp,
-                                color = accessibleColors.calendarBorder,
+                                color = accessibleColors.buttonText,
                                 shape = CircleShape
                             )
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back to selection screen",
-                            tint = accessibleColors.calendarText
+                            //tint = accessibleColors.calendarText
                         )
                     }
 
-                    // Language button with improved styling
-                    Box(
+                    // This spacer pushes the buttons to opposite sides
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Language button
+                    IconButton(
+                        onClick = { showLanguageSelector = true },
                         modifier = Modifier
                             .size(48.dp)
-                            .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.2f),
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.calendarBorder,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
                             .clickable {
                                 showLanguageSelector = true
                                 ttsManager?.speak("Opening language selector")
                             }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            "🌐",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.calendarText
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = "Change Language",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
+
+                    // Small space between the right buttons
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     // Accessibility button with improved styling
-                    Box(
+                    // Accessibility button
+                    IconButton(
+                        onClick = { showAccessibilitySettings = true },
                         modifier = Modifier
                             .size(48.dp)
-                            .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.2f),
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.calendarBorder,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
                             .clickable {
-                                showAccessibilitySettings = true
-                                ttsManager?.speak("Opening accessibility settings")
+                                showLanguageSelector = true
+                                ttsManager?.speak("Opening language selector")
                             }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            "⚙️",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.calendarText
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Accessibility Settings",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -256,7 +287,7 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
 
                 Image(
                     painter = painterResource(id = R.drawable.register),
-                    contentDescription = "login",
+                    contentDescription = "resgiter",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
@@ -285,8 +316,9 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                     )
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
+                // Password field with validation
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -296,39 +328,101 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                             color = accessibleColors.calendarText.copy(alpha = 0.8f)
                         )
                     },
+                    isError = passwordError != null,
+                    supportingText = {
+                        passwordError?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = accessibleColors.selectedDay,
-                        unfocusedBorderColor = accessibleColors.calendarBorder,
+                        focusedBorderColor = if (passwordError != null) MaterialTheme.colorScheme.error else accessibleColors.selectedDay,
+                        unfocusedBorderColor = if (passwordError != null) MaterialTheme.colorScheme.error else accessibleColors.calendarBorder,
                         focusedTextColor = accessibleColors.calendarText,
                         unfocusedTextColor = accessibleColors.calendarText,
                         cursorColor = accessibleColors.selectedDay,
-                        focusedLabelColor = accessibleColors.selectedDay,
-                        unfocusedLabelColor = accessibleColors.calendarText.copy(alpha = 0.7f)
+                        focusedLabelColor = if (passwordError != null) MaterialTheme.colorScheme.error else accessibleColors.selectedDay,
+                        unfocusedLabelColor = if (passwordError != null) MaterialTheme.colorScheme.error else accessibleColors.calendarText.copy(alpha = 0.7f)
                     )
                 )
 
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Confirm password field with validation
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = {
+                        Text(
+                            text = "Confirm Password",
+                            color = accessibleColors.calendarText.copy(alpha = 0.8f)
+                        )
+                    },
+                    isError = confirmPasswordError != null,
+                    supportingText = {
+                        confirmPasswordError?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = PasswordVisualTransformation(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = if (confirmPasswordError != null) MaterialTheme.colorScheme.error else accessibleColors.selectedDay,
+                        unfocusedBorderColor = if (confirmPasswordError != null) MaterialTheme.colorScheme.error else accessibleColors.calendarBorder,
+                        focusedTextColor = accessibleColors.calendarText,
+                        unfocusedTextColor = accessibleColors.calendarText,
+                        cursorColor = accessibleColors.selectedDay,
+                        focusedLabelColor = if (confirmPasswordError != null) MaterialTheme.colorScheme.error else accessibleColors.selectedDay,
+                        unfocusedLabelColor = if (confirmPasswordError != null) MaterialTheme.colorScheme.error else accessibleColors.calendarText.copy(alpha = 0.7f)
+                    )
+                )
+
+                // Password requirements text
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Password must be at least 8 characters with uppercase, number, and special character",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = accessibleColors.calendarText.copy(alpha = 0.7f),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
                     onClick = {
-                        isLoading = true
-                        authViewModel.register(email, password) { success, errorMessage ->
-                            if (success) {
-                                isLoading = false
-                                ttsManager?.speak("Registration successful")
-                                navController.navigate("profile") {
-                                    popUpTo("auth") { inclusive = true }
+                        // Validate once more before submission
+                        validateForm()
+
+                        if (isFormValid) {
+                            isLoading = true
+                            ttsManager?.speak("Creating account")
+                            authViewModel.register(email, password) { success, errorMessage ->
+                                if (success) {
+                                    isLoading = false
+                                    ttsManager?.speak("Registration successful")
+                                    navController.navigate("profile") {
+                                        popUpTo("auth") { inclusive = true }
+                                    }
+                                } else {
+                                    isLoading = false
+                                    ttsManager?.speak("Registration failed. ${errorMessage ?: "Please try again"}")
+                                    AppUtil.showToast(context, errorMessage ?: "Something went wrong")
                                 }
-                            } else {
-                                isLoading = false
-                                ttsManager?.speak("Registration failed. ${errorMessage ?: "Please try again"}")
-                                AppUtil.showToast(context, errorMessage ?: "Something went wrong")
                             }
+                        } else {
+                            // Form is invalid - provide feedback with TTS
+                            ttsManager?.speak("Please correct the errors in the form before continuing")
+                            AppUtil.showToast(context, "Please correct the form errors before continuing")
                         }
                     },
-                    enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty(),
+                    enabled = !isLoading && isFormValid,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp),
@@ -353,14 +447,6 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                         fontWeight = FontWeight.Medium
                     )
                 }
-
-//                if (isDarkMode) {
-//                    Text(
-//                        text = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        color = accessibleColors.calendarText.copy(alpha = 0.7f)
-//                    )
-//                }
             }
         }
 

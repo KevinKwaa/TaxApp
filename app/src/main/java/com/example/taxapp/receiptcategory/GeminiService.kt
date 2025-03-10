@@ -17,6 +17,7 @@ import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
 class GeminiService(private val context: Context) {
 
@@ -41,16 +42,18 @@ class GeminiService(private val context: Context) {
                 return Result.failure(Exception("Failed to load image"))
             }
 
-            // Create the prompt for Gemini
+            // Create the prompt for Gemini - updated to focus on detailed item extraction
             val prompt = """
                 You are a specialized receipt analyzer for a tax application. 
                 Extract the following information from this receipt image:
                 1. Merchant/Business name
-                2. Total amount (in MYR)
-                3. Date of purchase
-                4. Individual items with their prices (if visible)
+                2. Date of purchase (format as DD/MM/YYYY)
                 
-                Then, categorize the receipt into one of these Malaysian tax relief categories:
+                Most importantly, extract EACH individual item on the receipt with:
+                - Item name/description
+                - Item price/amount
+                
+                Then, categorize EACH item into one of these Malaysian tax relief categories:
                 - Lifestyle Expenses
                 - Childcare
                 - Sport Equipment 
@@ -61,13 +64,23 @@ class GeminiService(private val context: Context) {
                 Return the data in a JSON format with these fields:
                 {
                     "merchantName": "",
-                    "totalAmount": 0.0,
                     "date": "DD/MM/YYYY",
-                    "category": "",
+                    "totalAmount": 0.0,
                     "items": [
-                        {"description": "", "amount": 0.0}
+                        {
+                            "description": "",
+                            "amount": 0.0,
+                            "category": ""
+                        },
+                        {
+                            "description": "",
+                            "amount": 0.0,
+                            "category": ""
+                        }
                     ]
                 }
+                
+                Be as detailed as possible with the item descriptions. If you cannot see individual items, create at least one item with the receipt's total amount.
             """.trimIndent()
 
             // Query Gemini
@@ -116,23 +129,48 @@ class GeminiService(private val context: Context) {
             val merchantName = jsonObject.optString("merchantName", "")
             val totalAmount = jsonObject.optDouble("totalAmount", 0.0)
             val dateStr = jsonObject.optString("date", "")
-            val category = jsonObject.optString("category", "Lifestyle Expenses")
+            // Set a default category for the receipt, items will have their own categories
+            val category = "Lifestyle Expenses"
 
             // Parse date or use current date if not valid
             val date = parseDate(dateStr) ?: Date()
 
-            // Extract items
+            // Extract items with enhanced details
             val itemsArray = jsonObject.optJSONArray("items") ?: JSONArray()
             val items = mutableListOf<ExpenseItem>()
 
             for (i in 0 until itemsArray.length()) {
                 val itemObj = itemsArray.getJSONObject(i)
-                val description = itemObj.optString("description", "")
+                val description = itemObj.optString("description", "").takeIf { it.isNotEmpty() }
+                    ?: "Unnamed Item"
                 val amount = itemObj.optDouble("amount", 0.0)
+                // Get category for this specific item
+                val itemCategory = itemObj.optString("category", category)
 
-                if (description.isNotEmpty()) {
-                    items.add(ExpenseItem(description = description, amount = amount, category = category))
-                }
+                items.add(
+                    ExpenseItem(
+                        id = UUID.randomUUID().toString(),
+                        description = description,
+                        amount = amount,
+                        category = itemCategory,
+                        merchantName = merchantName,
+                        date = date
+                    )
+                )
+            }
+
+            // If no items were extracted, create a default one with the total amount
+            if (items.isEmpty() && totalAmount > 0) {
+                items.add(
+                    ExpenseItem(
+                        id = UUID.randomUUID().toString(),
+                        description = "Complete purchase",
+                        amount = totalAmount,
+                        category = category,
+                        merchantName = merchantName,
+                        date = date
+                    )
+                )
             }
 
             return ReceiptModel(
@@ -152,7 +190,17 @@ class GeminiService(private val context: Context) {
                 total = 0.0,
                 date = Date(),
                 category = "Lifestyle Expenses",
-                imageUrl = imageUri.toString()
+                imageUrl = imageUri.toString(),
+                // Create at least one default item
+                items = listOf(
+                    ExpenseItem(
+                        description = "Unknown Item",
+                        amount = 0.0,
+                        category = "Lifestyle Expenses",
+                        merchantName = "Unknown Merchant",
+                        date = Date()
+                    )
+                )
             )
         }
     }
@@ -251,14 +299,18 @@ class GeminiService(private val context: Context) {
     suspend fun analyzeTaxSavings(receipts: List<ReceiptModel>): Result<Map<String, Double>> {
         try {
             Log.d("GeminiService", "Analyzing tax savings for ${receipts.size} receipts")
+
+            // Create a map to collect all expense items by category
             val categoryTotals = mutableMapOf<String, Double>()
             var totalSpending = 0.0
 
-            // Calculate totals by category
+            // Calculate totals by item category instead of receipt category
             for (receipt in receipts) {
-                val currentTotal = categoryTotals.getOrDefault(receipt.category, 0.0)
-                categoryTotals[receipt.category] = currentTotal + receipt.total
-                totalSpending += receipt.total
+                for (item in receipt.items) {
+                    val currentTotal = categoryTotals.getOrDefault(item.category, 0.0)
+                    categoryTotals[item.category] = currentTotal + item.amount
+                    totalSpending += item.amount
+                }
             }
 
             // Prepare prompt for Gemini
@@ -295,7 +347,6 @@ class GeminiService(private val context: Context) {
             Log.d("GeminiService", "Received response from Gemini: $response")
 
             // Parse the JSON response
-            // The updated extractJsonFromResponse method now handles nullable String
             val jsonString = extractJsonFromResponse(response)
             Log.d("GeminiService", "Extracted JSON: $jsonString")
 

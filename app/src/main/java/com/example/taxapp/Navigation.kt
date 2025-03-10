@@ -358,7 +358,10 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                                 // Pop up to home to avoid building up back stack
                                 popUpTo("home") { inclusive = false }
                             }
-                        }
+                        },
+
+                        modifier = modifier,
+                        navController = navController
                     )
                 }
             }

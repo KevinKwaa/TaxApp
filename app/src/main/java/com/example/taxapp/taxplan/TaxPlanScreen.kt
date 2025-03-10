@@ -26,14 +26,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.AlertDialog
@@ -42,6 +49,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,6 +76,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -90,6 +99,8 @@ import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
 import com.example.taxapp.user.AppUtil
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,80 +110,254 @@ fun TaxPlanScreen(
     viewModel: TaxPlanViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+    // Add this to TaxPlanListScreen
+    var showAIExplanation by remember { mutableStateOf(false) }
+
+    // Access shared repositories
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+
+    // Observe the current language
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
+    }
+
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
+    // Clean up TTS when not needed
+    DisposableEffect(accessibilityState.textToSpeech) {
+        onDispose {
+            tts?.shutdown()
+        }
+    }
+
+    // Get the custom colors
+    val accessibleColors = LocalThemeColors.current
+    val isDarkMode = LocalDarkMode.current
+    ScreenReader("Home Screen")
+    val ttsManager = LocalTtsManager.current
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = if (viewModel.isViewingPlan) "Tax Plan Details" else "Tax Plan",
-                        style = TextStyle(
-                            fontSize = 24.sp,
-                            fontFamily = FontFamily.SansSerif,
+                        text = stringResource(id = R.string.tax_plan),
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (viewModel.isViewingPlan) {
-                            viewModel.closePlanView()
-                        } else {
-                            navController.navigateUp()
-                        }
-                    }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    //titleContentColor = MaterialTheme.colorScheme.onTertiary
+                ),
+                actions = {
+                    // Language button with improved styling
+                    IconButton(
+                        onClick = { showLanguageSelector = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Language, // Use the standard language icon
+                            contentDescription = "Change Language",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // Accessibility button with improved styling
+                    IconButton(
+                        onClick = { showAccessibilitySettings = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,  // Standard settings icon
+                            contentDescription = "Accessibility Settings",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { showAIExplanation = true },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,  // Using built-in Material icon
+                            contentDescription = "AI Information",
+                            modifier = Modifier.size(24.dp)
+                            //tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    // Add this dialog
+                    if (showAIExplanation) {
+                        AlertDialog(
+                            onDismissRequest = { showAIExplanation = false },
+                            title = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_ai),  // Add this icon to your drawable resources
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("AI Tax Plan Generator")
+                                }
+                            },
+                            text = {
+                                Column {
+                                    Text(
+                                        "This feature uses AI to analyze your income and employment type to generate personalized tax-saving suggestions.",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Text(
+                                        "How it works:",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Text(
+                                        "1. The AI analyzes your income level and employment type",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+
+                                    Text(
+                                        "2. It identifies applicable tax relief categories for your situation",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+
+                                    Text(
+                                        "3. It generates specific suggestions with estimated savings",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Text(
+                                        "Note: Make sure your income and employment information are up-to-date in your profile for the most accurate suggestions.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                Button(
+                                    onClick = { showAIExplanation = false }
+                                ) {
+                                    Text("Got it")
+                                }
+                            }
+                        )
                     }
                 }
             )
         },
         bottomBar = {
             BottomAppBar(
-                actions = {
-                    //home
-                    IconButton(onClick = { navController.navigate("home") }) {
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    IconButton(onClick = {
+                        ttsManager?.speak("Home")
+                        navController.navigate("home")
+                    }) {
                         Icon(
-                            Icons.Filled.Home,
+                            imageVector = Icons.Filled.Home,
                             contentDescription = "Home",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    //upload receipt
-                    IconButton(onClick = { navController.navigate("uploadReceipt") }) {
+                    IconButton(onClick = {
+                        ttsManager?.speak("Calendar")
+                        navController.navigate("calendar")
+                    }) {
                         Icon(
-                            Icons.Filled.AddCircle,
-                            contentDescription = "Upload Receipt",
+                            imageVector = Icons.Filled.CalendarMonth,
+                            contentDescription = "Calendar"
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    //category
-                    IconButton(onClick = { navController.navigate("category") }) {
+                    IconButton(onClick = {
+                        ttsManager?.speak("Upload Receipt")
+                        navController.navigate("uploadReceipt")
+                    }) {
                         Icon(
-                            Icons.Filled.Star,
-                            contentDescription = "Categories",
+                            imageVector = Icons.Filled.Receipt,
+                            contentDescription = "Upload Receipt"
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    //profile
-                    IconButton(onClick = { navController.navigate("editProfile") }) {
+                    IconButton(onClick = {
+                        ttsManager?.speak("Categories")
+                        navController.navigate("category")
+                    }) {
                         Icon(
-                            Icons.Filled.Face,
-                            contentDescription = "Profile",
+                            imageVector = Icons.Filled.Category,
+                            contentDescription = "Categories"
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        ttsManager?.speak("Account")
+                        navController.navigate("editProfile")
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.AccountCircle,
+                            contentDescription = "Account"
                         )
                     }
                 }
-            )
+            }
         }
     ) { innerPadding ->
         if (viewModel.isViewingPlan) {
@@ -220,6 +405,28 @@ fun TaxPlanScreen(
                 }
             )
         }
+    }
+    if (showLanguageSelector) {
+        LanguageSelector(
+            currentLanguageCode = currentLanguageCode,
+            onLanguageSelected = { languageCode ->
+                currentLanguageCode = languageCode
+            },
+            onDismiss = { showLanguageSelector = false },
+            activity = activity
+        )
+    }
+
+    if (showAccessibilitySettings) {
+        AccessibilitySettings(
+            currentSettings = accessibilityState,
+            onSettingsChanged = { newSettings ->
+                coroutineScope.launch {
+                    accessibilityRepository.updateSettings(newSettings)
+                }
+            },
+            onDismiss = { showAccessibilitySettings = false }
+        )
     }
 }
 
@@ -288,144 +495,6 @@ fun TaxPlanListScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                // Language button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showLanguageSelector = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "🌐",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
-                }
-
-                // Accessibility button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showAccessibilitySettings = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "⚙️",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
-                }
-
-                IconButton(
-                    onClick = { showAIExplanation = true },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.1f))
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_info),  // Add this icon to your drawable resources
-                        contentDescription = "AI Information",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-// Add this dialog
-                if (showAIExplanation) {
-                    AlertDialog(
-                        onDismissRequest = { showAIExplanation = false },
-                        title = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_ai),  // Add this icon to your drawable resources
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("AI Tax Plan Generator")
-                            }
-                        },
-                        text = {
-                            Column {
-                                Text(
-                                    "This feature uses AI to analyze your income and employment type to generate personalized tax-saving suggestions.",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Text(
-                                    "How it works:",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Text(
-                                    "1. The AI analyzes your income level and employment type",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-
-                                Text(
-                                    "2. It identifies applicable tax relief categories for your situation",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-
-                                Text(
-                                    "3. It generates specific suggestions with estimated savings",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Text(
-                                    "Note: Make sure your income and employment information are up-to-date in your profile for the most accurate suggestions.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        },
-                        confirmButton = {
-                            Button(
-                                onClick = { showAIExplanation = false }
-                            ) {
-                                Text("Got it")
-                            }
-                        }
-                    )
-                }
-            }
             // UI content based on state
             when {
                 isLoading -> {
@@ -531,7 +600,7 @@ fun TaxPlanListScreen(
                                 shape = RoundedCornerShape(12.dp)
                             ),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isLoading) MaterialTheme.colorScheme.primaryContainer else Color.Black,
+                            containerColor = if (isLoading) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.onPrimaryContainer,
                             contentColor = if (isLoading) MaterialTheme.colorScheme.primary else Color.White
                         ),
                         shape = RoundedCornerShape(12.dp),

@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -130,110 +132,92 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
     val isHighContrast = LocalHighContrastMode.current
     val ttsManager = LocalTtsManager.current
 
-    // Screen reader for accessibility
+
     ScreenReader("Login Screen")
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
-        Box(
+
+        Column(
             modifier = modifier
                 .fillMaxSize()
                 .background(accessibleColors.calendarBackground)
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // Add back button at the top
-                Row(
+                IconButton(
+                    onClick = {
+                        ttsManager?.speak("Returning")
+                        navController.popBackStack()
+                    },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .size(48.dp)
+                        .background(
+                            accessibleColors.buttonText,
+                            CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accessibleColors.buttonText,
+                            shape = CircleShape
+                        )
                 ) {
-                    IconButton(
-                        onClick = {
-                            ttsManager?.speak("Returning")
-                            navController.popBackStack()
-                        },
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.2f),
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.calendarBorder,
-                                shape = CircleShape
-                            )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back to selection screen",
-                            tint = accessibleColors.calendarText
-                        )
-                    }
-
-                    // Language button
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.2f),
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.calendarBorder,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
-                            .clickable {
-                                showLanguageSelector = true
-                                ttsManager?.speak("Opening language selector")
-                            }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "🌐",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.calendarText
-                        )
-                    }
-
-                    // Accessibility button with improved styling
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.2f),
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.calendarBorder,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
-                            .clickable {
-                                showAccessibilitySettings = true
-                                ttsManager?.speak("Opening accessibility settings")
-                            }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "⚙️",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.calendarText
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back to selection screen",
+                        //tint = accessibleColors.calendarText
+                    )
                 }
+
+                // This spacer pushes the buttons to opposite sides
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Language button
+                IconButton(
+                    onClick = { showLanguageSelector = true },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable {
+                            showLanguageSelector = true
+                            ttsManager?.speak("Opening language selector")
+                        }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Language,
+                        contentDescription = "Change Language",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                // Small space between the right buttons
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Accessibility button with improved styling
+                // Accessibility button
+                IconButton(
+                    onClick = { showAccessibilitySettings = true },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable {
+                            showLanguageSelector = true
+                            ttsManager?.speak("Opening language selector")
+                        }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Accessibility Settings",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
 
                 Text(
                     text = stringResource(id = R.string.welcome_back),
@@ -362,7 +346,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
 //                        color = accessibleColors.calendarText.copy(alpha = 0.7f)
 //                    )
 //                }
-            }
+
         }
         if (showLanguageSelector) {
             LanguageSelector(

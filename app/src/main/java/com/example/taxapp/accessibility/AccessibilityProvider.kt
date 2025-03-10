@@ -40,7 +40,37 @@ class AccessibleColors(
     val buttonText: Color,
     val cardBackground: Color,
     val cardBorder: Color,
-    val headerText: Color
+    val headerText: Color,
+    //
+    //val primary: Color,
+//    val onPrimary: Color,
+//    val primaryContainer: Color,
+//    val onPrimaryContainer: Color,
+//    val secondary: Color,
+//    val onSecondary: Color,
+//    val secondaryContainer: Color,
+//    val onSecondaryContainer: Color,
+//    val tertiary: Color,
+//    val onTertiary: Color,
+//    val tertiaryContainer: Color,
+//    val onTertiaryContainer: Color,
+//    val error: Color,
+//    val surface: Color,
+//    val onSurface: Color,
+//    val surfaceVariant: Color,
+//    val onSurfaceVariant: Color,
+//    val surfaceContainerHighest: Color,
+//    val surfaceContainerHigh: Color,
+//    val surfaceContainer: Color,
+//    val surfaceContainerLow: Color,
+//    val surfaceContainerLowest: Color,
+//    val inverseSurface: Color,
+//    val inverseOnSurface: Color,
+//    val surfaceTint: Color,
+//    val surfaceTintColor: Color,
+//    val outline: Color,
+//    val outlineVariant: Color,
+
 )
 
 data class AccessibleThemeColors(
@@ -279,7 +309,9 @@ private fun createAccessibleColors(
                 buttonText = Color.White,
                 cardBackground = Color(0xFF1A1A1A),
                 cardBorder = Color(0xFF4D90FF).copy(alpha = 0.5f),
-                headerText = Color.White
+                headerText = Color.White,
+                //
+                //primary = MaterialTheme.colorScheme.primary
             )
         } else {
             // Regular dark mode
@@ -297,7 +329,9 @@ private fun createAccessibleColors(
                 buttonText = Color(0xFFD8E6FF),
                 cardBackground = Color(0xFF252525),
                 cardBorder = Color(0xFF81A9FF).copy(alpha = 0.2f),
-                headerText = Color(0xFFE1E1E1)
+                headerText = Color(0xFFE1E1E1),
+                //
+                //primary = Color(0xffd0bcff)
             )
         }
     } else {
@@ -317,7 +351,9 @@ private fun createAccessibleColors(
                 buttonText = Color.White,
                 cardBackground = Color.White,
                 cardBorder = Color.Black,
-                headerText = Color.Black
+                headerText = Color.Black,
+                //
+                //primary = MaterialTheme.colorScheme.primary
             )
         } else {
             // Regular light mode
@@ -335,7 +371,8 @@ private fun createAccessibleColors(
                 buttonText = Color.White,
                 cardBackground = Color(0xFFF5F5F5),
                 cardBorder = Color(0xFF1565C0).copy(alpha = 0.2f),
-                headerText = Color(0xFF121212)
+                headerText = Color(0xFF121212),
+                //primary = MaterialTheme.colorScheme.primary
             )
         }
     }

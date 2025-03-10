@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Smart Tax Handler App</string>
+    <string name="app_name">Smart Tax Handler</string>
     <string name="scheduler">Scheduler</string>
     <string name="current_language">Current Language:</string>
     <string name="select_language">Select Language:</string>
@@ -231,4 +231,10 @@
 
     <string name="tax_calendar_desc">Keep track of important tax deadlines and scheduling.</string>
     <string name="going_to_calendar">Going to calendar</string>
+
+    <!-- Tax Plan Screen -->
+    <string name="main_features" translatable="false">Main Features</string>
+    <string name="calendar_description" translatable="false">Track important tax dates and deadlines</string>
+    <string name="tax_plan_description" translatable="false">Optimize your tax savings strategies</string>
+    <string name="tax_info_description" translatable="false">Learn about Malaysian tax regulations</string>
 </resources>

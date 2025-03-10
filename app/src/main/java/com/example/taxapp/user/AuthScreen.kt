@@ -20,8 +20,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -36,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -105,6 +111,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
     val ttsManager = LocalTtsManager.current
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
+
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -113,58 +120,34 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Top row with buttons aligned to the right
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 16.dp)
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                // Language button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showLanguageSelector = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
+                // Language button
+                IconButton(
+                    onClick = { showLanguageSelector = true },
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    Text(
-                        "🌐",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
+                    Icon(
+                        imageVector = Icons.Default.Language,
+                        contentDescription = "Change Language",
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
-                // Accessibility button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showAccessibilitySettings = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
+                // Accessibility button
+                IconButton(
+                    onClick = { showAccessibilitySettings = true },
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    Text(
-                        "⚙️",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Accessibility Settings",
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }

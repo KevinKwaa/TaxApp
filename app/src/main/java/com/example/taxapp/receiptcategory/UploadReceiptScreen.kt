@@ -33,13 +33,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -61,6 +69,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -99,74 +108,170 @@ fun UploadReceiptScreen(
 ) {
     val context = LocalContext.current
 
+    //language stuff
+    // Move these variables up to this function
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+
+    // Get the languageManager and accessibilityRepository here too
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+
+    // Move currentLanguageCode here
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
+    }
+
+    // Observe accessibility settings here too
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    val activity = context as? ComponentActivity
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
+            CenterAlignedTopAppBar(
                 title = {
-                    // Using MaterialTheme typography for proper scaling
                     Text(
                         text = stringResource(id = R.string.upload_receipt),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
                     )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                //
+                actions = {
+                    // Language button with improved styling
+                    IconButton(
+                        onClick = { showLanguageSelector = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Language, // Use the standard language icon
+                            contentDescription = "Change Language",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // Accessibility button with improved styling
+                    IconButton(
+                        onClick = { showAccessibilitySettings = true },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,  // Standard settings icon
+                            contentDescription = "Accessibility Settings",
+                            //tint = accessibleColors.buttonText,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             )
         },
         bottomBar = {
             BottomAppBar(
-                actions = {
-                    //home
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
                     IconButton(onClick = { navController.navigate("home") }) {
                         Icon(
                             Icons.Filled.Home,
                             contentDescription = "Home",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(onClick = { navController.navigate("calendar") }) {
+                        Icon(
+                            Icons.Filled.CalendarMonth,
+                            contentDescription = "Calendar"
+                        )
+                    }
 
-                    //upload receipt
                     IconButton(onClick = { navController.navigate("uploadReceipt") }) {
                         Icon(
-                            Icons.Filled.AddCircle,
+                            Icons.Filled.Receipt,
                             contentDescription = "Upload Receipt",
+                            //tint = MaterialTheme.colorScheme.outline // Highlight current screen
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    //category
                     IconButton(onClick = { navController.navigate("category") }) {
                         Icon(
-                            Icons.Filled.Star,
-                            contentDescription = "Profile",
+                            Icons.Filled.Category,
+                            contentDescription = "Categories"
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    //profile
                     IconButton(onClick = { navController.navigate("editProfile") }) {
                         Icon(
-                            Icons.Filled.Face,
-                            contentDescription = "Profile",
+                            Icons.Filled.AccountCircle,
+                            contentDescription = "Account"
                         )
                     }
                 }
-            )
+            }
         }
     ) { innerPadding ->
         UploadReceiptContent(
             modifier = modifier.padding(innerPadding),
             navController = navController,
-            receiptViewModel = receiptViewModel
+            receiptViewModel = receiptViewModel,
+            showLanguageSelector = showLanguageSelector,
+            showAccessibilitySettings = showAccessibilitySettings,
+            onShowLanguageSelector = { showLanguageSelector = it },
+            onShowAccessibilitySettings = { showAccessibilitySettings = it },
+            currentLanguageCode = currentLanguageCode,
+            onLanguageSelected = { currentLanguageCode = it },
+            accessibilityState = accessibilityState
         )
+
+        // Handle the dialogs here
+        if (showLanguageSelector) {
+            LanguageSelector(
+                currentLanguageCode = currentLanguageCode,
+                onLanguageSelected = { languageCode ->
+                    currentLanguageCode = languageCode
+                },
+                onDismiss = { showLanguageSelector = false },
+                activity = activity
+            )
+        }
+
+        if (showAccessibilitySettings) {
+            AccessibilitySettings(
+                currentSettings = accessibilityState,
+                onSettingsChanged = { newSettings ->
+                    coroutineScope.launch {
+                        accessibilityRepository.updateSettings(newSettings)
+                    }
+                },
+                onDismiss = { showAccessibilitySettings = false }
+            )
+        }
     }
 }
 
@@ -175,11 +280,16 @@ fun UploadReceiptScreen(
 fun UploadReceiptContent(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    receiptViewModel: ReceiptViewModel
+    receiptViewModel: ReceiptViewModel,
+    showLanguageSelector: Boolean,
+    showAccessibilitySettings: Boolean,
+    onShowLanguageSelector: (Boolean) -> Unit,
+    onShowAccessibilitySettings: (Boolean) -> Unit,
+    currentLanguageCode: String,
+    onLanguageSelected: (String) -> Unit,
+    accessibilityState: AccessibilityState
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val activity = context as? ComponentActivity
 
     // State for tracking the selected image URI
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -213,7 +323,7 @@ fun UploadReceiptContent(
                 onSuccess = {
                     // Log success before navigation
                     Log.d("UploadReceiptContent", "Receipt processing successful")
-                    Log.d("UploadReceiptContent", "Extracted data: merchantName=${receiptViewModel.merchantName}, total=${receiptViewModel.total}")
+                    Log.d("UploadReceiptContent", "Extracted data: merchantName=${receiptViewModel.merchantName}, items=${receiptViewModel.expenseItems.size}, total=${receiptViewModel.expenseItems.sumOf { it.amount }}")
 
                     isLoading = false
                     // Only navigate when processing is complete and successful
@@ -246,7 +356,7 @@ fun UploadReceiptContent(
                 onSuccess = {
                     // Log success before navigation
                     Log.d("UploadReceiptContent", "Receipt processing successful")
-                    Log.d("UploadReceiptContent", "Extracted data: merchantName=${receiptViewModel.merchantName}, total=${receiptViewModel.total}")
+                    Log.d("UploadReceiptContent", "Extracted data: merchantName=${receiptViewModel.merchantName}, items=${receiptViewModel.expenseItems.size}, total=${receiptViewModel.expenseItems.sumOf { it.amount }}")
 
                     isLoading = false
                     // Only navigate when processing is complete and successful
@@ -289,21 +399,6 @@ fun UploadReceiptContent(
         }
     }
 
-    var showLanguageSelector by remember { mutableStateOf(false) }
-    var showAccessibilitySettings by remember { mutableStateOf(false) }
-    // Access shared repositories
-    val languageManager = remember { AppLanguageManager.getInstance(context) }
-    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
-
-    // Observe the current language
-    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
-        mutableStateOf(languageManager.getCurrentLanguageCode())
-    }
-
-    // Observe accessibility settings
-    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
-        initial = AccessibilityState()
-    )
 
     // Create a TTS instance if text-to-speech is enabled
     val tts = remember(accessibilityState.textToSpeech) {
@@ -331,69 +426,18 @@ fun UploadReceiptContent(
     LaunchedEffect(Unit) {
         receiptViewModel.resetState()
     }
+
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
+
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
+                .background(accessibleColors.calendarBackground)
+                .padding(20.dp), // Match HomeScreen padding
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                // Language button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showLanguageSelector = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "🌐",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
-                }
 
-                // Accessibility button with improved styling
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = accessibleColors.calendarBorder,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
-                        .clickable { showAccessibilitySettings = true }
-                        .padding(8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "⚙️",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = accessibleColors.buttonText
-                    )
-                }
-            }
 
             if (isLoading) {
                 CircularProgressIndicator(
@@ -410,23 +454,15 @@ fun UploadReceiptContent(
                 )
             } else {
                 // Using MaterialTheme typography for proper scaling
-                Text(
-                    text = stringResource(id = R.string.receipt_add),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    ),
-                    modifier = Modifier.padding(bottom = 40.dp)
-                )
-
                 // Option Cards
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Take photo option
                     UploadOption(
-                        icon = Icons.Default.AccountCircle,
+                        icon = Icons.Default.PhotoCamera,
                         title = "Take Photo",
                         description = "Capture receipt using camera",
                         onClick = {
@@ -464,20 +500,21 @@ fun UploadReceiptContent(
                                 }
                             }
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth() // Changed from weight to fillMaxWidth
                     )
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                    // No need for horizontal Spacer, vertical spacing is handled by Column's arrangement
 
                     // Upload from gallery option
                     UploadOption(
-                        icon = Icons.Default.Face,
+                        icon = Icons.Default.PhotoLibrary,
                         title = "From Gallery",
                         description = "Select receipt from gallery",
                         onClick = {
                             ttsManager?.speak("Browse Gallery")
-                            galleryLauncher.launch("image/*") },
-                        modifier = Modifier.weight(1f)
+                            galleryLauncher.launch("image/*")
+                        },
+                        modifier = Modifier.fillMaxWidth() // Changed from weight to fillMaxWidth
                     )
                 }
 
@@ -493,29 +530,6 @@ fun UploadReceiptContent(
                 )
             }
         }
-
-        if (showLanguageSelector) {
-            LanguageSelector(
-                currentLanguageCode = currentLanguageCode,
-                onLanguageSelected = { languageCode ->
-                    currentLanguageCode = languageCode
-                },
-                onDismiss = { showLanguageSelector = false },
-                activity = activity  // Pass the activity
-            )
-        }
-
-        if (showAccessibilitySettings) {
-            AccessibilitySettings(
-                currentSettings = accessibilityState,
-                onSettingsChanged = { newSettings ->
-                    coroutineScope.launch {
-                        accessibilityRepository.updateSettings(newSettings)
-                    }
-                },
-                onDismiss = { showAccessibilitySettings = false }
-            )
-        }
     }
 }
 
@@ -525,7 +539,7 @@ fun UploadOption(
     title: String,
     description: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier
@@ -533,7 +547,7 @@ fun UploadOption(
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.onPrimary
         )
     ) {
         Column(

@@ -7,25 +7,29 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -48,6 +52,7 @@ import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailScreen(
     event: Event,
@@ -100,6 +105,10 @@ fun EventDetailScreen(
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
+
+    // Determine if this is a tax deadline event
+    val isTaxDeadlineEvent = event.title.contains("Tax Filing Deadline", ignoreCase = true)
+
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         if (showEditMode) {
             EventEditMode(
@@ -118,107 +127,156 @@ fun EventDetailScreen(
                 currentLanguageCode = currentLanguageCode
             )
         } else {
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(accessibleColors.calendarBackground)
-                    .padding(16.dp)
-            ) {
-                // Header with enhanced styling
-                Text(
-                    text = stringResource(id = R.string.event_details),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    ),
-                    color = accessibleColors.headerText,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
+            Scaffold(
+                topBar = {
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Text(
+                                text = stringResource(id = R.string.event_details),
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ),
+                        navigationIcon = {
+                            IconButton(onClick = onNavigateBack) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
+                        },
+                        actions = {
+                            // Language button
+                            IconButton(onClick = { showLanguageSelector = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Language,
+                                    contentDescription = "Change Language",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
-                    // Language button with improved styling
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.calendarBorder,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
-                            .clickable { showLanguageSelector = true }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "🌐",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.buttonText
-                        )
-                    }
-
-                    // Accessibility button with improved styling
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                accessibleColors.buttonBackground.copy(alpha = 0.8f),
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.calendarBorder,
-                                shape = CircleShape
-                            )
-                            .clip(CircleShape)
-                            .clickable { showAccessibilitySettings = true }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "⚙️",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = accessibleColors.buttonText
-                        )
-                    }
-                }
-
-                // Event details card with improved layout
-                EventDetailCard(
-                    event = event,
-                    locale = locale,
-                    accessibleColors = accessibleColors,
-                    isDarkMode = isDarkMode,
-                    onNavigateBack = onNavigateBack,
-                    onShowEditMode = {
-                        showEditMode = true
-                        // Add TTS feedback
-                        if (accessibilityState.textToSpeech) {
-                            tts?.speak("Editing event", TextToSpeech.QUEUE_FLUSH, null, null)
+                            // Accessibility button
+                            IconButton(onClick = { showAccessibilitySettings = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Accessibility Settings",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
-                    },
-                    onShowDeleteConfirmation = {
-                        showDeleteConfirmation = true
-                        // Add TTS feedback
-                        if (accessibilityState.textToSpeech) {
-                            tts?.speak("Delete confirmation", TextToSpeech.QUEUE_FLUSH, null, null)
+                    )
+                },
+                bottomBar = {
+                    BottomAppBar(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        tonalElevation = 8.dp
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            IconButton(onClick = { /* Navigate to home */ }) {
+                                Icon(
+                                    Icons.Filled.Home,
+                                    contentDescription = "Home"
+                                )
+                            }
+
+                            IconButton(onClick = { /* Navigate to calendar */ }) {
+                                Icon(
+                                    Icons.Filled.CalendarMonth,
+                                    contentDescription = "Calendar"
+                                )
+                            }
+
+                            IconButton(onClick = { /* Navigate to receipt */ }) {
+                                Icon(
+                                    Icons.Filled.Receipt,
+                                    contentDescription = "Upload Receipt"
+                                )
+                            }
+
+                            IconButton(onClick = { /* Navigate to category */ }) {
+                                Icon(
+                                    Icons.Filled.Category,
+                                    contentDescription = "Categories"
+                                )
+                            }
+
+                            IconButton(onClick = { /* Navigate to profile */ }) {
+                                Icon(
+                                    Icons.Filled.AccountCircle,
+                                    contentDescription = "Account"
+                                )
+                            }
                         }
-                    },
+                    }
+                },
+                floatingActionButton = {
+                    // Show action buttons only if not a tax deadline event
+                    if (!isTaxDeadlineEvent) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Edit FAB
+                            FloatingActionButton(
+                                onClick = { showEditMode = true },
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit Event")
+                            }
+
+                            // Delete FAB
+                            FloatingActionButton(
+                                onClick = { showDeleteConfirmation = true },
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete Event")
+                            }
+                        }
+                    } else {
+                        // For tax deadline events, just show a back button
+                        FloatingActionButton(
+                            onClick = onNavigateBack,
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back to Calendar")
+                        }
+                    }
+                },
+                floatingActionButtonPosition = FabPosition.End
+            ) { innerPadding ->
+                Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 16.dp)
-                        .padding(vertical = 15.dp)
-                )
-
-                Spacer(modifier = Modifier.height(70.dp))
+                        .fillMaxSize()
+                        .background(accessibleColors.calendarBackground)
+                        .padding(innerPadding)
+                        .padding(16.dp)
+                ) {
+                    // Event details card - without duplicate controls
+                    EventDetailCard(
+                        event = event,
+                        locale = locale,
+                        accessibleColors = accessibleColors,
+                        isDarkMode = isDarkMode,
+                        onNavigateBack = onNavigateBack,
+                        onShowEditMode = { showEditMode = true },
+                        onShowDeleteConfirmation = { showDeleteConfirmation = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(vertical = 15.dp),
+                        showButtons = false // Hide buttons as they're now in the FAB
+                    )
+                }
             }
         }
 
@@ -381,7 +439,7 @@ fun EventEditMode(
                                 )
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.ArrowBack,
+                                imageVector = Icons.Filled.ArrowBack,
                                 contentDescription = stringResource(id = R.string.cancel),
                                 tint = accessibleColors.buttonText
                             )
@@ -696,7 +754,8 @@ fun EventDetailCard(
     onNavigateBack: () -> Unit,
     onShowEditMode: () -> Unit,
     onShowDeleteConfirmation: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showButtons: Boolean = true // Parameter to control button visibility
 ) {
     val context = LocalContext.current
     val dateFormat = DateTimeFormatter.ofPattern("MMMM d, yyyy", locale)
@@ -824,18 +883,13 @@ fun EventDetailCard(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // IMPROVED: Vertical arrangement for Edit and Delete buttons
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            // Only show buttons if requested (default is true)
+            if (showButtons) {
                 // Show Edit and Delete buttons only if not a tax deadline event
                 if (!isTaxDeadlineEvent) {
                     // Edit button - with improved styling
                     Button(
-                        onClick = onShowEditMode, // Pass the function reference here
+                        onClick = onShowEditMode,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -868,9 +922,11 @@ fun EventDetailCard(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     // Delete button - with improved styling
                     Button(
-                        onClick = onShowDeleteConfirmation, // Pass the function reference here
+                        onClick = onShowDeleteConfirmation,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
