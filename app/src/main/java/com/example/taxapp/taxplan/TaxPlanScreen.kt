@@ -107,6 +107,7 @@ import java.time.format.DateTimeFormatter
 fun TaxPlanScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
+    onNavigateBack: () -> Unit,
     viewModel: TaxPlanViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -168,6 +169,14 @@ fun TaxPlanScreen(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     //titleContentColor = MaterialTheme.colorScheme.onTertiary
                 ),
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
                 actions = {
                     // Language button with improved styling
                     IconButton(
@@ -593,15 +602,15 @@ fun TaxPlanListScreen(
                         onClick = { viewModel.showCreatePlanDialog() },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
-                            .border(
-                                width = 1.dp,
-                                color = if (isLoading) MaterialTheme.colorScheme.primaryContainer else Color.White,
-                                shape = RoundedCornerShape(12.dp)
-                            ),
+                            .height(56.dp),
+//                            .border(
+//                                width = 1.dp,
+//                                color = if (isLoading) MaterialTheme.colorScheme.primaryContainer else Color.White,
+//                                shape = RoundedCornerShape(12.dp)
+//                            ),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isLoading) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.onPrimaryContainer,
-                            contentColor = if (isLoading) MaterialTheme.colorScheme.primary else Color.White
+                            containerColor = accessibleColors.buttonBackground,
+                            contentColor = accessibleColors.buttonText
                         ),
                         shape = RoundedCornerShape(12.dp),
                         enabled = !isLoading

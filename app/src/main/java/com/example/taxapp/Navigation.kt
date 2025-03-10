@@ -369,7 +369,16 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             composable("taxPlan") {
                 TaxPlanScreen(
                     modifier = modifier,
-                    navController = navController
+                    navController = navController,
+                    onNavigateBack = {
+                        // Announce navigation back to home
+                        ttsManager?.speak("Going back home screen")
+
+                        navController.navigate("home") {
+                            // Pop up to home to avoid building up back stack
+                            popUpTo("home") { inclusive = false }
+                        }
+                    }
                 )
             }
 
@@ -510,7 +519,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                                     ttsManager?.speak("Failed to delete event. Please try again.")
                                 }
                             }
-                        }
+                        },
+                        navController = navController
                     )
                 }
             }

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
@@ -38,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
@@ -59,7 +61,8 @@ fun EventDetailScreen(
     onNavigateBack: () -> Unit,
     onEditEvent: (Event) -> Unit,
     onDeleteEvent: (Event) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -180,35 +183,37 @@ fun EventDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            IconButton(onClick = { /* Navigate to home */ }) {
+                            IconButton(onClick = { onNavigateBack() }) {
                                 Icon(
                                     Icons.Filled.Home,
-                                    contentDescription = "Home"
+                                    contentDescription = "Home",
+                                    tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
 
-                            IconButton(onClick = { /* Navigate to calendar */ }) {
+                            IconButton(onClick = { /* Already on Calendar */ }) {
                                 Icon(
                                     Icons.Filled.CalendarMonth,
-                                    contentDescription = "Calendar"
+                                    contentDescription = "Calendar",
+                                    tint = MaterialTheme.colorScheme.primary // Highlight current screen
                                 )
                             }
 
-                            IconButton(onClick = { /* Navigate to receipt */ }) {
+                            IconButton(onClick = { navController.navigate("uploadReceipt") }) {
                                 Icon(
                                     Icons.Filled.Receipt,
                                     contentDescription = "Upload Receipt"
                                 )
                             }
 
-                            IconButton(onClick = { /* Navigate to category */ }) {
+                            IconButton(onClick = { navController.navigate("category") }) {
                                 Icon(
                                     Icons.Filled.Category,
                                     contentDescription = "Categories"
                                 )
                             }
 
-                            IconButton(onClick = { /* Navigate to profile */ }) {
+                            IconButton(onClick = { navController.navigate("editProfile") }) {
                                 Icon(
                                     Icons.Filled.AccountCircle,
                                     contentDescription = "Account"
@@ -351,6 +356,7 @@ fun EventDetailScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventEditMode(
@@ -364,9 +370,14 @@ fun EventEditMode(
     // Get the custom colors from the accessibility theme
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
+    // Access shared repositories
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
 
     // Create a TTS instance if text-to-speech is enabled
-    val context = LocalContext.current
     val tts = remember {
         if (accessibilityState.textToSpeech) {
             TextToSpeech(context) { status ->
@@ -382,365 +393,389 @@ fun EventEditMode(
         }
     }
 
-    // Use the currentLanguageCode parameter that gets passed in
+    // Form state variables
     var eventName by remember { mutableStateOf(event.title) }
     var description by remember { mutableStateOf(event.description) }
     var startTime by remember { mutableStateOf(event.startTime) }
     var endTime by remember { mutableStateOf(event.endTime) }
     var hasReminder by remember { mutableStateOf(event.hasReminder) }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(accessibleColors.calendarBackground)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 16.dp)
-        ) {
-            // Enhanced Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = if (isDarkMode) {
-                                listOf(
-                                    accessibleColors.selectedDay.copy(alpha = 0.8f),
-                                    accessibleColors.calendarBackground
-                                )
-                            } else {
-                                listOf(
-                                    accessibleColors.selectedDay.copy(alpha = 0.6f),
-                                    accessibleColors.calendarBackground
-                                )
-                            }
-                        )
-                    )
-            ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // Top row with back button
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Back button
-                        IconButton(
-                            onClick = onNavigateBack,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(
-                                    color = accessibleColors.buttonBackground.copy(alpha = 0.5f),
-                                    shape = CircleShape
-                                )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.ArrowBack,
-                                contentDescription = stringResource(id = R.string.cancel),
-                                tint = accessibleColors.buttonText
-                            )
-                        }
+    var showLanguageSelector by remember { mutableStateOf(false) }
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
 
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-
-                    // Screen title
+    // Scaffold implementation for consistent UI
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
                     Text(
                         text = stringResource(id = R.string.edit_event),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
-                        ),
-                        color = accessibleColors.headerText,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 8.dp)
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
                     )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Cancel Edit"
+                        )
+                    }
+                },
+                actions = {
+                    // Language button
+                    IconButton(onClick = { showLanguageSelector = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = "Change Language",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // Accessibility button
+                    IconButton(onClick = { showAccessibilitySettings = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Accessibility Settings",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    IconButton(onClick = { /* Navigate to home */ }) {
+                        Icon(
+                            Icons.Filled.Home,
+                            contentDescription = "Home"
+                        )
+                    }
+
+                    IconButton(onClick = { /* Navigate to calendar */ }) {
+                        Icon(
+                            Icons.Filled.CalendarMonth,
+                            contentDescription = "Calendar"
+                        )
+                    }
+
+                    IconButton(onClick = { /* Navigate to receipt */ }) {
+                        Icon(
+                            Icons.Filled.Receipt,
+                            contentDescription = "Upload Receipt"
+                        )
+                    }
+
+                    IconButton(onClick = { /* Navigate to category */ }) {
+                        Icon(
+                            Icons.Filled.Category,
+                            contentDescription = "Categories"
+                        )
+                    }
+
+                    IconButton(onClick = { /* Navigate to profile */ }) {
+                        Icon(
+                            Icons.Filled.AccountCircle,
+                            contentDescription = "Account"
+                        )
+                    }
                 }
             }
-
-            // Form content
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp)
-                    .shadow(
-                        elevation = if (isDarkMode) 12.dp else 4.dp,
-                        spotColor = accessibleColors.selectedDay.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(24.dp)
-                    ),
-                shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 0.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = accessibleColors.cardBackground
-                ),
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = accessibleColors.cardBorder
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Event Name Field with accessible styling and icon
-                    OutlinedTextField(
-                        value = eventName,
-                        onValueChange = { eventName = it },
-                        label = {
-                            Text(
-                                stringResource(id = R.string.event_name),
-                                color = accessibleColors.calendarText
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = null,
-                                tint = accessibleColors.selectedDay
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = accessibleColors.selectedDay,
-                            unfocusedBorderColor = accessibleColors.calendarBorder,
-                            focusedTextColor = accessibleColors.calendarText,
-                            unfocusedTextColor = accessibleColors.calendarText,
-                            cursorColor = accessibleColors.selectedDay
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    if (eventName.isNotBlank()) {
+                        val updatedEvent = event.copy(
+                            title = eventName,
+                            description = description,
+                            startTime = startTime,
+                            endTime = endTime,
+                            hasReminder = hasReminder
                         )
-                    )
-
-                    // Start Time Field with accessible styling
-                    OutlinedTextField(
-                        value = startTime,
-                        onValueChange = { startTime = it },
-                        label = {
-                            Text(
-                                stringResource(id = R.string.start_time),
-                                color = accessibleColors.calendarText
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.AccessTime,
-                                contentDescription = null,
-                                tint = accessibleColors.selectedDay
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = accessibleColors.selectedDay,
-                            unfocusedBorderColor = accessibleColors.calendarBorder,
-                            focusedTextColor = accessibleColors.calendarText,
-                            unfocusedTextColor = accessibleColors.calendarText,
-                            cursorColor = accessibleColors.selectedDay
-                        )
-                    )
-
-                    // End Time Field with accessible styling
-                    OutlinedTextField(
-                        value = endTime,
-                        onValueChange = { endTime = it },
-                        label = {
-                            Text(
-                                stringResource(id = R.string.end_time),
-                                color = accessibleColors.calendarText
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.AccessTime,
-                                contentDescription = null,
-                                tint = accessibleColors.selectedDay
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = accessibleColors.selectedDay,
-                            unfocusedBorderColor = accessibleColors.calendarBorder,
-                            focusedTextColor = accessibleColors.calendarText,
-                            unfocusedTextColor = accessibleColors.calendarText,
-                            cursorColor = accessibleColors.selectedDay
-                        )
-                    )
-
-                    // Description Field with accessible styling
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        label = {
-                            Text(
-                                stringResource(id = R.string.description),
-                                color = accessibleColors.calendarText
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = null,
-                                tint = accessibleColors.selectedDay
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        maxLines = 5,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = accessibleColors.selectedDay,
-                            unfocusedBorderColor = accessibleColors.calendarBorder,
-                            focusedTextColor = accessibleColors.calendarText,
-                            unfocusedTextColor = accessibleColors.calendarText,
-                            cursorColor = accessibleColors.selectedDay
-                        )
-                    )
-
-                    // Reminder Toggle with accessible styling
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = accessibleColors.cardBackground.copy(
-                                alpha = if (isDarkMode) 0.7f else 0.9f
-                            )
-                        ),
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = if (isDarkMode) 4.dp else 1.dp
-                        ),
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = accessibleColors.cardBorder.copy(alpha = 0.5f)
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Label with icon
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = if (hasReminder)
-                                        Icons.Default.Notifications
-                                    else
-                                        Icons.Default.NotificationsOff,
-                                    contentDescription = null,
-                                    tint = if (hasReminder)
-                                        accessibleColors.selectedDay
-                                    else
-                                        accessibleColors.calendarBorder
-                                )
-
-                                Text(
-                                    text = stringResource(id = R.string.reminder_for_event),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = accessibleColors.calendarText
-                                )
-                            }
-
-                            // Switch
-                            Switch(
-                                checked = hasReminder,
-                                onCheckedChange = {
-                                    hasReminder = it
-                                    // Add TTS feedback for switch toggle
-                                    if (accessibilityState.textToSpeech) {
-                                        val message = if (it) "Reminder enabled" else "Reminder disabled"
-                                        tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
-                                    }
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = accessibleColors.selectedDay,
-                                    checkedTrackColor = accessibleColors.selectedDay.copy(alpha = 0.5f),
-                                    uncheckedThumbColor = accessibleColors.buttonBackground,
-                                    uncheckedTrackColor = accessibleColors.calendarBorder
-                                )
-                            )
+                        onEventSaved(updatedEvent)
+                        // Add TTS feedback
+                        if (accessibilityState.textToSpeech) {
+                            tts?.speak("Saving changes", TextToSpeech.QUEUE_FLUSH, null, null)
                         }
                     }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Action Buttons
-                    val buttonShape = RoundedCornerShape(12.dp)
-
-                    Button(
-                        onClick = {
-                            if (eventName.isNotBlank()) {
-                                val updatedEvent = event.copy(
-                                    title = eventName,
-                                    description = description,
-                                    startTime = startTime,
-                                    endTime = endTime,
-                                    hasReminder = hasReminder
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                //enabled = eventName.isNotBlank()
+            ) {
+                Icon(Icons.Default.Check, contentDescription = "Save Changes")
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End
+    ) { innerPadding ->
+        // Main content area
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            color = accessibleColors.calendarBackground
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Form card with fields
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = if (isDarkMode) 6.dp else 2.dp
+                    ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = accessibleColors.cardBackground
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = accessibleColors.cardBorder
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Event Name Field with accessible styling and icon
+                        OutlinedTextField(
+                            value = eventName,
+                            onValueChange = { eventName = it },
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.event_name),
+                                    color = accessibleColors.calendarText
                                 )
-                                onEventSaved(updatedEvent)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        enabled = eventName.isNotBlank(), // Only enable if event has a name
-                        shape = buttonShape,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = accessibleColors.buttonBackground,
-                            contentColor = accessibleColors.buttonText,
-                            disabledContainerColor = accessibleColors.buttonBackground.copy(alpha = 0.5f),
-                            disabledContentColor = accessibleColors.buttonText.copy(alpha = 0.5f)
-                        )
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.save_changes),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = null,
+                                    tint = accessibleColors.selectedDay
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = accessibleColors.selectedDay,
+                                unfocusedBorderColor = accessibleColors.calendarBorder,
+                                focusedTextColor = accessibleColors.calendarText,
+                                unfocusedTextColor = accessibleColors.calendarText,
+                                cursorColor = accessibleColors.selectedDay
                             )
                         )
-                    }
 
-                    OutlinedButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = buttonShape,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = accessibleColors.buttonBackground
-                        ),
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = accessibleColors.buttonBackground
-                        )
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.cancel),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium
+                        // Start Time Field
+                        OutlinedTextField(
+                            value = startTime,
+                            onValueChange = { startTime = it },
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.start_time),
+                                    color = accessibleColors.calendarText
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.AccessTime,
+                                    contentDescription = null,
+                                    tint = accessibleColors.selectedDay
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = accessibleColors.selectedDay,
+                                unfocusedBorderColor = accessibleColors.calendarBorder,
+                                focusedTextColor = accessibleColors.calendarText,
+                                unfocusedTextColor = accessibleColors.calendarText,
+                                cursorColor = accessibleColors.selectedDay
                             )
                         )
+
+                        // End Time Field
+                        OutlinedTextField(
+                            value = endTime,
+                            onValueChange = { endTime = it },
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.end_time),
+                                    color = accessibleColors.calendarText
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.AccessTime,
+                                    contentDescription = null,
+                                    tint = accessibleColors.selectedDay
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = accessibleColors.selectedDay,
+                                unfocusedBorderColor = accessibleColors.calendarBorder,
+                                focusedTextColor = accessibleColors.calendarText,
+                                unfocusedTextColor = accessibleColors.calendarText,
+                                cursorColor = accessibleColors.selectedDay
+                            )
+                        )
+
+                        // Description Field
+                        OutlinedTextField(
+                            value = description,
+                            onValueChange = { description = it },
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.description),
+                                    color = accessibleColors.calendarText
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Description,
+                                    contentDescription = null,
+                                    tint = accessibleColors.selectedDay
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            maxLines = 5,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = accessibleColors.selectedDay,
+                                unfocusedBorderColor = accessibleColors.calendarBorder,
+                                focusedTextColor = accessibleColors.calendarText,
+                                unfocusedTextColor = accessibleColors.calendarText,
+                                cursorColor = accessibleColors.selectedDay
+                            )
+                        )
+
+                        // Reminder Toggle with card styling to match other screens
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = accessibleColors.cardBackground.copy(
+                                    alpha = if (isDarkMode) 0.7f else 0.9f
+                                )
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = accessibleColors.cardBorder.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Label with icon
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = if (hasReminder)
+                                            Icons.Default.Notifications
+                                        else
+                                            Icons.Default.NotificationsOff,
+                                        contentDescription = null,
+                                        tint = if (hasReminder)
+                                            accessibleColors.selectedDay
+                                        else
+                                            accessibleColors.calendarBorder
+                                    )
+
+                                    Text(
+                                        text = stringResource(id = R.string.reminder_for_event),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = accessibleColors.calendarText
+                                    )
+                                }
+
+                                // Switch
+                                Switch(
+                                    checked = hasReminder,
+                                    onCheckedChange = {
+                                        hasReminder = it
+                                        // Add TTS feedback for switch toggle
+                                        if (accessibilityState.textToSpeech) {
+                                            val message = if (it) "Reminder enabled" else "Reminder disabled"
+                                            tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+                                        }
+                                    },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = accessibleColors.selectedDay,
+                                        checkedTrackColor = accessibleColors.selectedDay.copy(alpha = 0.5f),
+                                        uncheckedThumbColor = accessibleColors.buttonBackground,
+                                        uncheckedTrackColor = accessibleColors.calendarBorder
+                                    )
+                                )
+                            }
+                        }
+
+//                        Spacer(modifier = Modifier.weight(1f))
+//
+//                        // Instead of buttons here, we use the FAB for save and the top app bar for navigation back
+//                        Text(
+//                            text = "Tap the check button to save your changes",
+//                            style = MaterialTheme.typography.bodyMedium,
+//                            color = accessibleColors.calendarText.copy(alpha = 0.7f),
+//                            modifier = Modifier.align(Alignment.CenterHorizontally)
+//                        )
                     }
                 }
             }
         }
+    }
+
+    if (showLanguageSelector) {
+        LanguageSelector(
+            currentLanguageCode = currentLanguageCode,
+            onLanguageSelected = { languageCode ->
+                // Apply language without recreating activity
+                languageManager.setLanguage(languageCode, activity)
+            },
+            onDismiss = { showLanguageSelector = false },
+            activity = activity
+        )
+    }
+
+    if (showAccessibilitySettings) {
+        AccessibilitySettings(
+            currentSettings = accessibilityState,
+            onSettingsChanged = { newSettings ->
+                // Persist accessibility settings using coroutine
+                coroutineScope.launch {
+                    accessibilityRepository.updateSettings(newSettings)
+                }
+            },
+            onDismiss = { showAccessibilitySettings = false }
+        )
     }
 }
 

@@ -350,10 +350,10 @@ fun TaxInformationContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = Color.Black
-                )
+                //colors = CardDefaults.cardColors(
+                    //containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    //contentColor = Color.Black
+                //)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -469,9 +469,10 @@ fun TaxInformationContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                colors = CardDefaults.cardColors(
+                colors =
+                    CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = Color.Black
+                    //contentColor = accessibleColors.headerText
                 )
             ) {
                 Column(
@@ -532,7 +533,7 @@ fun TaxInformationContent(
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = Color.Black
+                    //contentColor = Color.Black
                 )
             ) {
                 Column(
@@ -640,7 +641,7 @@ fun TaxReliefCategoryItem(
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onPrimary
+            containerColor = accessibleColors.cardBackground.copy(alpha = 0.7f)
         )
     ) {
         Column(
