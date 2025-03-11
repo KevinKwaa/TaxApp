@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -24,6 +25,10 @@ class CategoryViewModel : ViewModel() {
     var showDeleteConfirmation by mutableStateOf(false)
     var receiptToDelete by mutableStateOf<ReceiptModel?>(null)
     var expenseToDelete by mutableStateOf<ExpenseItem?>(null)
+
+    // Year filter state
+    var availableYears by mutableStateOf<List<Int>>(emptyList())
+    var selectedYear by mutableStateOf<Int?>(null)
 
     // Edit receipt state (legacy support)
     var isEditingReceipt by mutableStateOf(false)
@@ -91,12 +96,47 @@ class CategoryViewModel : ViewModel() {
                     return@launch
                 }
 
+                // Extract all available years from the receipts
+                val years = receipts.map { receipt ->
+                    val calendar = Calendar.getInstance()
+                    calendar.time = receipt.date
+                    calendar.get(Calendar.YEAR)
+                }.toSet().sorted()
+
+                // Update available years
+                availableYears = years
+
+                // If selectedYear is null or not in the available years, default to the most recent year
+                if (selectedYear == null || !years.contains(selectedYear)) {
+                    selectedYear = years.lastOrNull() ?: Calendar.getInstance().get(Calendar.YEAR)
+                }
+
+                // Filter receipts by the selected year
+                val filteredReceipts = if (selectedYear != null) {
+                    receipts.filter { receipt ->
+                        val calendar = Calendar.getInstance()
+                        calendar.time = receipt.date
+                        calendar.get(Calendar.YEAR) == selectedYear
+                    }
+                } else {
+                    receipts
+                }
+
+                // If no receipts in the selected year
+                if (filteredReceipts.isEmpty()) {
+                    categoryData = emptyMap()
+                    categorySummary = emptyMap()
+                    errorMessage = "No receipts found for $selectedYear. Try selecting a different year."
+                    isLoading = false
+                    return@launch
+                }
+
                 // Create a map to store items by category
                 val itemsByCategory = mutableMapOf<String, MutableList<ExpenseItemWithReceipt>>()
                 val categorySums = mutableMapOf<String, Double>()
 
                 // Process each receipt and its expense items
-                receipts.forEach { receipt ->
+                filteredReceipts.forEach { receipt ->
                     // If receipt has specific expense items, process each item's category
                     if (receipt.items.isNotEmpty()) {
                         receipt.items.forEach { item ->
@@ -155,6 +195,15 @@ class CategoryViewModel : ViewModel() {
             } finally {
                 isLoading = false
             }
+        }
+    }
+
+    // Set the selected year and reload data
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun setSelectedYear(year: Int) {
+        if (selectedYear != year) {
+            selectedYear = year
+            loadCategoryData()
         }
     }
 
@@ -472,5 +521,84 @@ class CategoryViewModel : ViewModel() {
         showDeleteConfirmation = false
         receiptToDelete = null
         expenseToDelete = null
+    }
+
+    // Clear year state variables
+    var showClearYearConfirmation by mutableStateOf(false)
+    var yearToClear by mutableStateOf<Int?>(null)
+
+    // Confirm clear year
+    fun confirmClearYear(year: Int) {
+        yearToClear = year
+        showClearYearConfirmation = true
+    }
+
+    // Cancel clear year
+    fun cancelClearYear() {
+        showClearYearConfirmation = false
+        yearToClear = null
+    }
+
+    // Clear all expenses for a specific year
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun clearExpensesForYear(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val year = yearToClear ?: return
+
+        viewModelScope.launch {
+            isLoading = true
+
+            try {
+                // Get all receipts
+                val receiptsResult = repository.getUserReceipts()
+                if (receiptsResult.isFailure) {
+                    throw receiptsResult.exceptionOrNull() ?: Exception("Failed to load receipts")
+                }
+
+                val receipts = receiptsResult.getOrNull() ?: emptyList()
+
+                // Filter receipts from the selected year
+                val receiptsToDelete = receipts.filter { receipt ->
+                    val calendar = Calendar.getInstance()
+                    calendar.time = receipt.date
+                    calendar.get(Calendar.YEAR) == year
+                }
+
+                if (receiptsToDelete.isEmpty()) {
+                    throw Exception("No receipts found for year $year")
+                }
+
+                // Delete all receipts for the selected year
+                var successCount = 0
+                var failureCount = 0
+
+                for (receipt in receiptsToDelete) {
+                    val result = repository.deleteReceipt(receipt.id)
+                    if (result.isSuccess) {
+                        successCount++
+                    } else {
+                        failureCount++
+                    }
+                }
+
+                // Check if all deletions were successful
+                if (failureCount > 0) {
+                    throw Exception("Failed to delete $failureCount out of ${receiptsToDelete.size} receipts")
+                }
+
+                // Refresh the data
+                loadCategoryData()
+
+                // Reset state
+                showClearYearConfirmation = false
+                yearToClear = null
+
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("CategoryViewModel", "Error clearing expenses for year $year", e)
+                onError(e.localizedMessage ?: "Failed to clear expenses")
+            } finally {
+                isLoading = false
+            }
+        }
     }
 }

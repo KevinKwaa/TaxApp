@@ -110,11 +110,10 @@ import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
 import com.example.taxapp.user.AppUtil
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Date
-import java.util.Locale
+import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Tab
+import java.util.Calendar
 
 @RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -371,7 +370,8 @@ fun CategoryScreenContent(
     val categoryData = categoryViewModel.categoryData
     val categorySummary = categoryViewModel.categorySummary
     val expandedCategories = categoryViewModel.expandedCategories
-
+    val availableYears = categoryViewModel.availableYears
+    val selectedYear = categoryViewModel.selectedYear
 
     // Create scroll state for scrollable content
     val scrollState = rememberScrollState()
@@ -427,98 +427,144 @@ fun CategoryScreenContent(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-                // Show loading indicator
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(48.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                // Show error message if any
-                else if (errorMessage != null && categoryData.isEmpty()) {
-                    Column(
+            // Year Selection Tabs
+            if (availableYears.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    ScrollableTabRow(
+                        selectedTabIndex = availableYears.indexOf(selectedYear).takeIf { it >= 0 } ?: 0,
+                        edgePadding = 16.dp,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = accessibleColors.headerText,
+                        divider = {},
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.no_item_found),
-                            contentDescription = "no item found",
-                        )
+                        availableYears.forEach { year ->
+                            Tab(
+                                selected = year == selectedYear,
+                                onClick = {
+                                    ttsManager?.speak("Year $year")
+                                    categoryViewModel.setSelectedYear(year)
+                                },
+                                text = {
+                                    Text(
+                                        text = year.toString(),
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = if (year == selectedYear) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    )
+                                },
+                                selectedContentColor = MaterialTheme.colorScheme.primary,
+                                unselectedContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Show loading indicator
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            // Show error message if any
+            else if (errorMessage != null && categoryData.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.no_item_found),
+                        contentDescription = "no item found",
+                    )
+                    Text(
+                        text = stringResource(id = R.string.no_item_found),
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        textAlign = TextAlign.Center,
+                        color = accessibleColors.headerText
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Define a common width for both buttons - can adjust the fraction as needed
+                    val buttonModifier = Modifier
+                        .fillMaxWidth(0.7f)  // Both buttons will use 70% of available width
+                        .height(48.dp)       // Fixed height for consistency
+
+                    ElevatedButton(
+                        modifier = buttonModifier,
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = accessibleColors.cardBackground),
+                        onClick = { categoryViewModel.loadCategoryData() }
+                    ) {
                         Text(
-                            text = stringResource(id = R.string.no_item_found),
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            textAlign = TextAlign.Center,
+                            text = stringResource(id = R.string.retry),
                             color = accessibleColors.headerText
                         )
+                    }
 
+                    if (navController != null) {
                         Spacer(modifier = Modifier.height(16.dp))
-
-                        // Define a common width for both buttons - can adjust the fraction as needed
-                        val buttonModifier = Modifier
-                            .fillMaxWidth(0.7f)  // Both buttons will use 70% of available width
-                            .height(48.dp)       // Fixed height for consistency
 
                         ElevatedButton(
                             modifier = buttonModifier,
                             colors = ButtonDefaults.elevatedButtonColors(
                                 containerColor = accessibleColors.cardBackground),
-                            onClick = { categoryViewModel.loadCategoryData() }
+                            onClick = { navController.navigate("uploadReceipt") }
                         ) {
-                            Text(
-                                text = stringResource(id = R.string.retry),
-                                color = accessibleColors.headerText
-                                )
-                        }
-
-                        if (navController != null) {
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            ElevatedButton(
-                                modifier = buttonModifier,
-                                colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = accessibleColors.cardBackground),
-                                onClick = { navController.navigate("uploadReceipt") }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Add Receipt",
-                                    modifier = Modifier.size(20.dp),
-                                    tint = accessibleColors.headerText
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = stringResource(id = R.string.add_receipt), color = accessibleColors.headerText)
-                            }
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Receipt",
+                                modifier = Modifier.size(20.dp),
+                                tint = accessibleColors.headerText
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = stringResource(id = R.string.add_receipt), color = accessibleColors.headerText)
                         }
                     }
                 }
-                // Show category data
-                else {
-                    Column(
+            }
+            // Show category data
+            else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Summary Card
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .verticalScroll(scrollState),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(vertical = 8.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = Color.Black
+                        )
                     ) {
-                        // Summary Card
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = Color.Black
-                            )
+                        Column(
+                            modifier = Modifier.padding(12.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Start,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = stringResource(id = R.string.categories_summary),
@@ -527,64 +573,105 @@ fun CategoryScreenContent(
                                     color = accessibleColors.headerText
                                 )
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                // Display selected year
+                                selectedYear?.let {
+                                    Spacer(modifier = Modifier.width(8.dp))
 
-                                Text(
-                                    text = stringResource(id = R.string.total_expenses,categoryViewModel.formatCurrency(categorySummary.values.sum())),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = accessibleColors.headerText
-                                )
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                Text(
-                                    text = stringResource(id = R.string.number_of_categories,categoryData.size),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = accessibleColors.headerText
-                                )
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                val totalItems = categoryData.values.sumOf { it.size }
-                                Text(
-                                    text = stringResource(id = R.string.number_of_expense_items, totalItems),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = accessibleColors.headerText
-                                )
-                            }
-                        }
-
-                        // Category Items
-                        categoryData.forEach { (category, expenseItems) ->
-                            val isExpanded = expandedCategories.contains(category)
-                            CategoryItemsSection(
-                                category = category,
-                                expenseItems = expenseItems,
-                                totalAmount = categorySummary[category] ?: 0.0,
-                                isExpanded = isExpanded,
-                                onToggleExpand = {
-                                    categoryViewModel.toggleCategoryExpansion(
-                                        category
+                                    Text(
+                                        text = "$it",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = accessibleColors.headerText
                                     )
-                                },
-                                onEditExpenseItem = { item ->
-                                    categoryViewModel.startEditingExpenseItem(item)
-                                },
-                                onDeleteExpenseItem = { item ->
-                                    categoryViewModel.confirmDeleteExpenseItem(item)
-                                },
-                                formatCurrency = { amount -> categoryViewModel.formatCurrency(amount) },
-                                formatDate = { date -> categoryViewModel.formatDate(date) }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = stringResource(id = R.string.total_expenses,categoryViewModel.formatCurrency(categorySummary.values.sum())),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = accessibleColors.headerText
                             )
 
-                            //Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = stringResource(id = R.string.number_of_categories,categoryData.size),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = accessibleColors.headerText
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            val totalItems = categoryData.values.sumOf { it.size }
+                            Text(
+                                text = stringResource(id = R.string.number_of_expense_items, totalItems),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = accessibleColors.headerText
+                            )
                         }
-
-                        // Space to ensure bottom items are visible
-                        Spacer(modifier = Modifier.height(24.dp))
                     }
-                }
 
+                    // Category Items
+                    categoryData.forEach { (category, expenseItems) ->
+                        val isExpanded = expandedCategories.contains(category)
+                        CategoryItemsSection(
+                            category = category,
+                            expenseItems = expenseItems,
+                            totalAmount = categorySummary[category] ?: 0.0,
+                            isExpanded = isExpanded,
+                            onToggleExpand = {
+                                categoryViewModel.toggleCategoryExpansion(
+                                    category
+                                )
+                            },
+                            onEditExpenseItem = { item ->
+                                categoryViewModel.startEditingExpenseItem(item)
+                            },
+                            onDeleteExpenseItem = { item ->
+                                categoryViewModel.confirmDeleteExpenseItem(item)
+                            },
+                            formatCurrency = { amount -> categoryViewModel.formatCurrency(amount) },
+                            formatDate = { date -> categoryViewModel.formatDate(date) }
+                        )
+
+                        //Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // Clear Year Button (only show if there are categories to clear)
+                    if (categoryData.isNotEmpty() && selectedYear != null) {
+                        Button(
+                            onClick = {
+                                ttsManager?.speak("Clear all expenses for year $selectedYear")
+                                categoryViewModel.confirmClearYear(selectedYear)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(id = R.string.clear_year_expenses, selectedYear),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+
+                    // Space to ensure bottom items are visible
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
         }
 
         if (showLanguageSelector) {
@@ -609,8 +696,77 @@ fun CategoryScreenContent(
                 onDismiss = { showAccessibilitySettings = false }
             )
         }
+
+        // Clear Year confirmation dialog
+        if (categoryViewModel.showClearYearConfirmation) {
+            // Prepare the success message here (in the composable context)
+            val successMessage = stringResource(
+                id = R.string.clear_year_success,
+                categoryViewModel.yearToClear?.toString() ?: ""
+            )
+
+            AlertDialog(
+                onDismissRequest = { categoryViewModel.cancelClearYear() },
+                title = {
+                    Text(text = stringResource(id = R.string.clear_year_confirm, categoryViewModel.yearToClear ?: ""))
+                },
+                text = {
+                    Text(
+                        text = stringResource(id = R.string.clear_year_message, categoryViewModel.yearToClear ?: "")
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            categoryViewModel.clearExpensesForYear(
+                                onSuccess = {
+                                    // Use the pre-created success message
+                                    AppUtil.showToast(context, successMessage)
+                                },
+                                onError = { error ->
+                                    AppUtil.showToast(context, error)
+                                }
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(text = stringResource(id = R.string.delete))
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(onClick = { categoryViewModel.cancelClearYear() }) {
+                        Text(text = stringResource(id = R.string.cancel))
+                    }
+                }
+            )
+        }
     }
-}
+
+        if (showLanguageSelector) {
+            LanguageSelector(
+                currentLanguageCode = currentLanguageCode,
+                onLanguageSelected = { languageCode ->
+                    currentLanguageCode = languageCode
+                },
+                onDismiss = { showLanguageSelector = false },
+                activity = activity  // Pass the activity
+            )
+        }
+
+        if (showAccessibilitySettings) {
+            AccessibilitySettings(
+                currentSettings = accessibilityState,
+                onSettingsChanged = { newSettings ->
+                    coroutineScope.launch {
+                        accessibilityRepository.updateSettings(newSettings)
+                    }
+                },
+                onDismiss = { showAccessibilitySettings = false }
+            )
+        }
+    }
 
 @Composable
 fun CategoryItemsSection(

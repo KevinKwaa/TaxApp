@@ -112,6 +112,11 @@
     <string name="number_of_categories">Bilangan Kategori: %1$d</string>
     <string name="number_of_receipts">Bilangan Resit: %1$d</string>
     <string name="number_of_expense_items">Bilangan item perbelanjaan: %1$d</string>
+    <string name="select_year">Pilih Tahun</string>
+    <string name="clear_year_confirm">Kosongkan Semua Perbelanjaan untuk %1$s?</string>
+    <string name="clear_year_message">Adakah anda pasti mahu memadamkan semua perbelanjaan untuk tahun %1$s? Tindakan ini tidak boleh dibuat asal.</string>
+    <string name="clear_year_success">Semua perbelanjaan untuk %1$s telah dipadamkan</string>
+    <string name="clear_year_expenses">Kosongkan Semua %1$s Perbelanjaan</string>
 
     <!-- Tax Plan -->
     <string name="tax_plan_title">Perancangan Cukai</string>

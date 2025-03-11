@@ -112,6 +112,11 @@
     <string name="number_of_categories">类别数量：%1$d</string>
     <string name="number_of_receipts">收据数量：%1$d</string>
     <string name="number_of_expense_items">费用物品数: %1$d</string>
+    <string name="select_year">选择年份</string>
+    <string name="clear_year_confirm">清除 %1$s 的所有费用？</string>
+    <string name="clear_year_message">您确定要删除 %1$s 年的所有费用吗？此操作无法撤消。</string>
+    <string name="clear_year_success">%1$s 的所有支出已删除</string>
+    <string name="clear_year_expenses">清除所有 %1$s 支出</string>
 
     <!-- Tax Plan -->
     <string name="tax_plan_title">税务规划</string>

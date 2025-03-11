@@ -205,20 +205,11 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                         },
                         modifier = Modifier
                             .size(48.dp)
-                            .background(
-                                accessibleColors.buttonText,
-                                CircleShape
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accessibleColors.buttonText,
-                                shape = CircleShape
-                            )
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back to selection screen",
-                            //tint = accessibleColors.calendarText
+                            tint = accessibleColors.headerText
                         )
                     }
 

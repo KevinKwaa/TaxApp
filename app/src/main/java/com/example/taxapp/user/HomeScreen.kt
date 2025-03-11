@@ -368,33 +368,33 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Logout button
-                    OutlinedButton(
-                        onClick = {
-                            ttsManager?.speak("Logging out")
-                            authViewModel.logout {
-                                navController.navigate("auth") {
-                                    popUpTo("home") { inclusive = true }
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Logout,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(id = R.string.logout),
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
+//                    // Logout button
+//                    OutlinedButton(
+//                        onClick = {
+//                            ttsManager?.speak("Logging out")
+//                            authViewModel.logout {
+//                                navController.navigate("auth") {
+//                                    popUpTo("home") { inclusive = true }
+//                                }
+//                            }
+//                        },
+//                        modifier = Modifier
+//                            .fillMaxWidth(),
+//                        colors = ButtonDefaults.outlinedButtonColors(
+//                            contentColor = MaterialTheme.colorScheme.error
+//                        )
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Rounded.Logout,
+//                            contentDescription = null,
+//                            modifier = Modifier.size(20.dp)
+//                        )
+//                        Spacer(modifier = Modifier.width(8.dp))
+//                        Text(
+//                            text = stringResource(id = R.string.logout),
+//                            style = MaterialTheme.typography.labelLarge
+//                        )
+//                    }
 
                     Spacer(modifier = Modifier.height(32.dp))
                 }

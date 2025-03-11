@@ -110,6 +110,11 @@
     <string name="number_of_categories">Number of Categories: %1$d</string>
     <string name="number_of_receipts">Number of Receipts: %1$d</string>
     <string name="number_of_expense_items">Number of Expense Items: %1$d</string>
+    <string name="select_year">Select Year</string>
+    <string name="clear_year_confirm">Clear All Expenses for %1$s?</string>
+    <string name="clear_year_message">Are you sure you want to delete all expenses for the year %1$s? This action cannot be undone.</string>
+    <string name="clear_year_success">All expenses for %1$s have been deleted</string>
+    <string name="clear_year_expenses">Clear All %1$s Expenses</string>
 
     <!-- Tax Plan -->
     <string name="tax_plan_title">Tax Planning</string>

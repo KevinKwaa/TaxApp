@@ -518,9 +518,10 @@ fun CalendarScreen(
                                 Icon(
                                     imageVector = Icons.Default.Add,
                                     contentDescription = null,
-                                    modifier = Modifier.padding(end = 8.dp)
+                                    modifier = Modifier.padding(end = 8.dp),
+                                    tint = accessibleColors.headerText
                                 )
-                                Text(stringResource(id = R.string.add_new_event))
+                                Text(stringResource(id = R.string.add_new_event), color = accessibleColors.headerText)
                             }
                         }
 
