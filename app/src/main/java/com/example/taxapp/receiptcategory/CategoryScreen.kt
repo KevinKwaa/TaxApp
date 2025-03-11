@@ -675,7 +675,8 @@ fun CategoryItemsSection(
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowDown,
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        modifier = Modifier.rotate(rotationState)
+                        modifier = Modifier.rotate(rotationState),
+                        tint = accessibleColors.headerText
                     )
                 }
             }
