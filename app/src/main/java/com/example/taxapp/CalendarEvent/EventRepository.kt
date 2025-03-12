@@ -317,9 +317,12 @@ fun Event.toMap(): Map<String, Any> {
         "dateTimestamp" to date.toTimestamp(),
         "startTime" to startTime,
         "endTime" to endTime,
-        "hasReminder" to hasReminder
+        "hasReminder" to hasReminder,
+        "isTodoEvent" to isTodoEvent,
+        "isCompleted" to isCompleted
     )
 }
+
 
 // Convert Firestore Document to Event
 @RequiresApi(Build.VERSION_CODES.O)
@@ -332,6 +335,8 @@ fun com.google.firebase.firestore.DocumentSnapshot.toEvent(): Event {
     val startTime = getString("startTime") ?: "00:00"
     val endTime = getString("endTime") ?: "00:00"
     val hasReminder = getBoolean("hasReminder") ?: false
+    val isTodoEvent = getBoolean("isTodoEvent") ?: false
+    val isCompleted = getBoolean("isCompleted") ?: false
 
     return Event(
         title = title,
@@ -339,6 +344,8 @@ fun com.google.firebase.firestore.DocumentSnapshot.toEvent(): Event {
         date = date,
         startTime = startTime,
         endTime = endTime,
-        hasReminder = hasReminder
+        hasReminder = hasReminder,
+        isTodoEvent = isTodoEvent,
+        isCompleted = isCompleted
     )
 }

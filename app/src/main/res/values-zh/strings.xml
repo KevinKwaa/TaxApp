@@ -391,4 +391,30 @@
     <string name="discard">放弃</string>
     <string name="keep_editing">继续更改</string>
     <string name="delete_item_confirmation">您确实要删除此费用物品吗？</string>
+
+    <!-- Calender to do add ons-->
+    <string name="make_todo_event">待办事项事件</string>
+    <string name="todo_events">待办事项</string>
+    <string name="regular_events">普通事项</string>
+    <string name="todo_status">待办状态</string>
+    <string name="pending">待办中</string>
+    <string name="completed">已完成</string>
+    <string name="past_due">已逾期</string>
+    <string name="mark_as_completed">标记为已完成</string>
+    <string name="mark_as_complete">标记完成</string>
+    <string name="mark_as_incomplete">标记未完成</string>
+    <string name="past_due_warning">此待办事项已逾期！</string>
+    <string name="past_due_todo_events">逾期待办事项</string>
+    <string name="past_due_message">您有 %1$d 个待办事项已逾期。请检查或重新安排。</string>
+    <string name="acknowledge">我知道了</string>
+    <string name="no_todo_events">此日期没有待办事项</string>
+    <string name="calendar_indicators">日历指示符</string>
+    <string name="regular_event">普通事项</string>
+    <string name="pending_todo">待办中</string>
+    <string name="completed_todo">已完成待办</string>
+    <string name="past_due_todo">逾期待办</string>
+    <string name="todo_notification_channel">待办事项提醒</string>
+    <string name="todo_notification_title">待办事项提醒</string>
+    <string name="past_due_notification">您有 %1$d 个待办事项已逾期</string>
+    <string name="upcoming_due_notification">您有 %1$d 个待办事项即将到期</string>
 </resources>

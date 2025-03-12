@@ -390,4 +390,30 @@
     <string name="discard">Discard</string>
     <string name="keep_editing">Keep Editing</string>
     <string name="delete_item_confirmation">Are you sure you want to delete this expense item?</string>
+
+    <!-- Calendar to do features -->
+    <string name="make_todo_event">To-do Event: </string>
+    <string name="todo_events">To-Do Events</string>
+    <string name="regular_events">Regular Events</string>
+    <string name="todo_status">To-Do Status</string>
+    <string name="pending">Pending</string>
+    <string name="completed">Completed</string>
+    <string name="past_due">Past Due</string>
+    <string name="mark_as_completed">Mark as completed</string>
+    <string name="mark_as_complete">Mark as Complete</string>
+    <string name="mark_as_incomplete">Mark as Incomplete</string>
+    <string name="past_due_warning">This to-do is past due!</string>
+    <string name="past_due_todo_events">Past Due To-Do Events</string>
+    <string name="past_due_message">You have %1$d to-do events that are past due. Please review or reschedule them.</string>
+    <string name="acknowledge">I Understand</string>
+    <string name="no_todo_events">No to-do events for this date</string>
+    <string name="calendar_indicators">Calendar Indicators</string>
+    <string name="regular_event">Regular Event</string>
+    <string name="pending_todo">Pending To-Do</string>
+    <string name="completed_todo">Completed To-Do</string>
+    <string name="past_due_todo">Past Due To-Do</string>
+    <string name="todo_notification_channel">To-Do Reminders</string>
+    <string name="todo_notification_title">To-Do Reminder</string>
+    <string name="past_due_notification">You have %1$d past due to-do tasks</string>
+    <string name="upcoming_due_notification">You have %1$d to-do tasks due soon</string>
 </resources>

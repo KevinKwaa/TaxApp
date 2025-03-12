@@ -521,6 +521,39 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                                 }
                             }
                         },
+                        onTodoStatusChange = { updatedEvent, isCompleted ->
+                            // Show loading status
+                            val statusText = if (isCompleted) "Marking as completed..." else "Marking as not completed..."
+                            statusMessage = statusText
+                            operationStatus = OperationStatus.LOADING
+                            showStatusFeedback = true
+
+                            // Update the todo status in Firebase
+                            coroutineScope.launch {
+                                val result = eventRepository.updateEvent(updatedEvent)
+                                if (result) {
+                                    // Update status to success
+                                    val successText = if (isCompleted) "Marked as completed!" else "Marked as not completed!"
+                                    statusMessage = successText
+                                    operationStatus = OperationStatus.SUCCESS
+                                    showStatusFeedback = true
+
+                                    // Announce successful update
+                                    ttsManager?.speak(successText)
+
+                                    // Update the current event value to reflect the change
+                                    currentEvent.value = updatedEvent
+                                } else {
+                                    // Update status to error
+                                    statusMessage = "Failed to update task status. Please try again."
+                                    operationStatus = OperationStatus.ERROR
+                                    showStatusFeedback = true
+
+                                    // Announce failure
+                                    ttsManager?.speak("Failed to update task status. Please try again.")
+                                }
+                            }
+                        },
                         navController = navController
                     )
                 }

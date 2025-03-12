@@ -60,11 +60,13 @@ fun AddEventScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val activity = context as? ComponentActivity
+
     var eventName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var startTime by remember { mutableStateOf("09:00") }
     var endTime by remember { mutableStateOf("10:00") }
     var hasReminder by remember { mutableStateOf(false) }
+    var isTodoEvent by remember { mutableStateOf(false) }
     var showLanguageSelector by remember { mutableStateOf(false) }
     var showAccessibilitySettings by remember { mutableStateOf(false) }
 
@@ -217,7 +219,9 @@ fun AddEventScreen(
                                 date = date,
                                 startTime = startTime,
                                 endTime = endTime,
-                                hasReminder = hasReminder
+                                hasReminder = hasReminder,
+                                isTodoEvent = isTodoEvent,     // Add the new field
+                                isCompleted = false            // Default to not completed
                             )
                             onEventSaved(newEvent)
                         }
@@ -404,6 +408,39 @@ fun AddEventScreen(
                                     if (accessibilityState.textToSpeech) {
                                         val message =
                                             if (it) "Reminder enabled" else "Reminder disabled"
+                                        tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+                                    }
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = accessibleColors.selectedDay,
+                                    checkedTrackColor = accessibleColors.selectedDay.copy(alpha = 0.5f),
+                                    uncheckedThumbColor = accessibleColors.buttonBackground,
+                                    uncheckedTrackColor = accessibleColors.calendarBorder
+                                )
+                            )
+                        }
+
+                        // Add the To-Do Toggle after the reminder toggle
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.make_todo_event),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = accessibleColors.calendarText
+                            )
+                            Switch(
+                                checked = isTodoEvent,
+                                onCheckedChange = {
+                                    isTodoEvent = it
+                                    // Add TTS feedback for switch toggle
+                                    if (accessibilityState.textToSpeech) {
+                                        val message =
+                                            if (it) "To-do event enabled" else "To-do event disabled"
                                         tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
                                     }
                                 },

@@ -392,4 +392,30 @@
     <string name="discard">Buang</string>
     <string name="keep_editing">Teruskan Mengedit</string>
     <string name="delete_item_confirmation">Adakah anda pasti mahu memadamkan item perbelanjaan ini?</string>
+
+    <!-- Calender to do add ons-->
+    <string name="make_todo_event">Acara Tugasan</string>
+    <string name="todo_events">Acara Untuk Dilakukan</string>
+    <string name="regular_events">Acara Biasa</string>
+    <string name="todo_status">Status Untuk Dilakukan</string>
+    <string name="pending">Belum Selesai</string>
+    <string name="completed">Selesai</string>
+    <string name="past_due">Terlewat Tempoh</string>
+    <string name="mark_as_completed">Tandakan sebagai selesai</string>
+    <string name="mark_as_complete">Tandakan Selesai</string>
+    <string name="mark_as_incomplete">Tandakan Tidak Selesai</string>
+    <string name="past_due_warning">Tugas ini telah terlewat tempoh!</string>
+    <string name="past_due_todo_events">Acara Untuk Dilakukan Yang Terlewat Tempoh</string>
+    <string name="past_due_message">Anda mempunyai %1$d acara untuk dilakukan yang telah terlewat tempoh. Sila semak atau jadualkan semula.</string>
+    <string name="acknowledge">Saya Faham</string>
+    <string name="no_todo_events">Tiada acara untuk dilakukan pada tarikh ini</string>
+    <string name="calendar_indicators">Petunjuk Kalendar</string>
+    <string name="regular_event">Acara Biasa</string>
+    <string name="pending_todo">Untuk Dilakukan Belum Selesai</string>
+    <string name="completed_todo">Untuk Dilakukan Selesai</string>
+    <string name="past_due_todo">Untuk Dilakukan Terlewat Tempoh</string>
+    <string name="todo_notification_channel">Peringatan Untuk Dilakukan</string>
+    <string name="todo_notification_title">Peringatan Untuk Dilakukan</string>
+    <string name="past_due_notification">Anda mempunyai %1$d tugas untuk dilakukan yang terlewat tempoh</string>
+    <string name="upcoming_due_notification">Anda mempunyai %1$d tugas untuk dilakukan yang akan tamat tempoh tidak lama lagi</string>
 </resources>

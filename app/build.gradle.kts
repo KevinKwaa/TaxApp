@@ -13,7 +13,7 @@ apply(plugin = "com.google.gms.google-services")
 
 android {
     namespace = "com.example.taxapp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.taxapp"
@@ -99,6 +99,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
     implementation(libs.firebase.storage.ktx)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Room Database dependencies - fixed to use KSP
     val roomVersion = "2.6.1"

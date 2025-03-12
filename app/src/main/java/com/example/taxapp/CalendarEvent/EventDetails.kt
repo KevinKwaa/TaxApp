@@ -4,6 +4,7 @@ import android.os.Build
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -14,10 +15,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
@@ -25,8 +28,10 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -51,6 +57,8 @@ import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -61,6 +69,7 @@ fun EventDetailScreen(
     onNavigateBack: () -> Unit,
     onEditEvent: (Event) -> Unit,
     onDeleteEvent: (Event) -> Unit,
+    onTodoStatusChange: (Event, Boolean) -> Unit, // Add handler for todo status change
     modifier: Modifier = Modifier,
     navController: NavHostController,
 ) {
@@ -71,6 +80,9 @@ fun EventDetailScreen(
     var showEditMode by remember { mutableStateOf(false) }
     var showLanguageSelector by remember { mutableStateOf(false) }
     var showAccessibilitySettings by remember { mutableStateOf(false) }
+
+    // Keep track of the current event state that might change during the screen's lifetime
+    var currentEvent by remember { mutableStateOf(event) }
 
     // Access shared repositories
     val languageManager = remember { AppLanguageManager.getInstance(context) }
@@ -110,15 +122,29 @@ fun EventDetailScreen(
     val isDarkMode = LocalDarkMode.current
 
     // Determine if this is a tax deadline event
-    val isTaxDeadlineEvent = event.title.contains("Tax Filing Deadline", ignoreCase = true)
+    val isTaxDeadlineEvent = currentEvent.title.contains("Tax Filing Deadline", ignoreCase = true)
+
+    // Handler for todo status change
+    val handleTodoStatusChange = { isCompleted: Boolean ->
+        val updatedEvent = currentEvent.copy(isCompleted = isCompleted)
+        onTodoStatusChange(updatedEvent, isCompleted)
+        currentEvent = updatedEvent
+
+        // Provide audio feedback if accessibility is enabled
+        if (accessibilityState.textToSpeech) {
+            val message = if (isCompleted) "Marked as completed" else "Marked as not completed"
+            tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
+    }
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         if (showEditMode) {
             EventEditMode(
-                event = event,
+                event = currentEvent,
                 onNavigateBack = { showEditMode = false },
                 onEventSaved = { updatedEvent ->
                     onEditEvent(updatedEvent)
+                    currentEvent = updatedEvent
                     showEditMode = false
 
                     // Add TTS feedback for edit completion
@@ -229,6 +255,38 @@ fun EventDetailScreen(
                         Column(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
+                            // To-do toggle FAB (if it's a to-do event)
+                            if (currentEvent.isTodoEvent) {
+                                ExtendedFloatingActionButton(
+                                    onClick = { handleTodoStatusChange(!currentEvent.isCompleted) },
+                                    containerColor = when {
+                                        currentEvent.isCompleted -> Color.Gray
+                                        isPastDue(currentEvent) -> Color.Red
+                                        else -> accessibleColors.selectedDay
+                                    },
+                                    contentColor = Color.White
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (currentEvent.isCompleted)
+                                                Icons.Default.Clear
+                                            else
+                                                Icons.Default.Check,
+                                            contentDescription = null
+                                        )
+                                        Text(
+                                            if (currentEvent.isCompleted)
+                                                stringResource(id = R.string.mark_as_incomplete)
+                                            else
+                                                stringResource(id = R.string.mark_as_complete)
+                                        )
+                                    }
+                                }
+                            }
+
                             // Edit FAB
                             FloatingActionButton(
                                 onClick = { showEditMode = true },
@@ -267,15 +325,18 @@ fun EventDetailScreen(
                         .padding(innerPadding)
                         .padding(16.dp)
                 ) {
-                    // Event details card - without duplicate controls
+                    // Event details card - with todo status change handler
                     EventDetailCard(
-                        event = event,
+                        event = currentEvent,
                         locale = locale,
                         accessibleColors = accessibleColors,
                         isDarkMode = isDarkMode,
                         onNavigateBack = onNavigateBack,
                         onShowEditMode = { showEditMode = true },
                         onShowDeleteConfirmation = { showDeleteConfirmation = true },
+                        onTodoStatusChange = { event, isCompleted ->
+                            handleTodoStatusChange(isCompleted)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
@@ -305,7 +366,7 @@ fun EventDetailScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            onDeleteEvent(event)
+                            onDeleteEvent(currentEvent)
                             showDeleteConfirmation = false
 
                             // Add TTS feedback
@@ -357,6 +418,18 @@ fun EventDetailScreen(
     }
 }
 
+// Helper function to check if a to-do event is past due
+@RequiresApi(Build.VERSION_CODES.O)
+fun isPastDue(event: Event): Boolean {
+    if (!event.isTodoEvent || event.isCompleted) return false
+
+    val today = LocalDate.now()
+    val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+
+    return event.date.isBefore(today) ||
+            (event.date.isEqual(today) && event.endTime < currentTime)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -401,9 +474,17 @@ fun EventEditMode(
     var startTime by remember { mutableStateOf(event.startTime) }
     var endTime by remember { mutableStateOf(event.endTime) }
     var hasReminder by remember { mutableStateOf(event.hasReminder) }
+    var isTodoEvent by remember { mutableStateOf(event.isTodoEvent) }
+    var isCompleted by remember { mutableStateOf(event.isCompleted) }
 
     var showLanguageSelector by remember { mutableStateOf(false) }
     var showAccessibilitySettings by remember { mutableStateOf(false) }
+
+    // Check if the event is past due (for to-do events)
+    val isPastDue = isTodoEvent && !isCompleted &&
+            (LocalDate.now().isAfter(event.date) ||
+                    (LocalDate.now().isEqual(event.date) &&
+                            LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) > endTime))
 
     // Scaffold implementation for consistent UI
     Scaffold(
@@ -507,7 +588,9 @@ fun EventEditMode(
                             description = description,
                             startTime = startTime,
                             endTime = endTime,
-                            hasReminder = hasReminder
+                            hasReminder = hasReminder,
+                            isTodoEvent = isTodoEvent,
+                            isCompleted = isCompleted
                         )
                         onEventSaved(updatedEvent)
                         // Add TTS feedback
@@ -518,7 +601,6 @@ fun EventEditMode(
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                //enabled = eventName.isNotBlank()
             ) {
                 Icon(Icons.Default.Check, contentDescription = "Save Changes")
             }
@@ -548,11 +630,20 @@ fun EventEditMode(
                         defaultElevation = if (isDarkMode) 6.dp else 2.dp
                     ),
                     colors = CardDefaults.cardColors(
-                        containerColor = accessibleColors.cardBackground
+                        containerColor = when {
+                            isTodoEvent && isCompleted -> Color.Gray.copy(alpha = 0.1f)
+                            isTodoEvent && isPastDue -> Color.Red.copy(alpha = 0.05f)
+                            isTodoEvent -> accessibleColors.selectedDay.copy(alpha = 0.05f)
+                            else -> accessibleColors.cardBackground
+                        }
                     ),
                     border = BorderStroke(
                         width = 1.dp,
-                        color = accessibleColors.cardBorder
+                        color = when {
+                            isTodoEvent && isPastDue -> Color.Red.copy(alpha = 0.5f)
+                            isTodoEvent && !isCompleted -> accessibleColors.selectedDay.copy(alpha = 0.5f)
+                            else -> accessibleColors.cardBorder
+                        }
                     )
                 ) {
                     Column(
@@ -676,6 +767,170 @@ fun EventEditMode(
                             )
                         )
 
+                        // Todo Event Toggle
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isTodoEvent)
+                                    accessibleColors.selectedDay.copy(alpha = 0.1f)
+                                else
+                                    accessibleColors.cardBackground.copy(
+                                        alpha = if (isDarkMode) 0.7f else 0.9f
+                                    )
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (isTodoEvent)
+                                    accessibleColors.selectedDay.copy(alpha = 0.5f)
+                                else
+                                    accessibleColors.cardBorder.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Label with icon
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Assignment,
+                                        contentDescription = null,
+                                        tint = if (isTodoEvent)
+                                            accessibleColors.selectedDay
+                                        else
+                                            accessibleColors.calendarBorder
+                                    )
+
+                                    Text(
+                                        text = stringResource(id = R.string.make_todo_event),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = accessibleColors.calendarText
+                                    )
+                                }
+
+                                // Switch
+                                Switch(
+                                    checked = isTodoEvent,
+                                    onCheckedChange = {
+                                        isTodoEvent = it
+                                        // Reset completed status if turning off to-do
+                                        if (!it) isCompleted = false
+
+                                        // Add TTS feedback for switch toggle
+                                        if (accessibilityState.textToSpeech) {
+                                            val message = if (it) "To-do event enabled" else "To-do event disabled"
+                                            tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+                                        }
+                                    },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = accessibleColors.selectedDay,
+                                        checkedTrackColor = accessibleColors.selectedDay.copy(alpha = 0.5f),
+                                        uncheckedThumbColor = accessibleColors.buttonBackground,
+                                        uncheckedTrackColor = accessibleColors.calendarBorder
+                                    )
+                                )
+                            }
+                        }
+
+                        // Completed toggle (only show if it's a to-do event)
+                        AnimatedVisibility(visible = isTodoEvent) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isCompleted)
+                                        Color.Gray.copy(alpha = 0.1f)
+                                    else if (isPastDue)
+                                        Color.Red.copy(alpha = 0.1f)
+                                    else
+                                        accessibleColors.cardBackground.copy(
+                                            alpha = if (isDarkMode) 0.7f else 0.9f
+                                        )
+                                ),
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = when {
+                                        isCompleted -> Color.Gray.copy(alpha = 0.5f)
+                                        isPastDue -> Color.Red.copy(alpha = 0.5f)
+                                        else -> accessibleColors.cardBorder.copy(alpha = 0.5f)
+                                    }
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Label with icon
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isCompleted)
+                                                Icons.Default.Check
+                                            else if (isPastDue)
+                                                Icons.Default.Warning
+                                            else
+                                                Icons.Default.RadioButtonUnchecked,
+                                            contentDescription = null,
+                                            tint = when {
+                                                isCompleted -> Color.Gray
+                                                isPastDue -> Color.Red
+                                                else -> accessibleColors.calendarBorder
+                                            }
+                                        )
+
+                                        Column {
+                                            Text(
+                                                text = stringResource(id = R.string.mark_as_completed),
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = when {
+                                                    isCompleted -> Color.Gray
+                                                    isPastDue -> Color.Red
+                                                    else -> accessibleColors.calendarText
+                                                }
+                                            )
+
+                                            if (isPastDue) {
+                                                Text(
+                                                    text = stringResource(id = R.string.past_due_warning),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color.Red
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // Checkbox
+                                    Checkbox(
+                                        checked = isCompleted,
+                                        onCheckedChange = {
+                                            isCompleted = it
+                                            // Add TTS feedback for switch toggle
+                                            if (accessibilityState.textToSpeech) {
+                                                val message = if (it) "Marked as completed" else "Marked as incomplete"
+                                                tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+                                            }
+                                        },
+                                        colors = CheckboxDefaults.colors(
+                                            checkedColor = Color.Gray,
+                                            uncheckedColor = if (isPastDue) Color.Red else accessibleColors.calendarBorder
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
                         // Reminder Toggle with card styling to match other screens
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -741,16 +996,6 @@ fun EventEditMode(
                                 )
                             }
                         }
-
-//                        Spacer(modifier = Modifier.weight(1f))
-//
-//                        // Instead of buttons here, we use the FAB for save and the top app bar for navigation back
-//                        Text(
-//                            text = "Tap the check button to save your changes",
-//                            style = MaterialTheme.typography.bodyMedium,
-//                            color = accessibleColors.calendarText.copy(alpha = 0.7f),
-//                            modifier = Modifier.align(Alignment.CenterHorizontally)
-//                        )
                     }
                 }
             }
@@ -793,6 +1038,7 @@ fun EventDetailCard(
     onNavigateBack: () -> Unit,
     onShowEditMode: () -> Unit,
     onShowDeleteConfirmation: () -> Unit,
+    onTodoStatusChange: ((Event, Boolean) -> Unit)? = null,
     modifier: Modifier = Modifier,
     showButtons: Boolean = true // Parameter to control button visibility
 ) {
@@ -817,11 +1063,21 @@ fun EventDetailCard(
     // Determine if this is a tax deadline event
     val isTaxDeadlineEvent = event.title.contains("Tax Filing Deadline", ignoreCase = true)
 
+    // Check if event is past due
+    val isPastDue = event.isTodoEvent && !event.isCompleted &&
+            (LocalDate.now().isAfter(event.date) ||
+                    (LocalDate.now().isEqual(event.date) &&
+                            LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) > event.endTime))
+
     Card(
         modifier = modifier
             .shadow(
                 elevation = if (isDarkMode) 12.dp else 4.dp,
-                spotColor = accessibleColors.selectedDay.copy(alpha = 0.3f),
+                spotColor = when {
+                    event.isTodoEvent && isPastDue -> Color.Red.copy(alpha = 0.3f)
+                    event.isTodoEvent && !event.isCompleted -> accessibleColors.selectedDay.copy(alpha = 0.3f)
+                    else -> accessibleColors.selectedDay.copy(alpha = 0.3f)
+                },
                 shape = RoundedCornerShape(24.dp)
             ),
         shape = RoundedCornerShape(24.dp),
@@ -829,11 +1085,20 @@ fun EventDetailCard(
             defaultElevation = 0.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = accessibleColors.cardBackground
+            containerColor = when {
+                event.isTodoEvent && event.isCompleted -> Color.Gray.copy(alpha = 0.1f)
+                event.isTodoEvent && isPastDue -> Color.Red.copy(alpha = 0.05f)
+                event.isTodoEvent -> accessibleColors.selectedDay.copy(alpha = 0.05f)
+                else -> accessibleColors.cardBackground
+            }
         ),
         border = BorderStroke(
             width = 1.dp,
-            color = accessibleColors.cardBorder
+            color = when {
+                event.isTodoEvent && isPastDue -> Color.Red.copy(alpha = 0.5f)
+                event.isTodoEvent && !event.isCompleted -> accessibleColors.selectedDay.copy(alpha = 0.7f)
+                else -> accessibleColors.cardBorder
+            }
         )
     ) {
         Column(
@@ -842,14 +1107,118 @@ fun EventDetailCard(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = event.title,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = accessibleColors.headerText,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            // Title with to-do indicator if applicable
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (event.isTodoEvent) {
+                    // Todo indicator icon
+                    Icon(
+                        imageVector = Icons.Default.Assignment,
+                        contentDescription = "To-do Event",
+                        tint = when {
+                            isPastDue -> Color.Red
+                            event.isCompleted -> Color.Gray
+                            else -> accessibleColors.selectedDay
+                        },
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Text(
+                    text = event.title,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        textDecoration = if (event.isTodoEvent && event.isCompleted)
+                            TextDecoration.LineThrough else TextDecoration.None
+                    ),
+                    color = when {
+                        event.isTodoEvent && isPastDue -> Color.Red
+                        event.isTodoEvent && event.isCompleted -> Color.Gray
+                        else -> accessibleColors.headerText
+                    },
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            // To-do status section (if applicable)
+            if (event.isTodoEvent) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = when {
+                            isPastDue -> Color.Red.copy(alpha = 0.1f)
+                            event.isCompleted -> Color.Gray.copy(alpha = 0.1f)
+                            else -> accessibleColors.selectedDay.copy(alpha = 0.1f)
+                        }
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = when {
+                            isPastDue -> Color.Red.copy(alpha = 0.3f)
+                            event.isCompleted -> Color.Gray.copy(alpha = 0.3f)
+                            else -> accessibleColors.selectedDay.copy(alpha = 0.3f)
+                        }
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = stringResource(id = R.string.todo_status),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = when {
+                                    isPastDue -> Color.Red
+                                    event.isCompleted -> Color.Gray
+                                    else -> accessibleColors.headerText
+                                }
+                            )
+
+                            Text(
+                                text = when {
+                                    isPastDue -> stringResource(id = R.string.past_due)
+                                    event.isCompleted -> stringResource(id = R.string.completed)
+                                    else -> stringResource(id = R.string.pending)
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = when {
+                                    isPastDue -> Color.Red
+                                    event.isCompleted -> Color.Gray
+                                    else -> accessibleColors.calendarText
+                                }
+                            )
+                        }
+
+                        // Only show checkbox if we have the handler function
+                        if (onTodoStatusChange != null) {
+                            Checkbox(
+                                checked = event.isCompleted,
+                                onCheckedChange = { isChecked ->
+                                    onTodoStatusChange(event, isChecked)
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = when {
+                                        isPastDue -> Color.Red
+                                        else -> accessibleColors.selectedDay
+                                    },
+                                    uncheckedColor = when {
+                                        isPastDue -> Color.Red
+                                        else -> accessibleColors.calendarBorder
+                                    }
+                                )
+                            )
+                        }
+                    }
+                }
+            }
 
             Divider(
                 modifier = Modifier.padding(bottom = 16.dp),
@@ -862,7 +1231,8 @@ fun EventDetailCard(
                 icon = Icons.Default.CalendarToday,
                 label = stringResource(id = R.string.date_colon),
                 value = event.date.format(dateFormat),
-                colors = accessibleColors
+                colors = accessibleColors,
+                warningColor = if (isPastDue) Color.Red else null
             )
 
             // Time section
@@ -870,7 +1240,8 @@ fun EventDetailCard(
                 icon = Icons.Default.AccessTime,
                 label = stringResource(id = R.string.time_colon),
                 value = "${event.startTime} - ${event.endTime}",
-                colors = accessibleColors
+                colors = accessibleColors,
+                warningColor = if (isPastDue) Color.Red else null
             )
 
             Divider(
@@ -926,6 +1297,47 @@ fun EventDetailCard(
             if (showButtons) {
                 // Show Edit and Delete buttons only if not a tax deadline event
                 if (!isTaxDeadlineEvent) {
+                    // If it's a to-do event, add a button to toggle completion
+                    if (event.isTodoEvent && onTodoStatusChange != null) {
+                        Button(
+                            onClick = { onTodoStatusChange(event, !event.isCompleted) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(28.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = when {
+                                    isPastDue -> Color.Red
+                                    event.isCompleted -> Color.Gray
+                                    else -> accessibleColors.selectedDay
+                                },
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = if (event.isCompleted) Icons.Default.Clear else Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(
+                                    text = if (event.isCompleted)
+                                        stringResource(id = R.string.mark_as_incomplete)
+                                    else
+                                        stringResource(id = R.string.mark_as_complete),
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
                     // Edit button - with improved styling
                     Button(
                         onClick = onShowEditMode,
@@ -1021,6 +1433,46 @@ fun EventDetailCard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun EventDetailRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+    colors: AccessibleColors,
+    warningColor: Color? = null
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = warningColor ?: colors.selectedDay,
+            modifier = Modifier.size(28.dp)
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = warningColor ?: colors.calendarText
+            )
+
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                color = warningColor ?: colors.calendarText
+            )
         }
     }
 }
