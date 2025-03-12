@@ -418,4 +418,15 @@
     <string name="todo_notification_title">Peringatan Untuk Dilakukan</string>
     <string name="past_due_notification">Anda mempunyai %1$d tugas untuk dilakukan yang terlewat tempoh</string>
     <string name="upcoming_due_notification">Anda mempunyai %1$d tugas untuk dilakukan yang akan tamat tempoh tidak lama lagi</string>
+
+    <string name="visit_official_tax_portal">Layari Portal Cukai Rasmi Malaysia →</string>
+    <string name="error_income_invalid_format">Format pendapatan tidak sah</string>
+    <string name="error_password_uppercase">Kata laluan mesti mengandungi sekurang-kurangnya satu huruf besar</string>
+    <string name="error_password_digit">Kata laluan mesti mengandungi sekurang-kurangnya satu nombor</string>
+    <string name="error_password_special_char">Kata laluan mesti mengandungi sekurang-kurangnya satu aksara khas</string>
+
+    <!-- Password confirmation validation -->
+    <string name="error_confirm_password_empty">Sila sahkan kata laluan anda</string>
+    <string name="error_passwords_dont_match">Kata laluan tidak sepadan</string>
+    <string name="error_user_not_logged_in">User not logged in</string>
 </resources>

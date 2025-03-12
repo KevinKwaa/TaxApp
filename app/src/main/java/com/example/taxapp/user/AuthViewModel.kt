@@ -1,11 +1,14 @@
 package com.example.taxapp.user
 
+import android.content.Context
 import android.os.Build
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.CalendarEvent.TaxDeadlineHelper
+import com.example.taxapp.R
 import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -18,6 +21,8 @@ class AuthViewModel : ViewModel() {
 
     private val auth = Firebase.auth
     private val firestore = Firebase.firestore
+
+    //var context = LocalContext.current
 
     fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         Log.d(TAG, "Attempting login for email: $email")
@@ -75,27 +80,30 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    fun userProfile(name: String, phone: String, dob: String, income: String, employment: String = "employee", onResult: (Boolean, String?) -> Unit) {
+    fun userProfile(name: String, phone: String, dob: String, income: String,
+                    employment: String = "employee", context: Context,
+                    onResult: (Boolean, String?) -> Unit) {
+
         // First perform validation before proceeding with saving
-        val nameValidation = ValidationUtil.validateName(name)
+        val nameValidation = ValidationUtil.validateName(name, context)
         if (!nameValidation.isValid) {
             onResult(false, nameValidation.errorMessage)
             return
         }
 
-        val phoneValidation = ValidationUtil.validatePhone(phone)
+        val phoneValidation = ValidationUtil.validatePhone(phone, context)
         if (!phoneValidation.isValid) {
             onResult(false, phoneValidation.errorMessage)
             return
         }
 
-        val dobValidation = ValidationUtil.validateDOB(dob)
+        val dobValidation = ValidationUtil.validateDOB(dob, context)
         if (!dobValidation.isValid) {
             onResult(false, dobValidation.errorMessage)
             return
         }
 
-        val incomeValidation = ValidationUtil.validateIncome(income)
+        val incomeValidation = ValidationUtil.validateIncome(income, context)
         if (!incomeValidation.isValid) {
             onResult(false, incomeValidation.errorMessage)
             return
@@ -105,6 +113,7 @@ class AuthViewModel : ViewModel() {
         val userId = FirebaseManager.getCurrentUserId()
         Log.d(TAG, "Updating profile for user ID: $userId")
 
+        // Rest of method stays the same
         if (userId != null) {
             val userDetails = hashMapOf(
                 "name" to name,
@@ -186,7 +195,7 @@ class AuthViewModel : ViewModel() {
                 }
         } else {
             Log.e(TAG, "userProfile failed: User not logged in")
-            onResult(false, "User not logged in")
+            onResult(false, context.getString(R.string.error_user_not_logged_in))
         }
     }
 

@@ -1,5 +1,6 @@
 package com.example.taxapp.user
 
+import android.content.Context
 import android.os.Build
 import android.speech.tts.TextToSpeech
 import android.util.Patterns
@@ -101,19 +102,23 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
     // Form validation state
     var isFormValid by remember { mutableStateOf(false) }
 
+    var context = LocalContext.current
+
     // Function to validate the form
-    fun validateForm() {
-        // Email basic validation
-        emailError = if (email.isBlank()) "Email cannot be empty"
-        else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) "Invalid email format"
+    fun validateForm(context: Context) {
+        // Get context for string resources
+
+        // Email basic validation with localized strings
+        emailError = if (email.isBlank()) context.getString(R.string.error_email_empty)
+        else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) context.getString(R.string.error_email_format)
         else null
 
-        // Password validation
-        val passwordValidation = ValidationUtil.validatePassword(password)
+        // Password validation with context
+        val passwordValidation = ValidationUtil.validatePassword(password, context)
         passwordError = if (!passwordValidation.isValid) passwordValidation.errorMessage else null
 
-        // Confirm password validation
-        val confirmValidation = ValidationUtil.validatePasswordConfirmation(password, confirmPassword)
+        // Confirm password validation with context
+        val confirmValidation = ValidationUtil.validatePasswordConfirmation(password, confirmPassword, context)
         confirmPasswordError = if (!confirmValidation.isValid) confirmValidation.errorMessage else null
 
         // Form is valid if all fields are valid
@@ -123,10 +128,8 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
 
     // Validate on each change
     LaunchedEffect(email, password, confirmPassword) {
-        validateForm()
+        validateForm(context)
     }
-
-    var context = LocalContext.current
 
     var isLoading by remember {
         mutableStateOf(false)
@@ -392,7 +395,7 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                 Button(
                     onClick = {
                         // Validate once more before submission
-                        validateForm()
+                        validateForm(context)
 
                         if (isFormValid) {
                             isLoading = true

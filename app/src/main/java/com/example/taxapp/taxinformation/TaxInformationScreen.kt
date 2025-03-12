@@ -47,6 +47,8 @@ import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
 import kotlinx.coroutines.launch
+import android.content.Intent
+import android.net.Uri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -263,6 +265,7 @@ fun TaxInformationContent(
 ) {
     val scrollState = rememberScrollState()
     val ttsManager = LocalTtsManager.current
+    val context = LocalContext.current
 
     // Calculate tax based on user income
     val taxCalculation = calculateIncomeTax(userIncome)
@@ -599,8 +602,33 @@ fun TaxInformationContent(
             text = stringResource(R.string.tax_information_disclaimer),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.padding(top = 16.dp, bottom = 48.dp) // Extra padding at bottom for scrollability
+            modifier = Modifier.padding(top = 16.dp, bottom = 1.dp) // Extra padding at bottom for scrollability
         )
+
+        //Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 48.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = stringResource(R.string.visit_official_tax_portal),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clickable {
+                        // Open URL in browser
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.hasil.gov.my"))
+                        context.startActivity(intent)
+                        // Optional: Add a toast notification
+                        Toast.makeText(context, "Opening official tax portal...", Toast.LENGTH_SHORT).show()
+                    }
+                    .padding(5.dp),
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

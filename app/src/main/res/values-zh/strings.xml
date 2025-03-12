@@ -417,4 +417,16 @@
     <string name="todo_notification_title">待办事项提醒</string>
     <string name="past_due_notification">您有 %1$d 个待办事项已逾期</string>
     <string name="upcoming_due_notification">您有 %1$d 个待办事项即将到期</string>
+
+    <string name="visit_official_tax_portal">访问马来西亚官方税务门户 →</string>
+
+    <string name="error_income_invalid_format">收入格式无效</string>
+    <string name="error_password_uppercase">密码必须包含至少一个大写字母</string>
+    <string name="error_password_digit">密码必须包含至少一个数字</string>
+    <string name="error_password_special_char">密码必须包含至少一个特殊字符</string>
+
+    <!-- Password confirmation validation -->
+    <string name="error_confirm_password_empty">请确认您的密码</string>
+    <string name="error_passwords_dont_match">密码不匹配</string>
+    <string name="error_user_not_logged_in">User not logged in</string>
 </resources>

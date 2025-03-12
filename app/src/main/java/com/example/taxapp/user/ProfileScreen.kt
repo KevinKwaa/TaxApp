@@ -1,5 +1,6 @@
 package com.example.taxapp.user
 
+import android.content.Context
 import android.os.Build
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
@@ -96,13 +97,15 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
     // Overall form validation state
     var isFormValid by remember { mutableStateOf(false) }
 
+    var context = LocalContext.current
+
     // Function to validate all fields and update form state
-    fun validateForm() {
-        // Validate each field
-        val nameValidation = ValidationUtil.validateName(name)
-        val phoneValidation = ValidationUtil.validatePhone(phone)
-        val dobValidation = ValidationUtil.validateDOB(dob)
-        val incomeValidation = ValidationUtil.validateIncome(income)
+    fun validateForm(context: Context) {
+        // Validate each field with context
+        val nameValidation = ValidationUtil.validateName(name, context)
+        val phoneValidation = ValidationUtil.validatePhone(phone, context)
+        val dobValidation = ValidationUtil.validateDOB(dob, context)
+        val incomeValidation = ValidationUtil.validateIncome(income, context)
 
         // Update error messages
         nameError = if (!nameValidation.isValid) nameValidation.errorMessage else null
@@ -117,13 +120,11 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
 
     // Validate on each change
     LaunchedEffect(name, phone, dob, income, employment) {
-        validateForm()
+        validateForm(context)
     }
 
     var isProfileUpdated by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    var context = LocalContext.current
 
     var isLoading by remember { mutableStateOf(false) }
 
@@ -466,12 +467,12 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
             Button(
                 onClick = {
                     // Validate once more before submission
-                    validateForm()
+                    validateForm(context)
 
                     if (isFormValid) {
                         isLoading = true
                         ttsManager?.speak("Saving profile")
-                        authViewModel.userProfile(name, phone, dob, income, employment) { success, error ->
+                        authViewModel.userProfile(name, phone, dob, income, employment, context) { success, error ->
                             isLoading = false
                             if (success) {
                                 ttsManager?.speak("Profile saved successfully")

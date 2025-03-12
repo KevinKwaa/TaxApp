@@ -416,4 +416,16 @@
     <string name="todo_notification_title">To-Do Reminder</string>
     <string name="past_due_notification">You have %1$d past due to-do tasks</string>
     <string name="upcoming_due_notification">You have %1$d to-do tasks due soon</string>
+
+    <string name="visit_official_tax_portal">Visit Official Malaysian Tax Portal →</string>
+
+    <string name="error_income_invalid_format">Invalid income format</string>
+    <string name="error_password_uppercase">Password must contain at least one uppercase letter</string>
+    <string name="error_password_digit">Password must contain at least one number</string>
+    <string name="error_password_special_char">Password must contain at least one special character</string>
+
+    <!-- Password confirmation validation -->
+    <string name="error_confirm_password_empty">Please confirm your password</string>
+    <string name="error_passwords_dont_match">Passwords do not match</string>
+    <string name="error_user_not_logged_in">User not logged in</string>
 </resources>

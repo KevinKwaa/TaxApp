@@ -1,5 +1,6 @@
 package com.example.taxapp.user
 
+import android.content.Context
 import android.os.Build
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -83,6 +84,7 @@ import com.example.taxapp.accessibility.ScreenReader
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -256,7 +258,9 @@ fun EditProfileScreen(
         EditProfileScreenContent(
             modifier = modifier.padding(innerPadding),
             navController = navController,
-            editProfileViewModel = editProfileViewModel
+            editProfileViewModel = editProfileViewModel,
+            // Pass the current language code to the child
+            currentLanguageCode = currentLanguageCode
         )
     }
 
@@ -291,6 +295,7 @@ fun EditProfileScreenContent(
     navController: NavHostController,
     editProfileViewModel: EditProfileViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
+    currentLanguageCode: String,
     onProfileSaved: () -> Unit = {}
 ){
     // Use collectAsState to properly observe viewModel state
@@ -312,43 +317,8 @@ fun EditProfileScreenContent(
     // Overall form validation state
     var isFormValid by remember { mutableStateOf(false) }
 
-    // Function to validate all fields and update form state
-    fun validateForm() {
-        // Validate each field
-        val nameValidation = ValidationUtil.validateName(name)
-        val phoneValidation = ValidationUtil.validatePhone(phone)
-        val dobValidation = ValidationUtil.validateDOB(dob)
-        val incomeValidation = ValidationUtil.validateIncome(income)
-
-        // Update error messages
-        nameError = if (!nameValidation.isValid) nameValidation.errorMessage else null
-        phoneError = if (!phoneValidation.isValid) phoneValidation.errorMessage else null
-        dobError = if (!dobValidation.isValid) dobValidation.errorMessage else null
-        incomeError = if (!incomeValidation.isValid) incomeValidation.errorMessage else null
-
-        // Form is valid if all fields are valid
-        isFormValid = nameValidation.isValid && phoneValidation.isValid &&
-                dobValidation.isValid && incomeValidation.isValid
-    }
-
-    // Validate on each change
-    LaunchedEffect(name, phone, dob, income, employment) {
-        validateForm()
-    }
-
     var context = LocalContext.current
     val scope = rememberCoroutineScope()
-
-    // Track if update was successful to show feedback
-    var updateSuccess by remember { mutableStateOf(false) }
-
-    // Effect to show success message
-    LaunchedEffect(updateSuccess) {
-        if (updateSuccess) {
-            Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-            updateSuccess = false
-        }
-    }
 
     val coroutineScope = rememberCoroutineScope()
     val activity = context as? ComponentActivity
@@ -389,6 +359,49 @@ fun EditProfileScreenContent(
     val isDarkMode = LocalDarkMode.current
     ScreenReader("Edit Profile Screen")
     val ttsManager = LocalTtsManager.current
+
+    // Modify your validation function to accept context as a parameter
+    fun validateForm(context: Context) {
+        // Validate each field with the passed context
+        val nameValidation = ValidationUtil.validateName(name, context)
+        val phoneValidation = ValidationUtil.validatePhone(phone, context)
+        val dobValidation = ValidationUtil.validateDOB(dob, context)
+        val incomeValidation = ValidationUtil.validateIncome(income, context)
+
+        // Update error messages
+        nameError = if (!nameValidation.isValid) nameValidation.errorMessage else null
+        phoneError = if (!phoneValidation.isValid) phoneValidation.errorMessage else null
+        dobError = if (!dobValidation.isValid) dobValidation.errorMessage else null
+        incomeError = if (!incomeValidation.isValid) incomeValidation.errorMessage else null
+
+        // Form is valid if all fields are valid
+        isFormValid = nameValidation.isValid && phoneValidation.isValid &&
+                dobValidation.isValid && incomeValidation.isValid
+    }
+
+    // Then call it passing the context
+    LaunchedEffect(name, phone, dob, income, employment, currentLanguageCode) {
+        validateForm(context)
+    }
+
+    LaunchedEffect(currentLanguageCode) {
+        // Re-validate with new language if there are any existing errors
+        if (nameError != null || phoneError != null || dobError != null || incomeError != null) {
+            validateForm(context)
+        }
+    }
+
+    // Track if update was successful to show feedback
+    var updateSuccess by remember { mutableStateOf(false) }
+
+    // Effect to show success message
+    LaunchedEffect(updateSuccess) {
+        if (updateSuccess) {
+            Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+            updateSuccess = false
+        }
+    }
+
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Column(
             modifier = modifier
@@ -669,7 +682,7 @@ fun EditProfileScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     // Validate form before submission
-                    validateForm()
+                    validateForm(context)
 
                     if (isFormValid) {
                         ttsManager?.speak("Saving Profile")
@@ -762,10 +775,16 @@ fun EditProfileScreenContent(
             LanguageSelector(
                 currentLanguageCode = currentLanguageCode,
                 onLanguageSelected = { languageCode ->
+                    // Update language code
                     currentLanguageCode = languageCode
+
+                    // Force validation with new language context
+                    coroutineScope.launch {
+                        validateForm(context)
+                    }
                 },
                 onDismiss = { showLanguageSelector = false },
-                activity = activity  // Pass the activity
+                activity = activity
             )
         }
 
