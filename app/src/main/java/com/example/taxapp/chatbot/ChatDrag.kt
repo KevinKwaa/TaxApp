@@ -43,8 +43,8 @@ fun SimpleDraggableBox(
     LaunchedEffect(parentSize, elementSize, needsInitialPosition) {
         if (needsInitialPosition && parentSize.width > 0 && elementSize.width > 0) {
             // Position at bottom right with a small margin (16dp ≈ 48px)
-            offsetX = (parentSize.width - elementSize.width - 890f).coerceAtLeast(0f)
-            offsetY = (parentSize.height - elementSize.height - 230f).coerceAtLeast(0f)
+            offsetX = (parentSize.width - elementSize.width - 1050f).coerceAtLeast(0f)
+            offsetY = (parentSize.height - elementSize.height - 300f).coerceAtLeast(0f)
             needsInitialPosition = false
             Log.d("SimpleDraggableBox", "Initial position set to bottom right: $offsetX, $offsetY")
         }
