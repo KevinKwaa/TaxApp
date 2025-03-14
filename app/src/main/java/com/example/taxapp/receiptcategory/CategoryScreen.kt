@@ -35,7 +35,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
@@ -114,9 +113,7 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1059,13 +1056,7 @@ fun EditExpenseItemDialog(
                     value = categoryViewModel.editExpenseDescription,
                     onValueChange = { categoryViewModel.editExpenseDescription = it },
                     label = { Text(text = stringResource(id = R.string.item_description)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = categoryViewModel.descriptionError != null,
-                    supportingText = {
-                        categoryViewModel.descriptionError?.let {
-                            Text(text = it, color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1075,13 +1066,7 @@ fun EditExpenseItemDialog(
                     value = categoryViewModel.editExpenseMerchant,
                     onValueChange = { categoryViewModel.editExpenseMerchant = it },
                     label = { Text(stringResource(id = R.string.merchant)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = categoryViewModel.merchantError != null,
-                    supportingText = {
-                        categoryViewModel.merchantError?.let {
-                            Text(text = it, color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1091,19 +1076,7 @@ fun EditExpenseItemDialog(
                     value = categoryViewModel.editExpenseDate,
                     onValueChange = { categoryViewModel.editExpenseDate = it },
                     label = { Text(stringResource(id = R.string.date)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = categoryViewModel.dateError != null,
-                    supportingText = {
-                        categoryViewModel.dateError?.let {
-                            Text(text = it, color = MaterialTheme.colorScheme.error)
-                        } ?: Text("Format: DD/MM/YYYY")
-                    },
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "Date format"
-                        )
-                    }
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1114,14 +1087,7 @@ fun EditExpenseItemDialog(
                     onValueChange = { categoryViewModel.editExpenseAmount = it },
                     label = { Text(stringResource(id = R.string.amount)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = categoryViewModel.amountError != null,
-                    supportingText = {
-                        categoryViewModel.amountError?.let {
-                            Text(text = it, color = MaterialTheme.colorScheme.error)
-                        }
-                    },
-                    prefix = { Text("RM ") }
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1145,13 +1111,7 @@ fun EditExpenseItemDialog(
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
-                        isError = categoryViewModel.categoryError != null,
-                        supportingText = {
-                            categoryViewModel.categoryError?.let {
-                                Text(text = it, color = MaterialTheme.colorScheme.error)
-                            }
-                        }
+                            .menuAnchor()
                     )
 
                     ExposedDropdownMenu(
@@ -1188,14 +1148,8 @@ fun EditExpenseItemDialog(
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Button(
-                        onClick = {
-                            // Validating fields when save is clicked
-                            if (categoryViewModel.validateExpenseItemFields()) {
-                                onSave()
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !categoryViewModel.hasValidationErrors
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f)
                     ) {
                         Text(stringResource(id = R.string.save))
                     }

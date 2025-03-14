@@ -56,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.DateRange
@@ -65,7 +66,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -463,6 +463,7 @@ fun ReceiptSummaryContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
+                            // text = "Expense Items (${receiptViewModel.expenseItems.size})",
                             text = stringResource(
                                 id = R.string.expense_items,
                                 receiptViewModel.expenseItems.size
@@ -542,25 +543,21 @@ fun ReceiptSummaryContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
-                            enabled = receiptViewModel.expenseItems.isNotEmpty() && !receiptViewModel.hasAnyValidationErrors(),
+                            enabled = receiptViewModel.expenseItems.isNotEmpty(),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary,
-                                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Text(
                                 text = if (receiptViewModel.expenseItems.size > 1)
                                     stringResource(id = R.string.save_num_items, receiptViewModel.expenseItems.size)
+                                //"Save ${receiptViewModel.expenseItems.size} Items"
                                 else
                                     stringResource(id = R.string.save_item),
                                 fontSize = 18.sp
                             )
                         }
-
-
-
 
                         Spacer(modifier = Modifier.height(12.dp))
 
@@ -661,8 +658,7 @@ fun EditableExpenseItemCard(
     onAmountChange: (Double) -> Unit,
     onMerchantChange: (String) -> Unit,
     onDateChange: (String) -> Unit,
-    onDeleteItem: (ExpenseItem) -> Unit,
-    receiptViewModel: ReceiptViewModel = viewModel() // Directly reference the viewModel to access validation state
+    onDeleteItem: (ExpenseItem) -> Unit
 ) {
     var categoryMenuExpanded by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(false) }
@@ -670,14 +666,8 @@ fun EditableExpenseItemCard(
     var editedAmount by remember(item.amount) { mutableStateOf(item.amount.toString()) }
     var editedMerchant by remember(item.merchantName) { mutableStateOf(item.merchantName) }
     var editedDate by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(item.date)) }
+    var isValidAmount by remember { mutableStateOf(true) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
-
-    // Access validation error states for this specific item
-    val descriptionError = receiptViewModel.itemDescriptionErrors[item.id]
-    val amountError = receiptViewModel.itemAmountErrors[item.id]
-    val merchantError = receiptViewModel.itemMerchantErrors[item.id]
-    val dateError = receiptViewModel.itemDateErrors[item.id]
-    val hasErrors = receiptViewModel.itemHasErrors[item.id] ?: false
 
     Card(
         modifier = Modifier
@@ -758,31 +748,17 @@ fun EditableExpenseItemCard(
                 // Merchant field
                 OutlinedTextField(
                     value = editedMerchant,
-                    onValueChange = {
-                        editedMerchant = it
-                        // Validate as user types
-                        receiptViewModel.validateExpenseItem(item, null, null, it, null)
-                    },
+                    onValueChange = { editedMerchant = it },
                     label = { Text(text = stringResource(id = R.string.merchant)) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    isError = merchantError != null,
-                    supportingText = {
-                        merchantError?.let {
-                            Text(text = it, color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                        .padding(vertical = 4.dp)
                 )
 
                 // Date field
                 OutlinedTextField(
                     value = editedDate,
-                    onValueChange = {
-                        editedDate = it
-                        // Validate as user types
-                        receiptViewModel.validateExpenseItem(item, null, null, null, it)
-                    },
+                    onValueChange = { editedDate = it },
                     label = { Text(text = stringResource(id = R.string.date)) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -792,33 +768,17 @@ fun EditableExpenseItemCard(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = "Date format"
                         )
-                    },
-                    isError = dateError != null,
-                    supportingText = {
-                        dateError?.let {
-                            Text(text = it, color = MaterialTheme.colorScheme.error)
-                        } ?: Text("Format: DD/MM/YYYY")
                     }
                 )
 
                 // Item name field
                 OutlinedTextField(
                     value = editedName,
-                    onValueChange = {
-                        editedName = it
-                        // Validate as user types
-                        receiptViewModel.validateExpenseItem(item, it, null, null, null)
-                    },
+                    onValueChange = { editedName = it },
                     label = { Text(text = stringResource(id = R.string.item_description)) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    isError = descriptionError != null,
-                    supportingText = {
-                        descriptionError?.let {
-                            Text(text = it, color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                        .padding(vertical = 4.dp)
                 )
 
                 // Amount field
@@ -826,22 +786,23 @@ fun EditableExpenseItemCard(
                     value = editedAmount,
                     onValueChange = {
                         editedAmount = it
-                        // Validate as user types
-                        receiptViewModel.validateExpenseItem(item, null, it, null, null)
+                        isValidAmount = it.toDoubleOrNull() != null
                     },
                     label = { Text(text = stringResource(id = R.string.amount)) },
-                    isError = amountError != null,
+                    isError = !isValidAmount,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    prefix = { Text("RM ") },
-                    supportingText = {
-                        amountError?.let {
-                            Text(text = it, color = MaterialTheme.colorScheme.error)
-                        }
-                    }
+                        .padding(vertical = 4.dp)
                 )
+
+                if (!isValidAmount) {
+                    Text(
+                        text = stringResource(id = R.string.valid_amount),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
 
                 // Category dropdown
                 Box(modifier = Modifier
@@ -874,16 +835,7 @@ fun EditableExpenseItemCard(
                 // Save button
                 Button(
                     onClick = {
-                        // Perform final validation before saving
-                        val isValid = receiptViewModel.validateExpenseItem(
-                            item,
-                            editedName,
-                            editedAmount,
-                            editedMerchant,
-                            editedDate
-                        )
-
-                        if (isValid) {
+                        if (isValidAmount) {
                             onNameChange(editedName)
                             onMerchantChange(editedMerchant)
                             onDateChange(editedDate)
@@ -891,7 +843,7 @@ fun EditableExpenseItemCard(
                             isEditing = false
                         }
                     },
-                    enabled = !hasErrors,
+                    enabled = isValidAmount,
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(top = 8.dp)

@@ -34,13 +34,6 @@ class ReceiptViewModel : ViewModel() {
     // Direct expense items list - this is our main focus now
     var expenseItems by mutableStateOf<List<ExpenseItem>>(emptyList())
 
-    // Validation state maps - track validation errors for each expense item
-    var itemDescriptionErrors by mutableStateOf<Map<String, String?>>(emptyMap())
-    var itemAmountErrors by mutableStateOf<Map<String, String?>>(emptyMap())
-    var itemMerchantErrors by mutableStateOf<Map<String, String?>>(emptyMap())
-    var itemDateErrors by mutableStateOf<Map<String, String?>>(emptyMap())
-    var itemHasErrors by mutableStateOf<Map<String, Boolean>>(emptyMap())
-
     // Available categories
     val availableCategories = listOf(
         "Lifestyle Expenses",
@@ -104,54 +97,16 @@ class ReceiptViewModel : ViewModel() {
                         throw Exception("Failed to extract receipt data")
                     }
                 } else {
-                    val exception = result.exceptionOrNull()
-                    val errorMsg = exception?.message ?: "Unknown error processing receipt"
-
-                    // Handle our special error type separately
-                    if (errorMsg.startsWith("NOT_A_RECEIPT:")) {
-                        // Extract the clean error message without the prefix
-                        errorMessage = errorMsg.substringAfter("NOT_A_RECEIPT:").trim()
-                        onError("INVALID_RECEIPT_IMAGE: $errorMessage")
-                    } else {
-                        throw exception ?: Exception("Unknown error processing receipt")
-                    }
+                    throw result.exceptionOrNull() ?: Exception("Unknown error processing receipt")
                 }
             } catch (e: Exception) {
                 Log.e("ReceiptViewModel", "Error processing receipt", e)
-                if (e.message?.startsWith("INVALID_RECEIPT_IMAGE:") == true) {
-                    errorMessage = "Failed to process the receipt: ${e.localizedMessage}"
-                    onError(errorMessage ?: "Unknown error")
-                } else {
-                    // Pass through our special error type
-                    onError(e.message ?: "Unknown error")
-                }
+                errorMessage = "Failed to process the receipt: ${e.localizedMessage}"
+                onError(errorMessage ?: "Unknown error")
             } finally {
                 isLoading = false
             }
         }
-    }
-
-    // Initialize validation state for all items
-    private fun initializeValidationState() {
-        val descErrors = mutableMapOf<String, String?>()
-        val amountErrors = mutableMapOf<String, String?>()
-        val merchantErrors = mutableMapOf<String, String?>()
-        val dateErrors = mutableMapOf<String, String?>()
-        val hasErrors = mutableMapOf<String, Boolean>()
-
-        expenseItems.forEach { item ->
-            descErrors[item.id] = null
-            amountErrors[item.id] = null
-            merchantErrors[item.id] = null
-            dateErrors[item.id] = null
-            hasErrors[item.id] = false
-        }
-
-        itemDescriptionErrors = descErrors
-        itemAmountErrors = amountErrors
-        itemMerchantErrors = merchantErrors
-        itemDateErrors = dateErrors
-        itemHasErrors = hasErrors
     }
 
     // Format date for display
@@ -161,103 +116,18 @@ class ReceiptViewModel : ViewModel() {
     }
 
     // Parse date from string
-    fun parseDate(dateString: String): Date? {
+    fun parseDate(dateString: String): Date {
         return try {
             val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            sdf.parse(dateString)
+            sdf.parse(dateString) ?: Date()
         } catch (e: Exception) {
             Log.e("ReceiptViewModel", "Error parsing date: $dateString", e)
-            null
+            Date()
         }
-    }
-
-    // Validate expense item fields
-    fun validateExpenseItem(item: ExpenseItem,
-                            newName: String?,
-                            newAmount: String?,
-                            newMerchant: String?,
-                            newDate: String?): Boolean {
-        var isValid = true
-        val errors = mutableMapOf<String, String?>()
-
-        // Create temp maps to hold updated validation state
-        val updatedDescErrors = itemDescriptionErrors.toMutableMap()
-        val updatedAmountErrors = itemAmountErrors.toMutableMap()
-        val updatedMerchantErrors = itemMerchantErrors.toMutableMap()
-        val updatedDateErrors = itemDateErrors.toMutableMap()
-        val updatedHasErrors = itemHasErrors.toMutableMap()
-
-        // Validate description if provided
-        if (newName != null) {
-            if (newName.trim().isEmpty()) {
-                updatedDescErrors[item.id] = "Description cannot be empty"
-                isValid = false
-            } else {
-                updatedDescErrors[item.id] = null
-            }
-        }
-
-        // Validate amount if provided
-        if (newAmount != null) {
-            val amountValue = newAmount.replace(",", ".").toDoubleOrNull()
-            if (amountValue == null) {
-                updatedAmountErrors[item.id] = "Please enter a valid amount"
-                isValid = false
-            } else if (amountValue <= 0) {
-                updatedAmountErrors[item.id] = "Amount must be greater than 0"
-                isValid = false
-            } else {
-                updatedAmountErrors[item.id] = null
-            }
-        }
-
-        // Validate merchant if provided
-        if (newMerchant != null) {
-            if (newMerchant.trim().isEmpty()) {
-                updatedMerchantErrors[item.id] = "Merchant name cannot be empty"
-                isValid = false
-            } else {
-                updatedMerchantErrors[item.id] = null
-            }
-        }
-
-        // Validate date if provided
-        if (newDate != null) {
-            val parsedDate = parseDate(newDate)
-            if (parsedDate == null) {
-                updatedDateErrors[item.id] = "Please enter a valid date (DD/MM/YYYY)"
-                isValid = false
-            } else {
-                updatedDateErrors[item.id] = null
-            }
-        }
-
-        // Update validation state
-        updatedHasErrors[item.id] = !isValid
-
-        // Apply updated validation state
-        itemDescriptionErrors = updatedDescErrors
-        itemAmountErrors = updatedAmountErrors
-        itemMerchantErrors = updatedMerchantErrors
-        itemDateErrors = updatedDateErrors
-        itemHasErrors = updatedHasErrors
-
-        return isValid
-    }
-
-    // Check if any items have validation errors
-    fun hasAnyValidationErrors(): Boolean {
-        return itemHasErrors.values.any { it }
     }
 
     // Save all extracted expense items as individual entities
     fun saveReceipt(onSuccess: (String) -> Unit, onError: (String) -> Unit) {
-        // Validate all items before saving
-        if (hasAnyValidationErrors()) {
-            onError("Please correct all validation errors before saving")
-            return
-        }
-
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
@@ -329,7 +199,7 @@ class ReceiptViewModel : ViewModel() {
         val itemDate = if (expenseItems.isNotEmpty()) {
             expenseItems.first().date
         } else {
-            parseDate(purchaseDate) ?: Date()
+            parseDate(purchaseDate)
         }
 
         // Create new expense item with current merchant name
@@ -344,53 +214,22 @@ class ReceiptViewModel : ViewModel() {
 
         // Add to list
         expenseItems = expenseItems + newItem
-
-        // Add new item to validation maps
-        val descErrors = itemDescriptionErrors.toMutableMap()
-        val amountErrors = itemAmountErrors.toMutableMap()
-        val merchantErrors = itemMerchantErrors.toMutableMap()
-        val dateErrors = itemDateErrors.toMutableMap()
-        val hasErrors = itemHasErrors.toMutableMap()
-
-        descErrors[newItem.id] = null
-        amountErrors[newItem.id] = null
-        merchantErrors[newItem.id] = null
-        dateErrors[newItem.id] = null
-        hasErrors[newItem.id] = false
-
-        itemDescriptionErrors = descErrors
-        itemAmountErrors = amountErrors
-        itemMerchantErrors = merchantErrors
-        itemDateErrors = dateErrors
-        itemHasErrors = hasErrors
     }
 
     // Update expense item description/name
     fun updateExpenseItemName(item: ExpenseItem, newName: String) {
-        // Validate first
-        validateExpenseItem(item, newName, null, null, null)
-
-        // Only update if valid
-        if (itemDescriptionErrors[item.id] == null) {
-            expenseItems = expenseItems.map {
-                if (it.id == item.id) it.copy(description = newName) else it
-            }
-            Log.d("ReceiptViewModel", "Updated item name to: $newName")
+        expenseItems = expenseItems.map {
+            if (it.id == item.id) it.copy(description = newName) else it
         }
+        Log.d("ReceiptViewModel", "Updated item name to: $newName")
     }
 
     // Update expense item amount
     fun updateExpenseItemAmount(item: ExpenseItem, newAmount: Double) {
-        // Validate using string representation
-        validateExpenseItem(item, null, newAmount.toString(), null, null)
-
-        // Only update if valid
-        if (itemAmountErrors[item.id] == null) {
-            expenseItems = expenseItems.map {
-                if (it.id == item.id) it.copy(amount = newAmount) else it
-            }
-            Log.d("ReceiptViewModel", "Updated item amount to: $newAmount")
+        expenseItems = expenseItems.map {
+            if (it.id == item.id) it.copy(amount = newAmount) else it
         }
+        Log.d("ReceiptViewModel", "Updated item amount to: $newAmount")
     }
 
     // Update expense item category
@@ -403,66 +242,36 @@ class ReceiptViewModel : ViewModel() {
 
     // Update expense item merchant name
     fun updateExpenseItemMerchant(item: ExpenseItem, newMerchant: String) {
-        // Validate first
-        validateExpenseItem(item, null, null, newMerchant, null)
-
-        // Only update if valid
-        if (itemMerchantErrors[item.id] == null) {
-            expenseItems = expenseItems.map {
-                if (it.id == item.id) it.copy(merchantName = newMerchant) else it
-            }
-            // Update the common merchant name if this is the first item
-            if (expenseItems.isNotEmpty() && expenseItems.first().id == item.id) {
-                merchantName = newMerchant
-            }
-            Log.d("ReceiptViewModel", "Updated item merchant to: $newMerchant")
+        expenseItems = expenseItems.map {
+            if (it.id == item.id) it.copy(merchantName = newMerchant) else it
         }
+        // Update the common merchant name if this is the first item
+        if (expenseItems.isNotEmpty() && expenseItems.first().id == item.id) {
+            merchantName = newMerchant
+        }
+        Log.d("ReceiptViewModel", "Updated item merchant to: $newMerchant")
     }
 
     // Update expense item date
     fun updateExpenseItemDate(item: ExpenseItem, newDateString: String) {
-        // Validate first
-        validateExpenseItem(item, null, null, null, newDateString)
-
-        // Only update if valid
-        if (itemDateErrors[item.id] == null) {
+        try {
             val newDate = parseDate(newDateString)
-            if (newDate != null) {
-                expenseItems = expenseItems.map {
-                    if (it.id == item.id) it.copy(date = newDate) else it
-                }
-                // Update the common date if this is the first item
-                if (expenseItems.isNotEmpty() && expenseItems.first().id == item.id) {
-                    purchaseDate = formatDate(newDate)
-                }
-                Log.d("ReceiptViewModel", "Updated item date to: $newDateString")
+            expenseItems = expenseItems.map {
+                if (it.id == item.id) it.copy(date = newDate) else it
             }
+            // Update the common date if this is the first item
+            if (expenseItems.isNotEmpty() && expenseItems.first().id == item.id) {
+                purchaseDate = formatDate(newDate)
+            }
+            Log.d("ReceiptViewModel", "Updated item date to: $newDateString")
+        } catch (e: Exception) {
+            Log.e("ReceiptViewModel", "Error updating date: $newDateString", e)
         }
     }
 
     // Delete expense item
     fun deleteExpenseItem(item: ExpenseItem) {
         expenseItems = expenseItems.filter { it.id != item.id }
-
-        // Remove from validation maps
-        val descErrors = itemDescriptionErrors.toMutableMap()
-        val amountErrors = itemAmountErrors.toMutableMap()
-        val merchantErrors = itemMerchantErrors.toMutableMap()
-        val dateErrors = itemDateErrors.toMutableMap()
-        val hasErrors = itemHasErrors.toMutableMap()
-
-        descErrors.remove(item.id)
-        amountErrors.remove(item.id)
-        merchantErrors.remove(item.id)
-        dateErrors.remove(item.id)
-        hasErrors.remove(item.id)
-
-        itemDescriptionErrors = descErrors
-        itemAmountErrors = amountErrors
-        itemMerchantErrors = merchantErrors
-        itemDateErrors = dateErrors
-        itemHasErrors = hasErrors
-
         Log.d("ReceiptViewModel", "Deleted expense item: ${item.description}, remaining items: ${expenseItems.size}")
     }
 
@@ -473,13 +282,6 @@ class ReceiptViewModel : ViewModel() {
         purchaseDate = ""
         expenseItems = emptyList()
         errorMessage = null
-
-        // Reset validation state
-        itemDescriptionErrors = emptyMap()
-        itemAmountErrors = emptyMap()
-        itemMerchantErrors = emptyMap()
-        itemDateErrors = emptyMap()
-        itemHasErrors = emptyMap()
     }
 
     // Analyze all user receipts for tax insights

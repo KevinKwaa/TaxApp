@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.example.taxapp.R
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.Dispatchers
@@ -111,7 +110,13 @@ class GeminiService(private val context: Context) {
         // Handle null response case
         if (response == null) {
             Log.w("GeminiService", "Received null response from Gemini")
-            throw Exception("NOT_A_RECEIPT: " + context.getString(R.string.error_unable_to_analyze_image))
+            return ReceiptModel(
+                merchantName = "Unknown Merchant",
+                total = 0.0,
+                date = Date(),
+                category = "Lifestyle Expenses",
+                imageUrl = imageUri.toString()
+            )
         }
 
         // Extract JSON object from response (Gemini might wrap JSON in markdown code blocks)
@@ -126,11 +131,6 @@ class GeminiService(private val context: Context) {
             val dateStr = jsonObject.optString("date", "")
             // Set a default category for the receipt, items will have their own categories
             val category = "Lifestyle Expenses"
-
-            // Check if this is likely not a receipt (missing key receipt information)
-            if (merchantName.isBlank() && totalAmount == 0.0 && dateStr.isBlank()) {
-                throw Exception("NOT_A_RECEIPT: " + context.getString(R.string.error_not_a_receipt))
-            }
 
             // Parse date or use current date if not valid
             val date = parseDate(dateStr) ?: Date()
@@ -183,14 +183,25 @@ class GeminiService(private val context: Context) {
             )
 
         } catch (e: Exception) {
-            // Check if it's our special error type and rethrow it
-            if (e.message?.startsWith("NOT_A_RECEIPT:") == true) {
-                throw e
-            }
-
             Log.e("GeminiService", "Error parsing Gemini response: ${e.message}", e)
-            // If JSON parsing fails, it's likely not a proper receipt
-            throw Exception("NOT_A_RECEIPT: " + context.getString(R.string.error_image_not_recognized))
+            // If JSON parsing fails, return a basic model
+            return ReceiptModel(
+                merchantName = "Unknown Merchant",
+                total = 0.0,
+                date = Date(),
+                category = "Lifestyle Expenses",
+                imageUrl = imageUri.toString(),
+                // Create at least one default item
+                items = listOf(
+                    ExpenseItem(
+                        description = "Unknown Item",
+                        amount = 0.0,
+                        category = "Lifestyle Expenses",
+                        merchantName = "Unknown Merchant",
+                        date = Date()
+                    )
+                )
+            )
         }
     }
 

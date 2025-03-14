@@ -49,14 +49,6 @@ class CategoryViewModel : ViewModel() {
     var editExpenseDate by mutableStateOf("")
     var parentReceiptId by mutableStateOf("")
 
-    // Validation state
-    var descriptionError by mutableStateOf<String?>(null)
-    var amountError by mutableStateOf<String?>(null)
-    var dateError by mutableStateOf<String?>(null)
-    var merchantError by mutableStateOf<String?>(null)
-    var categoryError by mutableStateOf<String?>(null)
-    var hasValidationErrors by mutableStateOf(false)
-
     // Data state
     var categoryData by mutableStateOf<Map<String, List<ExpenseItemWithReceipt>>>(emptyMap())
     var categorySummary by mutableStateOf<Map<String, Double>>(emptyMap())
@@ -236,13 +228,13 @@ class CategoryViewModel : ViewModel() {
     }
 
     // Parse date from string
-    fun parseDate(dateStr: String): Date? {
+    fun parseDate(dateStr: String): Date {
         return try {
             val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            dateFormat.parse(dateStr)
+            dateFormat.parse(dateStr) ?: Date()
         } catch (e: Exception) {
             Log.e("CategoryViewModel", "Error parsing date: $dateStr", e)
-            null
+            Date()
         }
     }
 
@@ -258,9 +250,6 @@ class CategoryViewModel : ViewModel() {
         // Find parent receipt for this item
         val parentReceipt = findParentReceipt(item)
         parentReceiptId = parentReceipt?.id ?: ""
-
-        // Clear validation errors
-        clearValidationErrors()
 
         isEditingExpenseItem = true
     }
@@ -282,7 +271,6 @@ class CategoryViewModel : ViewModel() {
         isEditingExpenseItem = false
         currentEditExpenseItem = null
         clearEditExpenseFields()
-        clearValidationErrors()
     }
 
     // Clear edit expense item fields
@@ -295,78 +283,9 @@ class CategoryViewModel : ViewModel() {
         parentReceiptId = ""
     }
 
-    // Clear validation errors
-    private fun clearValidationErrors() {
-        descriptionError = null
-        amountError = null
-        dateError = null
-        merchantError = null
-        categoryError = null
-        hasValidationErrors = false
-    }
-
-    // Validate expense item fields
-    fun validateExpenseItemFields(): Boolean {
-        var isValid = true
-
-        // Validate description
-        if (editExpenseDescription.trim().isEmpty()) {
-            descriptionError = "Description cannot be empty"
-            isValid = false
-        } else {
-            descriptionError = null
-        }
-
-        // Validate amount
-        val amountValue = editExpenseAmount.replace(",", ".").toDoubleOrNull()
-        if (amountValue == null) {
-            amountError = "Please enter a valid amount"
-            isValid = false
-        } else if (amountValue <= 0) {
-            amountError = "Amount must be greater than 0"
-            isValid = false
-        } else {
-            amountError = null
-        }
-
-        // Validate date
-        val parsedDate = parseDate(editExpenseDate)
-        if (parsedDate == null) {
-            dateError = "Please enter a valid date (DD/MM/YYYY)"
-            isValid = false
-        } else {
-            dateError = null
-        }
-
-        // Validate merchant
-        if (editExpenseMerchant.trim().isEmpty()) {
-            merchantError = "Merchant name cannot be empty"
-            isValid = false
-        } else {
-            merchantError = null
-        }
-
-        // Validate category
-        if (editExpenseCategory.trim().isEmpty() || !availableCategories.contains(editExpenseCategory)) {
-            categoryError = "Please select a valid category"
-            isValid = false
-        } else {
-            categoryError = null
-        }
-
-        hasValidationErrors = !isValid
-        return isValid
-    }
-
     // Save edited expense item
     @RequiresApi(Build.VERSION_CODES.N)
     fun saveEditedExpenseItem(onSuccess: () -> Unit, onError: (String) -> Unit) {
-        // Validate fields first
-        if (!validateExpenseItemFields()) {
-            onError("Please correct the validation errors")
-            return
-        }
-
         val parentReceipt = findParentReceipt(currentEditExpenseItem ?: return)
         if (parentReceipt == null) {
             onError("Could not find parent receipt for this expense item")
@@ -377,16 +296,16 @@ class CategoryViewModel : ViewModel() {
             isLoading = true
 
             try {
-                // Parse values (already validated)
-                val expenseAmount = editExpenseAmount.replace(",", ".").toDouble()
-                val expenseDate = parseDate(editExpenseDate)!!
+                // Parse values
+                val expenseAmount = editExpenseAmount.replace(",", ".").toDoubleOrNull() ?: 0.0
+                val expenseDate = parseDate(editExpenseDate)
 
                 // Create updated expense item
                 val updatedItem = currentEditExpenseItem!!.copy(
-                    description = editExpenseDescription.trim(),
+                    description = editExpenseDescription,
                     amount = expenseAmount,
                     category = editExpenseCategory,
-                    merchantName = editExpenseMerchant.trim(),
+                    merchantName = editExpenseMerchant,
                     date = expenseDate
                 )
 
@@ -416,7 +335,6 @@ class CategoryViewModel : ViewModel() {
                 isEditingExpenseItem = false
                 currentEditExpenseItem = null
                 clearEditExpenseFields()
-                clearValidationErrors()
 
                 onSuccess()
             } catch (e: Exception) {
@@ -427,8 +345,6 @@ class CategoryViewModel : ViewModel() {
             }
         }
     }
-
-    // Remaining methods stay the same...
 
     // Confirm delete expense item
     fun confirmDeleteExpenseItem(item: ExpenseItem) {
@@ -527,7 +443,7 @@ class CategoryViewModel : ViewModel() {
             try {
                 // Parse values
                 val totalAmount = editTotal.replace(",", ".").toDoubleOrNull() ?: 0.0
-                val receiptDate = parseDate(editDate) ?: Date()
+                val receiptDate = parseDate(editDate)
 
                 // Create updated receipt
                 val updatedReceipt = currentReceipt.copy(
