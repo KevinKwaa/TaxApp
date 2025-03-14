@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
@@ -113,7 +114,10 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
+import androidx.compose.runtime.LaunchedEffect
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1030,10 +1034,89 @@ fun EditExpenseItemDialog(
         val item = categoryViewModel.currentEditExpenseItem ?: return@Dialog
         val scrollState = rememberScrollState()
 
+        // Validation states
+        var isDescriptionValid by remember { mutableStateOf(true) }
+        var isMerchantValid by remember { mutableStateOf(true) }
+        var isDateValid by remember { mutableStateOf(true) }
+        var isAmountValid by remember { mutableStateOf(true) }
+        var isCategoryValid by remember { mutableStateOf(true) }
+
+        // Error messages
+        var descriptionError by remember { mutableStateOf("") }
+        var merchantError by remember { mutableStateOf("") }
+        var dateError by remember { mutableStateOf("") }
+        var amountError by remember { mutableStateOf("") }
+        var categoryError by remember { mutableStateOf("") }
+
+        // Pre-load string resources
+        val errorEmptyDescription = stringResource(id = R.string.error_empty_description)
+        val errorEmptyMerchant = stringResource(id = R.string.error_empty_merchant)
+        val errorInvalidDateFormat = stringResource(id = R.string.error_invalid_date_format)
+        val errorInvalidAmount = stringResource(id = R.string.error_invalid_amount)
+        val errorNegativeAmount = stringResource(id = R.string.error_negative_amount)
+        val errorEmptyCategory = stringResource(id = R.string.error_empty_category)
+
+        // Validation functions
+        val validateDescription = {
+            val valid = categoryViewModel.editExpenseDescription.trim().isNotEmpty()
+            isDescriptionValid = valid
+            descriptionError = if (!valid) errorEmptyDescription else ""
+            valid
+        }
+
+        val validateMerchant = {
+            val valid = categoryViewModel.editExpenseMerchant.trim().isNotEmpty()
+            isMerchantValid = valid
+            merchantError = if (!valid) errorEmptyMerchant else ""
+            valid
+        }
+
+        val validateDate = {
+            val valid = ValidationUtils.isDateValid(categoryViewModel.editExpenseDate)
+            isDateValid = valid
+            dateError = if (!valid) errorInvalidDateFormat else ""
+            valid
+        }
+
+        val validateAmount = {
+            val amountDouble = categoryViewModel.editExpenseAmount.replace(",", ".").toDoubleOrNull()
+            val valid = amountDouble != null && amountDouble > 0
+            isAmountValid = valid
+            amountError = if (!valid) {
+                if (amountDouble == null) errorInvalidAmount else errorNegativeAmount
+            } else ""
+            valid
+        }
+
+        val validateCategory = {
+            val valid = categoryViewModel.editExpenseCategory.trim().isNotEmpty()
+            isCategoryValid = valid
+            categoryError = if (!valid) errorEmptyCategory else ""
+            valid
+        }
+
+        // Initial validation
+        LaunchedEffect(Unit) {
+            validateDescription()
+            validateMerchant()
+            validateDate()
+            validateAmount()
+            validateCategory()
+        }
+
+        // Validate all fields
+        fun validateAllFields(): Boolean {
+            return validateDescription() &&
+                    validateMerchant() &&
+                    validateDate() &&
+                    validateAmount() &&
+                    validateCategory()
+        }
+
         Card(
             modifier = Modifier
-                .fillMaxWidth()  // Increased from default to take 95% of screen width
-                .heightIn(min = 450.dp)  // Set a minimum height
+                .fillMaxWidth()
+                .heightIn(min = 450.dp)
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
@@ -1041,7 +1124,7 @@ fun EditExpenseItemDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .verticalScroll(scrollState)  // Make content scrollable
+                    .verticalScroll(scrollState)
             ) {
                 // Dialog title
                 Text(
@@ -1054,9 +1137,18 @@ fun EditExpenseItemDialog(
                 // Item Description
                 OutlinedTextField(
                     value = categoryViewModel.editExpenseDescription,
-                    onValueChange = { categoryViewModel.editExpenseDescription = it },
+                    onValueChange = {
+                        categoryViewModel.editExpenseDescription = it
+                        validateDescription()
+                    },
                     label = { Text(text = stringResource(id = R.string.item_description)) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !isDescriptionValid,
+                    supportingText = {
+                        if (!isDescriptionValid) {
+                            Text(text = descriptionError)
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1064,9 +1156,18 @@ fun EditExpenseItemDialog(
                 // Merchant Name
                 OutlinedTextField(
                     value = categoryViewModel.editExpenseMerchant,
-                    onValueChange = { categoryViewModel.editExpenseMerchant = it },
+                    onValueChange = {
+                        categoryViewModel.editExpenseMerchant = it
+                        validateMerchant()
+                    },
                     label = { Text(stringResource(id = R.string.merchant)) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !isMerchantValid,
+                    supportingText = {
+                        if (!isMerchantValid) {
+                            Text(text = merchantError)
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1074,9 +1175,26 @@ fun EditExpenseItemDialog(
                 // Date
                 OutlinedTextField(
                     value = categoryViewModel.editExpenseDate,
-                    onValueChange = { categoryViewModel.editExpenseDate = it },
+                    onValueChange = {
+                        categoryViewModel.editExpenseDate = it
+                        validateDate()
+                    },
                     label = { Text(stringResource(id = R.string.date)) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !isDateValid,
+                    supportingText = {
+                        if (!isDateValid) {
+                            Text(text = dateError)
+                        } else {
+                            Text(text = stringResource(id = R.string.date_format_hint))
+                        }
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Date Format"
+                        )
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1084,15 +1202,24 @@ fun EditExpenseItemDialog(
                 // Amount
                 OutlinedTextField(
                     value = categoryViewModel.editExpenseAmount,
-                    onValueChange = { categoryViewModel.editExpenseAmount = it },
+                    onValueChange = {
+                        categoryViewModel.editExpenseAmount = it
+                        validateAmount()
+                    },
                     label = { Text(stringResource(id = R.string.amount)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !isAmountValid,
+                    supportingText = {
+                        if (!isAmountValid) {
+                            Text(text = amountError)
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Category Dropdown - FIXED VERSION
+                // Category Dropdown
                 var isExpanded by remember { mutableStateOf(false) }
 
                 ExposedDropdownMenuBox(
@@ -1111,7 +1238,13 @@ fun EditExpenseItemDialog(
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(),
+                        isError = !isCategoryValid,
+                        supportingText = {
+                            if (!isCategoryValid) {
+                                Text(text = categoryError)
+                            }
+                        }
                     )
 
                     ExposedDropdownMenu(
@@ -1124,6 +1257,7 @@ fun EditExpenseItemDialog(
                                 text = { Text(category) },
                                 onClick = {
                                     categoryViewModel.editExpenseCategory = category
+                                    validateCategory()
                                     isExpanded = false
                                 }
                             )
@@ -1148,12 +1282,18 @@ fun EditExpenseItemDialog(
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Button(
-                        onClick = onSave,
-                        modifier = Modifier.weight(1f)
+                        onClick = {
+                            if (validateAllFields()) {
+                                onSave()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = isDescriptionValid && isMerchantValid && isDateValid && isAmountValid && isCategoryValid
                     ) {
                         Text(stringResource(id = R.string.save))
                     }
                 }
+
                 // Add bottom spacing for scrollable content
                 Spacer(modifier = Modifier.height(8.dp))
             }

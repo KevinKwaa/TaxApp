@@ -442,14 +442,23 @@
     <string name="error_passwords_dont_match">Kata laluan tidak sepadan</string>
     <string name="error_user_not_logged_in">Pengguna tidak log masuk</string>
 
-    <string name="error_item_description_required">Description is required</string>
-    <string name="error_description_too_short">Description must be at least 2 characters</string>
-    <string name="error_merchant_required">Merchant name is required</string>
-    <string name="error_date_format">Invalid date format. Use dd/MM/yyyy</string>
+    <string name="error_item_description_required">Deskripsi diperlukan</string>
+    <string name="error_description_too_short">Deskripsi mestilah sekurang-kurangnya 2 aksara</string>
+    <string name="error_merchant_required">Nama peniaga diperlukan</string>
+    <string name="error_date_format">Format tarikh tidak sah. Gunakan dd/MM/yyyy</string>
     <string name="date_format_hint">Format: dd/MM/yyyy</string>
-    <string name="error_amount_required">Amount is required</string>
-    <string name="error_amount_format">Invalid amount format</string>
-    <string name="error_amount_positive">Amount must be greater than zero</string>
-    <string name="error_invalid_input">Please fix the errors before saving</string>
+    <string name="error_amount_required">Jumlah diperlukan</string>
+    <string name="error_amount_format">Format jumlah tidak sah</string>
+    <string name="error_amount_positive">Jumlah mestilah lebih besar daripada sifar</string>
+    <string name="error_invalid_input">Sila betulkan ralat sebelum menyimpan</string>
+
+
+    <string name="error_empty_description">Deskripsi tidak boleh kosong</string>
+    <string name="error_empty_merchant">Nama peniaga tidak boleh kosong</string>
+    <string name="error_invalid_date_format">Sila gunakan format DD/MM/YYYY</string>
+    <string name="error_invalid_date">Sila masukkan tarikh yang sah</string>
+    <string name="error_invalid_amount">Sila masukkan nombor yang sah</string>
+    <string name="error_negative_amount">Jumlah mestilah lebih besar daripada sifar</string>
+    <string name="error_empty_category">Sila pilih kategori</string>
 
 </resources>

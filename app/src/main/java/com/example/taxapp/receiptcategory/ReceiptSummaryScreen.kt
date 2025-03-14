@@ -666,8 +666,82 @@ fun EditableExpenseItemCard(
     var editedAmount by remember(item.amount) { mutableStateOf(item.amount.toString()) }
     var editedMerchant by remember(item.merchantName) { mutableStateOf(item.merchantName) }
     var editedDate by remember { mutableStateOf(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(item.date)) }
-    var isValidAmount by remember { mutableStateOf(true) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    // Validation states
+    var isNameValid by remember { mutableStateOf(true) }
+    var isMerchantValid by remember { mutableStateOf(true) }
+    var isDateValid by remember { mutableStateOf(true) }
+    var isAmountValid by remember { mutableStateOf(true) }
+
+    // Validation errors
+    var nameError by remember { mutableStateOf("") }
+    var merchantError by remember { mutableStateOf("") }
+    var dateError by remember { mutableStateOf("") }
+    var amountError by remember { mutableStateOf("") }
+
+    // Pre-load string resources for validation
+    val errorEmptyDescription = stringResource(id = R.string.error_empty_description)
+    val errorEmptyMerchant = stringResource(id = R.string.error_empty_merchant)
+    val errorInvalidDateFormat = stringResource(id = R.string.error_invalid_date_format)
+    val errorInvalidDate = stringResource(id = R.string.error_invalid_date)
+    val errorInvalidAmount = stringResource(id = R.string.error_invalid_amount)
+    val errorNegativeAmount = stringResource(id = R.string.error_negative_amount)
+
+    // Function to validate all fields
+    fun validateFields(): Boolean {
+        // Validate name
+        if (editedName.trim().isEmpty()) {
+            isNameValid = false
+            nameError = errorEmptyDescription
+        } else {
+            isNameValid = true
+            nameError = ""
+        }
+
+        // Validate merchant
+        if (editedMerchant.trim().isEmpty()) {
+            isMerchantValid = false
+            merchantError = errorEmptyMerchant
+        } else {
+            isMerchantValid = true
+            merchantError = ""
+        }
+
+        // Validate date
+        val datePattern = Regex("^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$")
+        if (!datePattern.matches(editedDate)) {
+            isDateValid = false
+            dateError = errorInvalidDateFormat
+        } else {
+            // Check if it's a valid date (e.g., not 31/02/2023)
+            try {
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                sdf.isLenient = false
+                sdf.parse(editedDate)
+                isDateValid = true
+                dateError = ""
+            } catch (e: Exception) {
+                isDateValid = false
+                dateError = errorInvalidDate
+            }
+        }
+
+        // Validate amount
+        val amountDouble = editedAmount.replace(",", ".").toDoubleOrNull()
+        if (amountDouble == null) {
+            isAmountValid = false
+            amountError = errorInvalidAmount
+        } else if (amountDouble <= 0) {
+            isAmountValid = false
+            amountError = errorNegativeAmount
+        } else {
+            isAmountValid = true
+            amountError = ""
+        }
+
+        return isNameValid && isMerchantValid && isDateValid && isAmountValid
+    }
 
     Card(
         modifier = Modifier
@@ -748,17 +822,48 @@ fun EditableExpenseItemCard(
                 // Merchant field
                 OutlinedTextField(
                     value = editedMerchant,
-                    onValueChange = { editedMerchant = it },
+                    onValueChange = {
+                        editedMerchant = it
+                        isMerchantValid = it.trim().isNotEmpty()
+                        if (!isMerchantValid) {
+                            merchantError = errorEmptyMerchant
+                        }
+                    },
                     label = { Text(text = stringResource(id = R.string.merchant)) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = 4.dp),
+                    isError = !isMerchantValid,
+                    supportingText = {
+                        if (!isMerchantValid) {
+                            Text(text = merchantError)
+                        }
+                    }
                 )
 
                 // Date field
                 OutlinedTextField(
                     value = editedDate,
-                    onValueChange = { editedDate = it },
+                    onValueChange = {
+                        editedDate = it
+                        // Use ValidationUtils for complete date validation
+                        isDateValid = ValidationUtils.isDateValid(it)
+
+                        // Set appropriate error message based on validation result
+                        if (!isDateValid) {
+                            val datePattern = Regex("^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$")
+                            dateError = if (datePattern.matches(it)) {
+                                // Format is correct but date is invalid (like 31/02/2023)
+                                errorInvalidDate
+                            } else {
+                                // Format is incorrect
+                                errorInvalidDateFormat
+                            }
+                        } else {
+                            // Clear error message when valid
+                            dateError = ""
+                        }
+                    },
                     label = { Text(text = stringResource(id = R.string.date)) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -768,17 +873,37 @@ fun EditableExpenseItemCard(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = "Date format"
                         )
+                    },
+                    isError = !isDateValid,
+                    supportingText = {
+                        if (!isDateValid) {
+                            Text(text = dateError)
+                        } else {
+                            Text(text = stringResource(id = R.string.date_format_hint))
+                        }
                     }
                 )
 
                 // Item name field
                 OutlinedTextField(
                     value = editedName,
-                    onValueChange = { editedName = it },
+                    onValueChange = {
+                        editedName = it
+                        isNameValid = it.trim().isNotEmpty()
+                        if (!isNameValid) {
+                            nameError = errorEmptyDescription
+                        }
+                    },
                     label = { Text(text = stringResource(id = R.string.item_description)) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = 4.dp),
+                    isError = !isNameValid,
+                    supportingText = {
+                        if (!isNameValid) {
+                            Text(text = nameError)
+                        }
+                    }
                 )
 
                 // Amount field
@@ -786,23 +911,28 @@ fun EditableExpenseItemCard(
                     value = editedAmount,
                     onValueChange = {
                         editedAmount = it
-                        isValidAmount = it.toDoubleOrNull() != null
+                        val amountDouble = it.replace(",", ".").toDoubleOrNull()
+                        isAmountValid = amountDouble != null && amountDouble > 0
+                        if (amountDouble == null) {
+                            amountError = errorInvalidAmount
+                        } else if (amountDouble <= 0) {
+                            amountError = errorNegativeAmount
+                        } else {
+                            amountError = ""
+                        }
                     },
                     label = { Text(text = stringResource(id = R.string.amount)) },
-                    isError = !isValidAmount,
+                    isError = !isAmountValid,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = 4.dp),
+                    supportingText = {
+                        if (!isAmountValid) {
+                            Text(text = amountError)
+                        }
+                    }
                 )
-
-                if (!isValidAmount) {
-                    Text(
-                        text = stringResource(id = R.string.valid_amount),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
 
                 // Category dropdown
                 Box(modifier = Modifier
@@ -835,15 +965,15 @@ fun EditableExpenseItemCard(
                 // Save button
                 Button(
                     onClick = {
-                        if (isValidAmount) {
+                        if (validateFields()) {
                             onNameChange(editedName)
                             onMerchantChange(editedMerchant)
                             onDateChange(editedDate)
-                            editedAmount.toDoubleOrNull()?.let { onAmountChange(it) }
+                            editedAmount.replace(",", ".").toDoubleOrNull()?.let { onAmountChange(it) }
                             isEditing = false
                         }
                     },
-                    enabled = isValidAmount,
+                    enabled = isNameValid && isMerchantValid && isDateValid && isAmountValid,
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(top = 8.dp)

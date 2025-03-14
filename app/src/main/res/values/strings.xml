@@ -451,4 +451,16 @@
     <string name="error_amount_positive">Amount must be greater than zero</string>
     <string name="error_invalid_input">Please fix the errors before saving</string>
 
+
+
+    <string name="error_empty_description">Description cannot be empty</string>
+    <string name="error_empty_merchant">Merchant name cannot be empty</string>
+    <string name="error_invalid_date_format">Please use DD/MM/YYYY format</string>
+    <string name="error_invalid_date">Please enter a valid date</string>
+    <string name="error_invalid_amount">Please enter a valid number</string>
+    <string name="error_negative_amount">Amount must be greater than zero</string>
+    <string name="error_empty_category">Please select a category</string>
+
+
+
 </resources>

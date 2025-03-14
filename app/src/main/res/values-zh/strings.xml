@@ -442,13 +442,28 @@
     <string name="error_passwords_dont_match">密码不匹配</string>
     <string name="error_user_not_logged_in">用户未登录</string>
 
-    <string name="error_item_description_required">Description is required</string>
-    <string name="error_description_too_short">Description must be at least 2 characters</string>
-    <string name="error_merchant_required">Merchant name is required</string>
-    <string name="error_date_format">Invalid date format. Use dd/MM/yyyy</string>
-    <string name="date_format_hint">Format: dd/MM/yyyy</string>
-    <string name="error_amount_required">Amount is required</string>
-    <string name="error_amount_format">Invalid amount format</string>
-    <string name="error_amount_positive">Amount must be greater than zero</string>
-    <string name="error_invalid_input">Please fix the errors before saving</string>
+    Here's the translation of all the error messages to Simplified Chinese:
+
+    ```
+    <string name="error_item_description_required">必须填写描述</string>
+    <string name="error_description_too_short">描述至少需要2个字符</string>
+    <string name="error_merchant_required">必须填写商家名称</string>
+    <string name="error_date_format">日期格式无效。请使用dd/MM/yyyy格式</string>
+    <string name="date_format_hint">格式：dd/MM/yyyy</string>
+    <string name="error_amount_required">必须填写金额</string>
+    <string name="error_amount_format">金额格式无效</string>
+    <string name="error_amount_positive">金额必须大于零</string>
+    <string name="error_invalid_input">保存前请修正错误</string>
+
+
+    <string name="error_empty_description">描述不能为空</string>
+    <string name="error_empty_merchant">商家名称不能为空</string>
+    <string name="error_invalid_date_format">请使用DD/MM/YYYY格式</string>
+    <string name="error_invalid_date">请输入有效日期</string>
+    <string name="error_invalid_amount">请输入有效数字</string>
+    <string name="error_negative_amount">金额必须大于零</string>
+    <string name="error_empty_category">请选择一个类别</string>
+    ```
+
+
 </resources>
