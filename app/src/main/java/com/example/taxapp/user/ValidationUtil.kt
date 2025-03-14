@@ -4,10 +4,20 @@ import android.content.Context
 import android.util.Patterns
 import com.example.taxapp.R
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
 object ValidationUtil {
+
+    // Email validation - Check if it's a valid email format
+    fun validateEmail(email: String, context: Context): ValidationResult {
+        return when {
+            email.isBlank() -> ValidationResult(false, context.getString(R.string.error_email_empty))
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> ValidationResult(false, context.getString(R.string.error_email_format))
+            else -> ValidationResult(true)
+        }
+    }
 
     // Name validation - Check if it's not empty and contains only valid characters
     fun validateName(name: String, context: Context): ValidationResult {
@@ -37,22 +47,67 @@ object ValidationUtil {
             return ValidationResult(false, context.getString(R.string.error_dob_empty))
         }
 
-        return try {
-            val sdf = SimpleDateFormat("MM/dd/yyyy", Locale.US)
+        // First, check the format manually to provide more specific error messages
+        val parts = dob.split("/")
+        if (parts.size != 3) {
+            return ValidationResult(false, context.getString(R.string.error_dob_format))
+        }
+
+        try {
+            // Extract day, month, year
+            val day = parts[0].toInt()
+            val month = parts[1].toInt()
+            val year = parts[2].toInt()
+
+            // Validate month (1-12)
+            if (month < 1 || month > 12) {
+                return ValidationResult(false, context.getString(R.string.error_dob_invalid_month))
+            }
+
+            // Validate day based on month
+            val maxDays = when(month) {
+                2 -> if (isLeapYear(year)) 29 else 28 // February
+                4, 6, 9, 11 -> 30 // April, June, September, November
+                else -> 31 // All other months
+            }
+
+            if (day < 1 || day > maxDays) {
+                if (month == 2 && day == 29 && !isLeapYear(year)) {
+                    return ValidationResult(false, context.getString(R.string.error_dob_not_leap_year))
+                } else {
+                    return ValidationResult(false, context.getString(R.string.error_dob_invalid_day))
+                }
+            }
+
+            // Now use SimpleDateFormat for additional validations (creates a Date object)
+            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.US)
             sdf.isLenient = false
             val parsedDate = sdf.parse(dob)
 
-            // Check if the date is in the past
+            // Check if the date is in the future
             if (parsedDate != null && parsedDate.after(Date())) {
                 return ValidationResult(false, context.getString(R.string.error_dob_future))
             }
 
-            ValidationResult(true)
+            // Check if the date is unreasonably old
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.YEAR, -120) // 120 years ago
+            if (parsedDate != null && parsedDate.before(calendar.time)) {
+                return ValidationResult(false, context.getString(R.string.error_dob_too_old))
+            }
+
+            return ValidationResult(true)
+        } catch (e: NumberFormatException) {
+            return ValidationResult(false, context.getString(R.string.error_dob_format))
         } catch (e: Exception) {
-            ValidationResult(false, context.getString(R.string.error_dob_format))
+            return ValidationResult(false, context.getString(R.string.error_dob_format))
         }
     }
 
+    // Helper function to check if a year is a leap year
+    private fun isLeapYear(year: Int): Boolean {
+        return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+    }
     // Income validation - Check if it's a valid number
     fun validateIncome(income: String, context: Context): ValidationResult {
         return when {

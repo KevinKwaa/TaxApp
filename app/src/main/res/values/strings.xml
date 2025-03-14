@@ -249,6 +249,14 @@
 
 
     <!-- Validation Error Messages -->
+    <string name="error_not_a_receipt">The uploaded image doesn\'t appear to be a receipt or invoice. Please ensure you\'re uploading a valid receipt.</string>
+    <string name="error_unable_to_analyze_image">Unable to analyze the image. Please upload a clear image of a receipt or invoice.</string>
+    <string name="error_image_not_recognized">The image couldn\'t be recognized as a valid receipt. Please upload a clearer image of a receipt or invoice.</string>
+    <string name="invalid_receipt_image">Invalid Receipt Image</string>
+    <string name="ok">OK</string>
+    <string name="not_a_receipt">Not a Receipt</string>
+    <string name="try_again">Try Again</string>
+    <string name="upload_valid_receipt">Please upload a valid receipt or invoice image.</string>
     <string name="error_name_empty">Name cannot be empty</string>
     <string name="error_name_too_short">Name is too short</string>
     <string name="error_name_invalid_chars">Name contains invalid characters</string>
@@ -258,6 +266,10 @@
     <string name="error_dob_empty">Date of birth cannot be empty</string>
     <string name="error_dob_future">Date of birth cannot be in the future</string>
     <string name="error_dob_format">Invalid date format. Use MM/DD/YYYY</string>
+    <string name="error_dob_too_old">Please enter a valid date of birth (date too old)</string>
+    <string name="error_dob_invalid_month">Month must be between 1 and 12</string>
+    <string name="error_dob_invalid_day">Invalid day for the selected month</string>
+    <string name="error_dob_not_leap_year">Invalid date: February 29 only exists in leap years</string>
     <string name="error_income_empty">Income cannot be empty</string>
     <string name="error_income_invalid_chars">Income can only contain numbers, commas, and periods</string>
     <string name="error_income_negative">Income cannot be negative</string>
@@ -428,4 +440,15 @@
     <string name="error_confirm_password_empty">Please confirm your password</string>
     <string name="error_passwords_dont_match">Passwords do not match</string>
     <string name="error_user_not_logged_in">User not logged in</string>
+
+    <string name="error_item_description_required">Description is required</string>
+    <string name="error_description_too_short">Description must be at least 2 characters</string>
+    <string name="error_merchant_required">Merchant name is required</string>
+    <string name="error_date_format">Invalid date format. Use dd/MM/yyyy</string>
+    <string name="date_format_hint">Format: dd/MM/yyyy</string>
+    <string name="error_amount_required">Amount is required</string>
+    <string name="error_amount_format">Invalid amount format</string>
+    <string name="error_amount_positive">Amount must be greater than zero</string>
+    <string name="error_invalid_input">Please fix the errors before saving</string>
+
 </resources>

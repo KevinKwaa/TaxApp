@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
@@ -113,7 +114,9 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -744,29 +747,29 @@ fun CategoryScreenContent(
         }
     }
 
-        if (showLanguageSelector) {
-            LanguageSelector(
-                currentLanguageCode = currentLanguageCode,
-                onLanguageSelected = { languageCode ->
-                    currentLanguageCode = languageCode
-                },
-                onDismiss = { showLanguageSelector = false },
-                activity = activity  // Pass the activity
-            )
-        }
-
-        if (showAccessibilitySettings) {
-            AccessibilitySettings(
-                currentSettings = accessibilityState,
-                onSettingsChanged = { newSettings ->
-                    coroutineScope.launch {
-                        accessibilityRepository.updateSettings(newSettings)
-                    }
-                },
-                onDismiss = { showAccessibilitySettings = false }
-            )
-        }
+    if (showLanguageSelector) {
+        LanguageSelector(
+            currentLanguageCode = currentLanguageCode,
+            onLanguageSelected = { languageCode ->
+                currentLanguageCode = languageCode
+            },
+            onDismiss = { showLanguageSelector = false },
+            activity = activity  // Pass the activity
+        )
     }
+
+    if (showAccessibilitySettings) {
+        AccessibilitySettings(
+            currentSettings = accessibilityState,
+            onSettingsChanged = { newSettings ->
+                coroutineScope.launch {
+                    accessibilityRepository.updateSettings(newSettings)
+                }
+            },
+            onDismiss = { showAccessibilitySettings = false }
+        )
+    }
+}
 
 @Composable
 fun CategoryItemsSection(
@@ -995,10 +998,10 @@ fun DeleteConfirmationDialog(
             Text(
                 text = if (isExpenseItem)
                     stringResource(id = R.string.delete_item_message)
-                    //"Are you sure you want to delete this expense item? This action cannot be undone."
+                //"Are you sure you want to delete this expense item? This action cannot be undone."
                 else
                     stringResource(id = R.string.delete_receipt_message)
-                    //"Are you sure you want to delete this receipt? This action cannot be undone."
+                //"Are you sure you want to delete this receipt? This action cannot be undone."
             )
         },
         confirmButton = {
@@ -1056,7 +1059,13 @@ fun EditExpenseItemDialog(
                     value = categoryViewModel.editExpenseDescription,
                     onValueChange = { categoryViewModel.editExpenseDescription = it },
                     label = { Text(text = stringResource(id = R.string.item_description)) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = categoryViewModel.descriptionError != null,
+                    supportingText = {
+                        categoryViewModel.descriptionError?.let {
+                            Text(text = it, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1066,7 +1075,13 @@ fun EditExpenseItemDialog(
                     value = categoryViewModel.editExpenseMerchant,
                     onValueChange = { categoryViewModel.editExpenseMerchant = it },
                     label = { Text(stringResource(id = R.string.merchant)) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = categoryViewModel.merchantError != null,
+                    supportingText = {
+                        categoryViewModel.merchantError?.let {
+                            Text(text = it, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1076,7 +1091,19 @@ fun EditExpenseItemDialog(
                     value = categoryViewModel.editExpenseDate,
                     onValueChange = { categoryViewModel.editExpenseDate = it },
                     label = { Text(stringResource(id = R.string.date)) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = categoryViewModel.dateError != null,
+                    supportingText = {
+                        categoryViewModel.dateError?.let {
+                            Text(text = it, color = MaterialTheme.colorScheme.error)
+                        } ?: Text("Format: DD/MM/YYYY")
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Date format"
+                        )
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1087,7 +1114,14 @@ fun EditExpenseItemDialog(
                     onValueChange = { categoryViewModel.editExpenseAmount = it },
                     label = { Text(stringResource(id = R.string.amount)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = categoryViewModel.amountError != null,
+                    supportingText = {
+                        categoryViewModel.amountError?.let {
+                            Text(text = it, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    prefix = { Text("RM ") }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1111,7 +1145,13 @@ fun EditExpenseItemDialog(
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(),
+                        isError = categoryViewModel.categoryError != null,
+                        supportingText = {
+                            categoryViewModel.categoryError?.let {
+                                Text(text = it, color = MaterialTheme.colorScheme.error)
+                            }
+                        }
                     )
 
                     ExposedDropdownMenu(
@@ -1148,8 +1188,14 @@ fun EditExpenseItemDialog(
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Button(
-                        onClick = onSave,
-                        modifier = Modifier.weight(1f)
+                        onClick = {
+                            // Validating fields when save is clicked
+                            if (categoryViewModel.validateExpenseItemFields()) {
+                                onSave()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !categoryViewModel.hasValidationErrors
                     ) {
                         Text(stringResource(id = R.string.save))
                     }

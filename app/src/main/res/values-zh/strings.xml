@@ -250,6 +250,14 @@
     <string name="tax_info_description">了解马来西亚税收法规</string>
 
     <!-- Validation Error Messages in Chinese (Simplified) -->
+    <string name="error_not_a_receipt">上传的图片看起来不像是收据或发票。请确保您上传的是有效的收据。</string>
+    <string name="error_unable_to_analyze_image">无法分析图像。请上传收据或发票的清晰图像。</string>
+    <string name="error_image_not_recognized">无法将该图片识别为有效收据。请上传更清晰的收据或发票图片。</string>
+    <string name="invalid_receipt_image">收据图片无效</string>
+    <string name="ok">好的</string>
+    <string name="not_a_receipt">不是收据</string>
+    <string name="try_again">再试一次</string>
+    <string name="upload_valid_receipt">请上传有效的收据或发票图像。</string>
     <string name="error_name_empty">姓名不能为空</string>
     <string name="error_name_too_short">姓名太短</string>
     <string name="error_name_invalid_chars">姓名包含无效字符</string>
@@ -259,6 +267,10 @@
     <string name="error_dob_empty">出生日期不能为空</string>
     <string name="error_dob_future">出生日期不能是未来日期</string>
     <string name="error_dob_format">日期格式无效。请使用MM/DD/YYYY格式</string>
+    <string name="error_dob_too_old">请输入有效的出生日期（日期太旧）</string>
+    <string name="error_dob_invalid_month">月份必须介于 1 至 12 之间</string>
+    <string name="error_dob_invalid_day">所选月份的日期无效</string>
+    <string name="error_dob_not_leap_year">无效日期：2 月 29 日仅在闰年存在</string>
     <string name="error_income_empty">收入不能为空</string>
     <string name="error_income_invalid_chars">收入只能包含数字、逗号和句点</string>
     <string name="error_income_negative">收入不能为负数</string>
@@ -428,5 +440,15 @@
     <!-- Password confirmation validation -->
     <string name="error_confirm_password_empty">请确认您的密码</string>
     <string name="error_passwords_dont_match">密码不匹配</string>
-    <string name="error_user_not_logged_in">User not logged in</string>
+    <string name="error_user_not_logged_in">用户未登录</string>
+
+    <string name="error_item_description_required">Description is required</string>
+    <string name="error_description_too_short">Description must be at least 2 characters</string>
+    <string name="error_merchant_required">Merchant name is required</string>
+    <string name="error_date_format">Invalid date format. Use dd/MM/yyyy</string>
+    <string name="date_format_hint">Format: dd/MM/yyyy</string>
+    <string name="error_amount_required">Amount is required</string>
+    <string name="error_amount_format">Invalid amount format</string>
+    <string name="error_amount_positive">Amount must be greater than zero</string>
+    <string name="error_invalid_input">Please fix the errors before saving</string>
 </resources>

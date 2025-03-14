@@ -302,16 +302,16 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                 },
                 placeholder = {
                     Text(
-                        text = "MM/DD/YYYY",
+                        text = "DD/MM/YYYY",
                         color = accessibleColors.calendarText.copy(alpha = 0.5f)
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 isError = dobError != null,
                 supportingText = {
-                    dobError?.let {
+                    if (dobError != null) {
                         Text(
-                            text = it,
+                            text = dobError ?: "",
                             color = MaterialTheme.colorScheme.error
                         )
                     }

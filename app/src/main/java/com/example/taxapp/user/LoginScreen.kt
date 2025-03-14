@@ -35,6 +35,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,7 +86,33 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
         mutableStateOf("")
     }
 
+    // Add validation states
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
+    // Form validation state
+    var isFormValid by remember { mutableStateOf(false) }
+
+
     var context = LocalContext.current
+
+    // Function to validate the form
+    fun validateForm() {
+        // Validate email with context
+        val emailValidation = ValidationUtil.validateEmail(email, context)
+        emailError = if (!emailValidation.isValid) emailValidation.errorMessage else null
+
+        // We'll keep password validation simple for login - just check if it's not empty
+        passwordError = if (password.isEmpty()) context.getString(R.string.error_password_empty) else null
+
+        // Form is valid if all fields are valid
+        isFormValid = emailValidation.isValid && password.isNotEmpty()
+    }
+
+    // Validate on each change
+    LaunchedEffect(email, password) {
+        validateForm()
+    }
 
     var isLoading by remember {
         mutableStateOf(false)
@@ -251,6 +278,15 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                             color = accessibleColors.calendarText.copy(alpha = 0.8f)
                         )
                     },
+                    isError = emailError != null,
+                    supportingText = {
+                        emailError?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = accessibleColors.selectedDay,
@@ -274,6 +310,15 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                             color = accessibleColors.calendarText.copy(alpha = 0.8f)
                         )
                     },
+                    isError = passwordError != null,
+                    supportingText = {
+                        passwordError?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -291,19 +336,28 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
 
                 Button(
                     onClick = {
-                        isLoading = true
-                        authViewModel.login(email, password) { success, errorMessage ->
-                            if (success) {
-                                isLoading = false
-                                ttsManager?.speak("Login successful")
-                                navController.navigate("home") {
-                                    popUpTo("auth") { inclusive = true }
+                        // Validate form before attempting login
+                        validateForm()
+
+                        if (isFormValid) {
+                            isLoading = true
+                            authViewModel.login(email, password) { success, errorMessage ->
+                                if (success) {
+                                    isLoading = false
+                                    ttsManager?.speak("Login successful")
+                                    navController.navigate("home") {
+                                        popUpTo("auth") { inclusive = true }
+                                    }
+                                } else {
+                                    isLoading = false
+                                    ttsManager?.speak("Login failed. ${errorMessage ?: "Please try again"}")
+                                    AppUtil.showToast(context, errorMessage ?: "Something went wrong")
                                 }
-                            } else {
-                                isLoading = false
-                                ttsManager?.speak("Login failed. ${errorMessage ?: "Please try again"}")
-                                AppUtil.showToast(context, errorMessage ?: "Something went wrong")
                             }
+                        } else {
+                            // Provide feedback for invalid form
+                            ttsManager?.speak("Please correct the errors before logging in")
+                            AppUtil.showToast(context, "Please correct the form errors before continuing")
                         }
                     },
                     enabled = !isLoading && email.isNotEmpty() && password.isNotEmpty(),
@@ -316,7 +370,10 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                         disabledContainerColor = accessibleColors.buttonBackground.copy(alpha = 0.5f),
                         disabledContentColor = accessibleColors.buttonText.copy(alpha = 0.5f)
                     )
-                ) {
+                )
+
+
+                {
                     if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),

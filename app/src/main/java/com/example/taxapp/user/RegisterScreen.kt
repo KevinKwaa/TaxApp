@@ -110,8 +110,7 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
 
         // Email basic validation with localized strings
         emailError = if (email.isBlank()) context.getString(R.string.error_email_empty)
-        else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) context.getString(R.string.error_email_format)
-        else null
+        else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) context.getString(R.string.error_email_format) else null
 
         // Password validation with context
         val passwordValidation = ValidationUtil.validatePassword(password, context)
@@ -299,6 +298,15 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                             text = stringResource(id = R.string.email),
                             color = accessibleColors.calendarText.copy(alpha = 0.8f)
                         )
+                    },
+                    isError = emailError != null,
+                    supportingText = {
+                        emailError?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(

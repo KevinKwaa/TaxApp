@@ -251,6 +251,14 @@
     <string name="tax_info_description">Ketahui tentang peraturan cukai Malaysia</string>
 
     <!-- Validation Error Messages in Malay -->
+    <string name="error_not_a_receipt">Imej yang dimuat naik nampaknya bukan resit atau invois. Sila pastikan anda memuat naik resit yang sah.</string>
+    <string name="error_unable_to_analyze_image">Tidak dapat menganalisis imej. Sila muat naik imej resit atau invois yang jelas.</string>
+    <string name="error_image_not_recognized">Imej itu tidak dapat dikenali sebagai resit yang sah. Sila muat naik imej resit atau invois yang lebih jelas.</string>
+    <string name="invalid_receipt_image">Imej Resit Tidak Sah</string>
+    <string name="ok">OK</string>
+    <string name="not_a_receipt">Bukan Resit</string>
+    <string name="try_again">Cuba Lagi</string>
+    <string name="upload_valid_receipt">Sila muat naik imej resit atau invois yang sah.</string>
     <string name="error_name_empty">Nama tidak boleh kosong</string>
     <string name="error_name_too_short">Nama terlalu pendek</string>
     <string name="error_name_invalid_chars">Nama mengandungi aksara yang tidak sah</string>
@@ -260,6 +268,10 @@
     <string name="error_dob_empty">Tarikh lahir tidak boleh kosong</string>
     <string name="error_dob_future">Tarikh lahir tidak boleh pada masa hadapan</string>
     <string name="error_dob_format">Format tarikh tidak sah. Gunakan MM/DD/YYYY</string>
+    <string name="error_dob_too_old">Sila masukkan tarikh lahir yang sah (tarikh terlalu lama)</string>
+    <string name="error_dob_invalid_month">Bulan mestilah antara 1 dan 12</string>
+    <string name="error_dob_invalid_day">Hari tidak sah untuk bulan yang dipilih</string>
+    <string name="error_dob_not_leap_year">Tarikh tidak sah: 29 Februari hanya wujud dalam tahun lompat</string>
     <string name="error_income_empty">Pendapatan tidak boleh kosong</string>
     <string name="error_income_invalid_chars">Pendapatan hanya boleh mengandungi nombor, koma, dan titik</string>
     <string name="error_income_negative">Pendapatan tidak boleh negatif</string>
@@ -428,5 +440,16 @@
     <!-- Password confirmation validation -->
     <string name="error_confirm_password_empty">Sila sahkan kata laluan anda</string>
     <string name="error_passwords_dont_match">Kata laluan tidak sepadan</string>
-    <string name="error_user_not_logged_in">User not logged in</string>
+    <string name="error_user_not_logged_in">Pengguna tidak log masuk</string>
+
+    <string name="error_item_description_required">Description is required</string>
+    <string name="error_description_too_short">Description must be at least 2 characters</string>
+    <string name="error_merchant_required">Merchant name is required</string>
+    <string name="error_date_format">Invalid date format. Use dd/MM/yyyy</string>
+    <string name="date_format_hint">Format: dd/MM/yyyy</string>
+    <string name="error_amount_required">Amount is required</string>
+    <string name="error_amount_format">Invalid amount format</string>
+    <string name="error_amount_positive">Amount must be greater than zero</string>
+    <string name="error_invalid_input">Please fix the errors before saving</string>
+
 </resources>

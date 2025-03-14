@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
@@ -43,8 +44,10 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -297,6 +300,10 @@ fun UploadReceiptContent(
     // State for showing loading indicator
     var isLoading by remember { mutableStateOf(false) }
 
+    // State for showing invalid receipt dialog
+    var showInvalidReceiptDialog by remember { mutableStateOf(false) }
+    var invalidReceiptMessage by remember { mutableStateOf("") }
+
     // Add debug logging
     LaunchedEffect(Unit) {
         Log.d("UploadReceiptContent", "Starting receipt upload screen with viewModel: $receiptViewModel")
@@ -332,7 +339,14 @@ fun UploadReceiptContent(
                 onError = { errorMessage ->
                     Log.e("UploadReceiptContent", "Receipt processing error: $errorMessage")
                     isLoading = false
-                    AppUtil.showToast(context, errorMessage)
+
+                    // Check if this is our special error type for invalid receipt images
+                    if (errorMessage.startsWith("INVALID_RECEIPT_IMAGE:")) {
+                        invalidReceiptMessage = errorMessage.substringAfter("INVALID_RECEIPT_IMAGE:").trim()
+                        showInvalidReceiptDialog = true
+                    } else {
+                        AppUtil.showToast(context, errorMessage)
+                    }
                 }
             )
         }
@@ -365,7 +379,14 @@ fun UploadReceiptContent(
                 onError = { errorMessage ->
                     Log.e("UploadReceiptContent", "Receipt processing error: $errorMessage")
                     isLoading = false
-                    AppUtil.showToast(context, errorMessage)
+
+                    // Check if this is our special error type for invalid receipt images
+                    if (errorMessage.startsWith("INVALID_RECEIPT_IMAGE:")) {
+                        invalidReceiptMessage = errorMessage.substringAfter("INVALID_RECEIPT_IMAGE:").trim()
+                        showInvalidReceiptDialog = true
+                    } else {
+                        AppUtil.showToast(context, errorMessage)
+                    }
                 }
             )
         }
@@ -522,6 +543,45 @@ fun UploadReceiptContent(
 
             }
         }
+    }
+
+    // Invalid Receipt Dialog
+    if (showInvalidReceiptDialog) {
+        AlertDialog(
+            onDismissRequest = { showInvalidReceiptDialog = false },
+            title = {
+                Text(
+                    text = stringResource(id = R.string.invalid_receipt_image),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = invalidReceiptMessage,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showInvalidReceiptDialog = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(text = stringResource(id = R.string.ok))
+                }
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            containerColor = accessibleColors.calendarSurface
+        )
     }
 }
 
