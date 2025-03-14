@@ -97,12 +97,27 @@ class ReceiptViewModel : ViewModel() {
                         throw Exception("Failed to extract receipt data")
                     }
                 } else {
-                    throw result.exceptionOrNull() ?: Exception("Unknown error processing receipt")
+                    val exception = result.exceptionOrNull()
+                    val errorMsg = exception?.message ?: "Unknown error processing receipt"
+
+                    // Handle our special error type separately
+                    if (errorMsg.startsWith("NOT_A_RECEIPT:")) {
+                        // Extract the clean error message without the prefix
+                        errorMessage = errorMsg.substringAfter("NOT_A_RECEIPT:").trim()
+                        onError("INVALID_RECEIPT_IMAGE: $errorMessage")
+                    } else {
+                        throw exception ?: Exception("Unknown error processing receipt")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ReceiptViewModel", "Error processing receipt", e)
-                errorMessage = "Failed to process the receipt: ${e.localizedMessage}"
-                onError(errorMessage ?: "Unknown error")
+                if (e.message?.startsWith("INVALID_RECEIPT_IMAGE:") == true) {
+                    errorMessage = "Failed to process the receipt: ${e.localizedMessage}"
+                    onError(errorMessage ?: "Unknown error")
+                } else {
+                    // Pass through our special error type
+                    onError(e.message ?: "Unknown error")
+                }
             } finally {
                 isLoading = false
             }
