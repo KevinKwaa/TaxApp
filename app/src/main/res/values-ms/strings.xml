@@ -461,4 +461,7 @@
     <string name="error_negative_amount">Jumlah mestilah lebih besar daripada sifar</string>
     <string name="error_empty_category">Sila pilih kategori</string>
 
+    <string name="error_null_response">Tidak dapat menganalisis imej. Sila muat naik imej resit atau invois yang jelas.</string>
+    <string name="error_parsing_receipt">Imej tidak dapat dikenali sebagai resit yang sah. Sila muat naik imej resit atau invois yang lebih jelas.</string>
+    <string name="error_failed_to_load_image">Gagal memuat imej. Sila cuba lagi dengan imej yang berbeza.</string>
 </resources>

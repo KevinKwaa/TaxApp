@@ -451,8 +451,6 @@
     <string name="error_amount_positive">Amount must be greater than zero</string>
     <string name="error_invalid_input">Please fix the errors before saving</string>
 
-
-
     <string name="error_empty_description">Description cannot be empty</string>
     <string name="error_empty_merchant">Merchant name cannot be empty</string>
     <string name="error_invalid_date_format">Please use DD/MM/YYYY format</string>
@@ -461,6 +459,7 @@
     <string name="error_negative_amount">Amount must be greater than zero</string>
     <string name="error_empty_category">Please select a category</string>
 
-
-
+    <string name="error_null_response">Unable to analyze the image. Please upload a clear image of a receipt or invoice.</string>
+    <string name="error_parsing_receipt">The image couldn\'t be recognized as a valid receipt. Please upload a clearer image of a receipt or invoice.</string>
+    <string name="error_failed_to_load_image">Failed to load image. Please try again with a different image.</string>
 </resources>

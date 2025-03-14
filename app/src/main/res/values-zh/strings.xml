@@ -463,7 +463,8 @@
     <string name="error_invalid_amount">请输入有效数字</string>
     <string name="error_negative_amount">金额必须大于零</string>
     <string name="error_empty_category">请选择一个类别</string>
-    ```
 
-
+    <string name="error_null_response">无法分析图像。请上传清晰的收据或发票图像。</string>
+    <string name="error_parsing_receipt">无法将图像识别为有效的收据。请上传更清晰的收据或发票图像。</string>
+    <string name="error_failed_to_load_image">加载图像失败。请尝试使用其他图像。</string>
 </resources>

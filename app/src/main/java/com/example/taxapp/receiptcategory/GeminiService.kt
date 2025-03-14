@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.taxapp.R
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+
+// Define error codes for better categorization
+private const val ERROR_PREFIX = "NOT_A_RECEIPT:"
 
 class GeminiService(private val context: Context) {
 
@@ -110,7 +114,7 @@ class GeminiService(private val context: Context) {
         // Handle null response case
         if (response == null) {
             Log.w("GeminiService", "Received null response from Gemini")
-            throw Exception("NOT_A_RECEIPT: Unable to analyze the image. Please upload a clear image of a receipt or invoice.")
+            throw Exception(ERROR_PREFIX + context.getString(R.string.error_null_response))
         }
 
         // Extract JSON object from response (Gemini might wrap JSON in markdown code blocks)
@@ -128,7 +132,7 @@ class GeminiService(private val context: Context) {
 
             // Check if this is likely not a receipt (missing key receipt information)
             if (merchantName.isBlank() && totalAmount == 0.0 && dateStr.isBlank()) {
-                throw Exception("NOT_A_RECEIPT: The uploaded image doesn't appear to be a receipt or invoice. Please ensure you're uploading a valid receipt.")
+                throw Exception(ERROR_PREFIX + context.getString(R.string.error_not_a_receipt))
             }
 
             // Parse date or use current date if not valid
@@ -183,16 +187,15 @@ class GeminiService(private val context: Context) {
 
         } catch (e: Exception) {
             // Check if it's our special error type and rethrow it
-            if (e.message?.startsWith("NOT_A_RECEIPT:") == true) {
+            if (e.message?.startsWith(ERROR_PREFIX) == true) {
                 throw e
             }
 
             Log.e("GeminiService", "Error parsing Gemini response: ${e.message}", e)
             // If JSON parsing fails, it's likely not a proper receipt
-            throw Exception("NOT_A_RECEIPT: The image couldn't be recognized as a valid receipt. Please upload a clearer image of a receipt or invoice.")
+            throw Exception(ERROR_PREFIX + context.getString(R.string.error_parsing_receipt))
         }
     }
-
 
     /**
      * Extract JSON from Gemini response, which might be wrapped in markdown code blocks
