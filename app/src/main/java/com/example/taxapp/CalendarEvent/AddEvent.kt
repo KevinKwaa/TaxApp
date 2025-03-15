@@ -6,13 +6,16 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
@@ -70,6 +73,16 @@ fun AddEventScreen(
     var showLanguageSelector by remember { mutableStateOf(false) }
     var showAccessibilitySettings by remember { mutableStateOf(false) }
 
+    // State for date and time pickers
+    var selectedDate by remember { mutableStateOf(date) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
+
+    // Validation state
+    var timeError by remember { mutableStateOf<String?>(null) }
+    var dateError by remember { mutableStateOf<String?>(null) }
+
     // Access shared repositories
     val languageManager = remember { AppLanguageManager.getInstance(context) }
     val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
@@ -108,13 +121,7 @@ fun AddEventScreen(
     val isDarkMode = LocalDarkMode.current
 
     val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", locale)
-    var eventDate by remember { mutableStateOf(date.format(dateFormat)) }
-
-    // Effect to update date format when language changes
-    LaunchedEffect(currentLanguageCode) {
-        val newDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", languageManager.getCurrentLocale())
-        eventDate = date.format(newDateFormat)
-    }
+    val displayDateFormat = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", locale)
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Scaffold(
@@ -212,19 +219,37 @@ fun AddEventScreen(
             floatingActionButton = {
                 ExtendedFloatingActionButton(
                     onClick = {
-                        if (eventName.isNotBlank()) {
-                            val newEvent = Event(
-                                title = eventName,
-                                description = description,
-                                date = date,
-                                startTime = startTime,
-                                endTime = endTime,
-                                hasReminder = hasReminder,
-                                isTodoEvent = isTodoEvent,     // Add the new field
-                                isCompleted = false            // Default to not completed
-                            )
-                            onEventSaved(newEvent)
+                        // Validate input before saving
+                        if (eventName.isBlank()) {
+                            // Show error for empty event name
+                            return@ExtendedFloatingActionButton
                         }
+
+//                        // Validate date is not in the past
+//                        if (DateValidator.isPastDate(selectedDate)) {
+//                            dateError = "Cannot create an event in the past."
+//                            return@ExtendedFloatingActionButton
+//                        }
+
+                        // Validate end time is after start time
+                        val timeValidation = TimeValidator.validateTimeOrder(startTime, endTime)
+                        if (!timeValidation.first) {
+                            timeError = timeValidation.second
+                            return@ExtendedFloatingActionButton
+                        }
+
+                        // If all validation passes, create and save the event
+                        val newEvent = Event(
+                            title = eventName,
+                            description = description,
+                            date = selectedDate,
+                            startTime = startTime,
+                            endTime = endTime,
+                            hasReminder = hasReminder,
+                            isTodoEvent = isTodoEvent,
+                            isCompleted = false
+                        )
+                        onEventSaved(newEvent)
                     },
                     icon = { Icon(Icons.Filled.CalendarMonth, "Save Event") },
                     text = { Text(stringResource(id = R.string.save_event)) },
@@ -296,10 +321,10 @@ fun AddEventScreen(
                             )
                         )
 
-                        // Event Date Field with accessible styling
+                        // Event Date Field with date picker
                         OutlinedTextField(
-                            value = eventDate,
-                            onValueChange = { eventDate = it },
+                            value = selectedDate.format(displayDateFormat),
+                            onValueChange = { /* Read-only */ },
                             label = {
                                 Text(
                                     stringResource(id = R.string.event_date),
@@ -308,8 +333,18 @@ fun AddEventScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 8.dp)
+                                .clickable { showDatePicker = true },
                             readOnly = true,
+                            trailingIcon = {
+                                IconButton(onClick = { showDatePicker = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarToday,
+                                        contentDescription = stringResource(id = R.string.select_date),
+                                        tint = accessibleColors.selectedDay
+                                    )
+                                }
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = accessibleColors.selectedDay,
                                 unfocusedBorderColor = accessibleColors.calendarBorder,
@@ -319,10 +354,10 @@ fun AddEventScreen(
                             )
                         )
 
-                        // Start Time Field with accessible styling
+                        // Start Time Field with time picker
                         OutlinedTextField(
                             value = startTime,
-                            onValueChange = { startTime = it },
+                            onValueChange = { /* Read-only */ },
                             label = {
                                 Text(
                                     stringResource(id = R.string.start_time),
@@ -331,7 +366,18 @@ fun AddEventScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 8.dp)
+                                .clickable { showStartTimePicker = true },
+                            readOnly = true,
+                            trailingIcon = {
+                                IconButton(onClick = { showStartTimePicker = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccessTime,
+                                        contentDescription = stringResource(id = R.string.select_start_time),
+                                        tint = accessibleColors.selectedDay
+                                    )
+                                }
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = accessibleColors.selectedDay,
                                 unfocusedBorderColor = accessibleColors.calendarBorder,
@@ -341,10 +387,10 @@ fun AddEventScreen(
                             )
                         )
 
-                        // End Time Field with accessible styling
+                        // End Time Field with time picker
                         OutlinedTextField(
                             value = endTime,
-                            onValueChange = { endTime = it },
+                            onValueChange = { /* Read-only */ },
                             label = {
                                 Text(
                                     stringResource(id = R.string.end_time),
@@ -353,7 +399,18 @@ fun AddEventScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 8.dp)
+                                .clickable { showEndTimePicker = true },
+                            readOnly = true,
+                            trailingIcon = {
+                                IconButton(onClick = { showEndTimePicker = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccessTime,
+                                        contentDescription = stringResource(id = R.string.select_end_time),
+                                        tint = accessibleColors.selectedDay
+                                    )
+                                }
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = accessibleColors.selectedDay,
                                 unfocusedBorderColor = accessibleColors.calendarBorder,
@@ -457,6 +514,141 @@ fun AddEventScreen(
             }
         }
 
+        // Date Picker Dialog
+        if (showDatePicker) {
+            AccessibleDatePickerDialog(
+                onDateSelected = { newDate ->
+                    selectedDate = newDate
+                    if (accessibilityState.textToSpeech) {
+                        tts?.speak(
+                            "Selected date: ${newDate.format(displayDateFormat)}",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            null
+                        )
+                    }
+                    // Clear date error if any
+                    dateError = null
+                },
+                onDismiss = { showDatePicker = false },
+                initialDate = selectedDate,
+//                validateDate = { date ->
+//                    // Example validation: Can't select dates in the past
+//                    if (DateValidator.isPastDate(date)) {
+//                        Pair(false, "Cannot select a date in the past.")
+//                    } else {
+//                        Pair(true, null)
+//                    }
+//                }
+            )
+        }
+
+        // Start Time Picker Dialog
+        if (showStartTimePicker) {
+            AccessibleTimePickerDialog(
+                onTimeSelected = { newTime ->
+                    startTime = newTime
+                    // Optionally adjust end time if start time is later
+                    if (startTime > endTime) {
+                        endTime = startTime
+                    }
+                    if (accessibilityState.textToSpeech) {
+                        tts?.speak(
+                            "Selected start time: $newTime",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            null
+                        )
+                    }
+                    // Clear time error if any
+                    timeError = null
+                },
+                onDismiss = { showStartTimePicker = false },
+                initialTime = startTime,
+                title = stringResource(id = R.string.select_start_time),
+                validateTime = { time ->
+                    // Basic time format validation
+                    TimeValidator.validateTimeString(time)
+                }
+            )
+        }
+
+        // End Time Picker Dialog
+        if (showEndTimePicker) {
+            AccessibleTimePickerDialog(
+                onTimeSelected = { newTime ->
+                    // Validate end time is after start time
+                    val validation = TimeValidator.validateTimeOrder(startTime, newTime)
+                    if (validation.first) {
+                        endTime = newTime
+                        timeError = null
+
+                        if (accessibilityState.textToSpeech) {
+                            tts?.speak(
+                                "Selected end time: $newTime",
+                                TextToSpeech.QUEUE_FLUSH,
+                                null,
+                                null
+                            )
+                        }
+                    } else {
+                        timeError = validation.second
+
+                        if (accessibilityState.textToSpeech) {
+                            tts?.speak(
+                                validation.second ?: "Invalid time",
+                                TextToSpeech.QUEUE_FLUSH,
+                                null,
+                                null
+                            )
+                        }
+                    }
+                },
+                onDismiss = { showEndTimePicker = false },
+                initialTime = endTime,
+                title = stringResource(id = R.string.select_end_time),
+                validateTime = { time ->
+                    // Validate compared to start time
+                    TimeValidator.validateTimeOrder(startTime, time)
+                }
+            )
+        }
+
+        // Show validation errors if present
+        if (timeError != null || dateError != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    timeError = null
+                    dateError = null
+                },
+                title = { Text("Validation Error") },
+                text = {
+                    Column {
+                        if (timeError != null) {
+                            Text(
+                                text = timeError ?: "",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        if (dateError != null) {
+                            Text(
+                                text = dateError ?: "",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        timeError = null
+                        dateError = null
+                    }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+
         if (showLanguageSelector) {
             LanguageSelector(
                 currentLanguageCode = currentLanguageCode,
@@ -473,10 +665,6 @@ fun AddEventScreen(
 
                     // Update language in the manager which affects the whole app
                     languageManager.setLanguage(languageCode)
-
-                    // Refresh the date format
-                    val newDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", newLocale)
-                    eventDate = date.format(newDateFormat)
                 },
                 onDismiss = { showLanguageSelector = false },
                 activity = activity

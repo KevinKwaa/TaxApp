@@ -10,16 +10,20 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Repository for managing events with Firebase Firestore
@@ -220,6 +224,7 @@ class EventRepository {
 
         return try {
             // Find the event document in the user's events collection
+            // Note: This query relies on the original title and date which might have changed
             val query = getUserEventsCollection(userId)
                 .whereEqualTo("title", event.title)
                 .whereEqualTo("dateTimestamp", event.date.toTimestamp())
@@ -229,15 +234,62 @@ class EventRepository {
 
             if (query.documents.isNotEmpty()) {
                 val documentId = query.documents[0].id
+
+                // Update the event with the new data
                 getUserEventsCollection(userId).document(documentId).set(event.toMap()).await()
                 Log.d(TAG, "Event updated successfully: ${event.title}")
 
-                // Force refresh to update UI immediately
+                // Ensure we force refresh properly
+                Log.d(TAG, "Forcing refresh after event update")
                 forceRefresh()
+
+                // Add a small delay to ensure Firestore has time to process
+                withContext(Dispatchers.IO) {
+                    delay(500)
+                }
+
+                // Force a second refresh to ensure UI catches the change
+                Log.d(TAG, "Forcing second refresh to ensure UI update")
+                forceRefresh()
+
                 true
             } else {
-                Log.w(TAG, "Event not found to update")
-                false
+                Log.w(TAG, "Event not found to update. Trying alternative approach...")
+
+                // If the original event can't be found, try to delete any events with the same title
+                // and then create a new one (this is a fallback approach)
+                val allEvents = getUserEventsCollection(userId).get().await()
+                val matchingEvents = allEvents.documents.filter {
+                    it.getString("title") == event.title
+                }
+
+                if (matchingEvents.isNotEmpty()) {
+                    // Found events with the same title, delete them
+                    for (doc in matchingEvents) {
+                        getUserEventsCollection(userId).document(doc.id).delete().await()
+                        Log.d(TAG, "Deleted event with matching title: ${doc.id}")
+                    }
+
+                    // Now add the new event
+                    getUserEventsCollection(userId).add(event.toMap()).await()
+                    Log.d(TAG, "Created new event after deleting old ones: ${event.title}")
+
+                    // Force refresh twice
+                    forceRefresh()
+                    delay(500)
+                    forceRefresh()
+
+                    true
+                } else {
+                    // If all else fails, just try to add it as a new event
+                    getUserEventsCollection(userId).add(event.toMap()).await()
+                    Log.d(TAG, "Added event as new since no matching events found: ${event.title}")
+
+                    // Force refresh
+                    forceRefresh()
+
+                    true
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error updating event", e)

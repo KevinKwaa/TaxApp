@@ -462,4 +462,17 @@
     <string name="error_null_response">Unable to analyze the image. Please upload a clear image of a receipt or invoice.</string>
     <string name="error_parsing_receipt">The image couldn\'t be recognized as a valid receipt. Please upload a clearer image of a receipt or invoice.</string>
     <string name="error_failed_to_load_image">Failed to load image. Please try again with a different image.</string>
+
+    <string name="select_date">Select Date</string>
+    <string name="select_time">Select Time</string>
+    <string name="select_start_time">Select Start Time</string>
+    <string name="select_end_time">Select End Time</string>
+
+    <string name="all_events">All Events</string>
+    <string name="events_count_format">%d event(s) on this date</string>
+    <string name="todo_events_count_format">%d to-do event(s) on this date</string>
+    <string name="pending_completed_format">%1$d pending, %2$d completed</string>
+    <string name="time_separator">to</string>
+
+    <string name="time_validator">End time must be after start time.</string>
 </resources>

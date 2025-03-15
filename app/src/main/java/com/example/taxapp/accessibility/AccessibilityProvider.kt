@@ -24,7 +24,7 @@ val LocalColorBlindMode = compositionLocalOf { false }
 val LocalHighContrastMode = compositionLocalOf { false }
 val LocalDarkMode = compositionLocalOf { false }
 val LocalThemeColors = compositionLocalOf<AccessibleColors> { error("No AccessibleColors provided") }
-
+val LocalThemeColorsAccessible = compositionLocalOf<AccessibleThemeColors> { error("No AccessibleColors provided") }
 
 // Class to hold accessible color variations
 class AccessibleColors(
@@ -113,7 +113,8 @@ fun AccessibilityThemeProvider(
         LocalColorBlindMode provides accessibilityState.colorBlindMode,
         LocalHighContrastMode provides accessibilityState.highContrastMode,
         LocalDarkMode provides effectiveDarkMode,
-        LocalThemeColors provides accessibleColors
+        LocalThemeColors provides accessibleColors,
+        LocalThemeColorsAccessible provides AccessibleThemeColors()
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

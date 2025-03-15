@@ -464,4 +464,17 @@
     <string name="error_null_response">Tidak dapat menganalisis imej. Sila muat naik imej resit atau invois yang jelas.</string>
     <string name="error_parsing_receipt">Imej tidak dapat dikenali sebagai resit yang sah. Sila muat naik imej resit atau invois yang lebih jelas.</string>
     <string name="error_failed_to_load_image">Gagal memuat imej. Sila cuba lagi dengan imej yang berbeza.</string>
+
+    <string name="select_date">Pilih Tarikh</string>
+    <string name="select_time">Pilih Masa</string>
+    <string name="select_start_time">Pilih Masa Mula</string>
+    <string name="select_end_time">Pilih Masa Tamat</string>
+
+    <string name="all_events">Semua Acara</string>
+    <string name="events_count_format">%d acara pada tarikh ini</string>
+    <string name="todo_events_count_format">%d acara to-do pada tarikh ini</string>
+    <string name="pending_completed_format">%1$d belum selesai, %2$d selesai</string>
+    <string name="time_separator">hingga</string>
+
+    <string name="time_validator">Masa tamat mesti selepas masa mula.</string>
 </resources>

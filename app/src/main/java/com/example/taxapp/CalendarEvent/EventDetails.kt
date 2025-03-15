@@ -2,12 +2,14 @@ package com.example.taxapp.CalendarEvent
 
 import android.os.Build
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,10 +55,12 @@ import com.example.taxapp.accessibility.AccessibilityState
 import com.example.taxapp.accessibility.AccessibleColors
 import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
+import com.example.taxapp.accessibility.LocalThemeColorsAccessible
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -119,7 +123,10 @@ fun EventDetailScreen(
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
+    val accessibleThemeColors = LocalThemeColorsAccessible.current
     val isDarkMode = LocalDarkMode.current
+
+    var showSuccessMessage by remember { mutableStateOf(false) }
 
     // Determine if this is a tax deadline event
     val isTaxDeadlineEvent = currentEvent.title.contains("Tax Filing Deadline", ignoreCase = true)
@@ -137,14 +144,38 @@ fun EventDetailScreen(
         }
     }
 
+    val eventRepository = remember { EventRepository.getInstance() }
+
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         if (showEditMode) {
             EventEditMode(
                 event = currentEvent,
                 onNavigateBack = { showEditMode = false },
                 onEventSaved = { updatedEvent ->
-                    onEditEvent(updatedEvent)
-                    currentEvent = updatedEvent
+                    // Log the event update
+                    Log.d("EventDetail", "Event update requested: ${updatedEvent.title}")
+                    Log.d("EventDetail", "Original date: ${currentEvent.date}, Updated date: ${updatedEvent.date}")
+
+                    // Update the repository and handle result
+                    coroutineScope.launch {
+                        val success = eventRepository.updateEvent(updatedEvent)
+                        if (success) {
+                            // Update local state
+                            currentEvent = updatedEvent
+                            // Show a success message
+                            showSuccessMessage = true
+                            // Set a timer to hide the message
+                            delay(3000)
+                            showSuccessMessage = false
+                            // Force immediate refresh to update the calendar
+                            eventRepository.forceRefresh()
+                        } else {
+                            // Show error message (implement as needed)
+                            Log.e("EventDetail", "Failed to update event")
+                        }
+                    }
+
+                    // Close edit mode
                     showEditMode = false
 
                     // Add TTS feedback for edit completion
@@ -154,7 +185,8 @@ fun EventDetailScreen(
                 },
                 accessibilityState = accessibilityState,
                 currentLanguageCode = currentLanguageCode,
-                navController = navController
+                navController = navController,
+                eventRepository = eventRepository // Pass the repository to edit mode
             )
         } else {
             Scaffold(
@@ -257,14 +289,14 @@ fun EventDetailScreen(
                         ) {
                             // To-do toggle FAB (if it's a to-do event)
                             if (currentEvent.isTodoEvent) {
-                                ExtendedFloatingActionButton(
+                                FloatingActionButton(
                                     onClick = { handleTodoStatusChange(!currentEvent.isCompleted) },
                                     containerColor = when {
-                                        currentEvent.isCompleted -> Color.Gray
-                                        isPastDue(currentEvent) -> Color.Red
+                                        currentEvent.isCompleted -> MaterialTheme.colorScheme.error
+                                        isPastDue(currentEvent) -> accessibleThemeColors.primaryButtonBackground
                                         else -> accessibleColors.selectedDay
                                     },
-                                    contentColor = Color.White
+                                    contentColor = accessibleColors.buttonText
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -277,19 +309,24 @@ fun EventDetailScreen(
                                                 Icons.Default.Check,
                                             contentDescription = null
                                         )
-                                        Text(
-                                            if (currentEvent.isCompleted)
-                                                stringResource(id = R.string.mark_as_incomplete)
-                                            else
-                                                stringResource(id = R.string.mark_as_complete)
-                                        )
+//                                        Text(
+//                                            if (currentEvent.isCompleted)
+//                                                stringResource(id = R.string.mark_as_incomplete)
+//                                            else
+//                                                stringResource(id = R.string.mark_as_complete)
+//                                        )
                                     }
                                 }
                             }
 
                             // Edit FAB
+                            // Modify the call to showEditMode
                             FloatingActionButton(
-                                onClick = { showEditMode = true },
+                                onClick = {
+                                    // Store the original event for reference
+                                    val originalEvent = currentEvent
+                                    showEditMode = true
+                                },
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary
                             ) {
@@ -441,6 +478,7 @@ fun EventEditMode(
     currentLanguageCode: String,
     modifier: Modifier = Modifier,
     navController: NavHostController,
+    eventRepository: EventRepository
 ) {
     // Get the custom colors from the accessibility theme
     val accessibleColors = LocalThemeColors.current
@@ -448,6 +486,7 @@ fun EventEditMode(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val activity = context as? ComponentActivity
+
     // Access shared repositories
     val languageManager = remember { AppLanguageManager.getInstance(context) }
     val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
@@ -476,9 +515,24 @@ fun EventEditMode(
     var hasReminder by remember { mutableStateOf(event.hasReminder) }
     var isTodoEvent by remember { mutableStateOf(event.isTodoEvent) }
     var isCompleted by remember { mutableStateOf(event.isCompleted) }
+    var selectedDate by remember { mutableStateOf(event.date) }
 
+    // State for picker dialogs
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
     var showLanguageSelector by remember { mutableStateOf(false) }
     var showAccessibilitySettings by remember { mutableStateOf(false) }
+
+    // Validation state
+    var timeError by remember { mutableStateOf<String?>(null) }
+    var dateError by remember { mutableStateOf<String?>(null) }
+
+    // Get the locale from the language manager
+    val locale = languageManager.getCurrentLocale()
+
+    // Date formatter for display
+    val displayDateFormat = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", locale)
 
     // Check if the event is past due (for to-do events)
     val isPastDue = isTodoEvent && !isCompleted &&
@@ -582,21 +636,35 @@ fun EventEditMode(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    if (eventName.isNotBlank()) {
-                        val updatedEvent = event.copy(
-                            title = eventName,
-                            description = description,
-                            startTime = startTime,
-                            endTime = endTime,
-                            hasReminder = hasReminder,
-                            isTodoEvent = isTodoEvent,
-                            isCompleted = isCompleted
-                        )
-                        onEventSaved(updatedEvent)
-                        // Add TTS feedback
-                        if (accessibilityState.textToSpeech) {
-                            tts?.speak("Saving changes", TextToSpeech.QUEUE_FLUSH, null, null)
-                        }
+                    // Validate input before saving
+                    if (eventName.isBlank()) {
+                        // Don't allow blank event names
+                        return@FloatingActionButton
+                    }
+
+                    // Validate end time is after start time
+                    val timeValidation = TimeValidator.validateTimeOrder(startTime, endTime)
+                    if (!timeValidation.first) {
+                        timeError = timeValidation.second
+                        return@FloatingActionButton
+                    }
+
+                    // If all validation passes, create and save the updated event
+                    val updatedEvent = event.copy(
+                        title = eventName,
+                        description = description,
+                        date = selectedDate,
+                        startTime = startTime,
+                        endTime = endTime,
+                        hasReminder = hasReminder,
+                        isTodoEvent = isTodoEvent,
+                        isCompleted = isCompleted
+                    )
+                    onEventSaved(updatedEvent)
+
+                    // Add TTS feedback
+                    if (accessibilityState.textToSpeech) {
+                        tts?.speak("Saving changes", TextToSpeech.QUEUE_FLUSH, null, null)
                     }
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -625,17 +693,12 @@ fun EventEditMode(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(20.dp),
                     elevation = CardDefaults.cardElevation(
-                        defaultElevation = if (isDarkMode) 6.dp else 2.dp
+                        defaultElevation = if (isDarkMode) 8.dp else 4.dp
                     ),
                     colors = CardDefaults.cardColors(
-                        containerColor = when {
-                            isTodoEvent && isCompleted -> Color.Gray.copy(alpha = 0.1f)
-                            isTodoEvent && isPastDue -> Color.Red.copy(alpha = 0.05f)
-                            isTodoEvent -> accessibleColors.selectedDay.copy(alpha = 0.05f)
-                            else -> accessibleColors.cardBackground
-                        }
+                        containerColor = accessibleColors.cardBackground
                     ),
                     border = BorderStroke(
                         width = 1.dp,
@@ -680,10 +743,50 @@ fun EventEditMode(
                             )
                         )
 
+                        // Event Date Field with accessible date picker
+                        OutlinedTextField(
+                            value = selectedDate.format(displayDateFormat),
+                            onValueChange = { /* Read-only */ },
+                            label = {
+                                Text(
+                                    stringResource(id = R.string.event_date),
+                                    color = accessibleColors.calendarText
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarToday,
+                                    contentDescription = null,
+                                    tint = accessibleColors.selectedDay
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showDatePicker = true },
+                            shape = RoundedCornerShape(12.dp),
+                            readOnly = true,
+                            trailingIcon = {
+                                IconButton(onClick = { showDatePicker = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarToday,
+                                        contentDescription = stringResource(id = R.string.select_date),
+                                        tint = accessibleColors.selectedDay
+                                    )
+                                }
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = accessibleColors.selectedDay,
+                                unfocusedBorderColor = accessibleColors.calendarBorder,
+                                focusedTextColor = accessibleColors.calendarText,
+                                unfocusedTextColor = accessibleColors.calendarText,
+                                cursorColor = accessibleColors.selectedDay
+                            )
+                        )
+
                         // Start Time Field
                         OutlinedTextField(
                             value = startTime,
-                            onValueChange = { startTime = it },
+                            onValueChange = { /* Read-only */ },
                             label = {
                                 Text(
                                     stringResource(id = R.string.start_time),
@@ -697,8 +800,20 @@ fun EventEditMode(
                                     tint = accessibleColors.selectedDay
                                 )
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showStartTimePicker = true },
                             shape = RoundedCornerShape(12.dp),
+                            readOnly = true,
+                            trailingIcon = {
+                                IconButton(onClick = { showStartTimePicker = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccessTime,
+                                        contentDescription = stringResource(id = R.string.select_start_time),
+                                        tint = accessibleColors.selectedDay
+                                    )
+                                }
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = accessibleColors.selectedDay,
                                 unfocusedBorderColor = accessibleColors.calendarBorder,
@@ -711,7 +826,7 @@ fun EventEditMode(
                         // End Time Field
                         OutlinedTextField(
                             value = endTime,
-                            onValueChange = { endTime = it },
+                            onValueChange = { /* Read-only */ },
                             label = {
                                 Text(
                                     stringResource(id = R.string.end_time),
@@ -725,8 +840,20 @@ fun EventEditMode(
                                     tint = accessibleColors.selectedDay
                                 )
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showEndTimePicker = true },
                             shape = RoundedCornerShape(12.dp),
+                            readOnly = true,
+                            trailingIcon = {
+                                IconButton(onClick = { showEndTimePicker = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccessTime,
+                                        contentDescription = stringResource(id = R.string.select_end_time),
+                                        tint = accessibleColors.selectedDay
+                                    )
+                                }
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = accessibleColors.selectedDay,
                                 unfocusedBorderColor = accessibleColors.calendarBorder,
@@ -840,96 +967,96 @@ fun EventEditMode(
                         }
 
                         // Completed toggle (only show if it's a to-do event)
-                        AnimatedVisibility(visible = isTodoEvent) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (isCompleted)
-                                        Color.Gray.copy(alpha = 0.1f)
-                                    else if (isPastDue)
-                                        Color.Red.copy(alpha = 0.1f)
-                                    else
-                                        accessibleColors.cardBackground.copy(
-                                            alpha = if (isDarkMode) 0.7f else 0.9f
-                                        )
-                                ),
-                                border = BorderStroke(
-                                    width = 1.dp,
-                                    color = when {
-                                        isCompleted -> Color.Gray.copy(alpha = 0.5f)
-                                        isPastDue -> Color.Red.copy(alpha = 0.5f)
-                                        else -> accessibleColors.cardBorder.copy(alpha = 0.5f)
-                                    }
-                                )
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // Label with icon
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isCompleted)
-                                                Icons.Default.Check
-                                            else if (isPastDue)
-                                                Icons.Default.Warning
-                                            else
-                                                Icons.Default.RadioButtonUnchecked,
-                                            contentDescription = null,
-                                            tint = when {
-                                                isCompleted -> Color.Gray
-                                                isPastDue -> Color.Red
-                                                else -> accessibleColors.calendarBorder
-                                            }
-                                        )
-
-                                        Column {
-                                            Text(
-                                                text = stringResource(id = R.string.mark_as_completed),
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                color = when {
-                                                    isCompleted -> Color.Gray
-                                                    isPastDue -> Color.Red
-                                                    else -> accessibleColors.calendarText
-                                                }
-                                            )
-
-                                            if (isPastDue) {
-                                                Text(
-                                                    text = stringResource(id = R.string.past_due_warning),
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = Color.Red
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    // Checkbox
-                                    Checkbox(
-                                        checked = isCompleted,
-                                        onCheckedChange = {
-                                            isCompleted = it
-                                            // Add TTS feedback for switch toggle
-                                            if (accessibilityState.textToSpeech) {
-                                                val message = if (it) "Marked as completed" else "Marked as incomplete"
-                                                tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
-                                            }
-                                        },
-                                        colors = CheckboxDefaults.colors(
-                                            checkedColor = Color.Gray,
-                                            uncheckedColor = if (isPastDue) Color.Red else accessibleColors.calendarBorder
-                                        )
-                                    )
-                                }
-                            }
-                        }
+//                        AnimatedVisibility(visible = isTodoEvent) {
+//                            Card(
+//                                modifier = Modifier.fillMaxWidth(),
+//                                shape = RoundedCornerShape(12.dp),
+//                                colors = CardDefaults.cardColors(
+//                                    containerColor = if (isCompleted)
+//                                        Color.Gray.copy(alpha = 0.1f)
+//                                    else if (isPastDue)
+//                                        Color.Red.copy(alpha = 0.1f)
+//                                    else
+//                                        accessibleColors.cardBackground.copy(
+//                                            alpha = if (isDarkMode) 0.7f else 0.9f
+//                                        )
+//                                ),
+//                                border = BorderStroke(
+//                                    width = 1.dp,
+//                                    color = when {
+//                                        isCompleted -> Color.Gray.copy(alpha = 0.5f)
+//                                        isPastDue -> Color.Red.copy(alpha = 0.5f)
+//                                        else -> accessibleColors.cardBorder.copy(alpha = 0.5f)
+//                                    }
+//                                )
+//                            ) {
+//                                Row(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+//                                    horizontalArrangement = Arrangement.SpaceBetween,
+//                                    verticalAlignment = Alignment.CenterVertically
+//                                ) {
+//                                    // Label with icon
+//                                    Row(
+//                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+//                                        verticalAlignment = Alignment.CenterVertically
+//                                    ) {
+//                                        Icon(
+//                                            imageVector = if (isCompleted)
+//                                                Icons.Default.Check
+//                                            else if (isPastDue)
+//                                                Icons.Default.Warning
+//                                            else
+//                                                Icons.Default.RadioButtonUnchecked,
+//                                            contentDescription = null,
+//                                            tint = when {
+//                                                isCompleted -> Color.Gray
+//                                                isPastDue -> Color.Red
+//                                                else -> accessibleColors.calendarBorder
+//                                            }
+//                                        )
+//
+//                                        Column {
+//                                            Text(
+//                                                text = stringResource(id = R.string.mark_as_completed),
+//                                                style = MaterialTheme.typography.bodyLarge,
+//                                                color = when {
+//                                                    isCompleted -> Color.Gray
+//                                                    isPastDue -> Color.Red
+//                                                    else -> accessibleColors.calendarText
+//                                                }
+//                                            )
+//
+//                                            if (isPastDue) {
+//                                                Text(
+//                                                    text = stringResource(id = R.string.past_due_warning),
+//                                                    style = MaterialTheme.typography.bodySmall,
+//                                                    color = Color.Red
+//                                                )
+//                                            }
+//                                        }
+//                                    }
+//
+//                                    // Checkbox
+//                                    Checkbox(
+//                                        checked = isCompleted,
+//                                        onCheckedChange = {
+//                                            isCompleted = it
+//                                            // Add TTS feedback for switch toggle
+//                                            if (accessibilityState.textToSpeech) {
+//                                                val message = if (it) "Marked as completed" else "Marked as incomplete"
+//                                                tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+//                                            }
+//                                        },
+//                                        colors = CheckboxDefaults.colors(
+//                                            checkedColor = Color.Gray,
+//                                            uncheckedColor = if (isPastDue) Color.Red else accessibleColors.calendarBorder
+//                                        )
+//                                    )
+//                                }
+//                            }
+//                        }
 
                         // Reminder Toggle with card styling to match other screens
                         Card(
@@ -1002,6 +1129,137 @@ fun EventEditMode(
         }
     }
 
+    // Date Picker Dialog
+    if (showDatePicker) {
+        AccessibleDatePickerDialog(
+            onDateSelected = { newDate ->
+                selectedDate = newDate
+                if (accessibilityState.textToSpeech) {
+                    tts?.speak(
+                        "Selected date: ${newDate.format(displayDateFormat)}",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        null
+                    )
+                }
+                // Clear date error if any
+                dateError = null
+            },
+            onDismiss = { showDatePicker = false },
+            initialDate = selectedDate,
+//            validateDate = { date ->
+//                // For editing, we'll allow past dates (user might be editing an old event)
+//                Pair(true, null)
+//            }
+        )
+    }
+
+    // Start Time Picker Dialog
+    if (showStartTimePicker) {
+        AccessibleTimePickerDialog(
+            onTimeSelected = { newTime ->
+                startTime = newTime
+                // Optionally adjust end time if start time is later
+                if (startTime > endTime) {
+                    endTime = startTime
+                }
+                if (accessibilityState.textToSpeech) {
+                    tts?.speak(
+                        "Selected start time: $newTime",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        null
+                    )
+                }
+                // Clear time error if any
+                timeError = null
+            },
+            onDismiss = { showStartTimePicker = false },
+            initialTime = startTime,
+            title = stringResource(id = R.string.select_start_time),
+            validateTime = { time ->
+                // Basic time format validation
+                TimeValidator.validateTimeString(time)
+            }
+        )
+    }
+
+    // End Time Picker Dialog
+    if (showEndTimePicker) {
+        AccessibleTimePickerDialog(
+            onTimeSelected = { newTime ->
+                // Validate end time is after start time
+                val validation = TimeValidator.validateTimeOrder(startTime, newTime)
+                if (validation.first) {
+                    endTime = newTime
+                    timeError = null
+
+                    if (accessibilityState.textToSpeech) {
+                        tts?.speak(
+                            "Selected end time: $newTime",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            null
+                        )
+                    }
+                } else {
+                    timeError = validation.second
+
+                    if (accessibilityState.textToSpeech) {
+                        tts?.speak(
+                            validation.second ?: "Invalid time",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            null
+                        )
+                    }
+                }
+            },
+            onDismiss = { showEndTimePicker = false },
+            initialTime = endTime,
+            title = stringResource(id = R.string.select_end_time),
+            validateTime = { time ->
+                // Validate compared to start time
+                TimeValidator.validateTimeOrder(startTime, time)
+            }
+        )
+    }
+
+    // Show validation errors if present
+    if (timeError != null || dateError != null) {
+        AlertDialog(
+            onDismissRequest = {
+                timeError = null
+                dateError = null
+            },
+            title = { Text("Validation Error") },
+            text = {
+                Column {
+                    if (timeError != null) {
+                        Text(
+                            text = timeError ?: "",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    if (dateError != null) {
+                        Text(
+                            text = dateError ?: "",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    timeError = null
+                    dateError = null
+                }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
     if (showLanguageSelector) {
         LanguageSelector(
             currentLanguageCode = currentLanguageCode,
@@ -1071,15 +1329,16 @@ fun EventDetailCard(
 
     Card(
         modifier = modifier
-            .shadow(
-                elevation = if (isDarkMode) 12.dp else 4.dp,
-                spotColor = when {
-                    event.isTodoEvent && isPastDue -> Color.Red.copy(alpha = 0.3f)
-                    event.isTodoEvent && !event.isCompleted -> accessibleColors.selectedDay.copy(alpha = 0.3f)
-                    else -> accessibleColors.selectedDay.copy(alpha = 0.3f)
-                },
-                shape = RoundedCornerShape(24.dp)
-            ),
+//            .shadow(
+//                elevation = if (isDarkMode) 12.dp else 4.dp,
+//                //spotColor = Color.Transparent,
+//                spotColor = when {
+//                    event.isTodoEvent && isPastDue -> Color.Red.copy(alpha = 0.5f)
+//                    event.isTodoEvent && !event.isCompleted -> accessibleColors.selectedDay.copy(alpha = 0.3f)
+//                    else -> accessibleColors.selectedDay.copy(alpha = 0.3f)
+//                },
+//                shape = RoundedCornerShape(24.dp)
+            ,
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp

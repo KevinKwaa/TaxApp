@@ -608,8 +608,8 @@ fun CalendarScreen(
                                                         Calendar.DAY_OF_WEEK,
                                                         Calendar.SHORT,
                                                         locale
-                                                    )?.substring(0, 1)
-                                                } ?: "?"
+                                                    )//?.substring(0, 1)
+                                                } //?: "?"
 
                                                 Text(
                                                     text = dayName,
@@ -1465,7 +1465,10 @@ fun EventTabView(
     //ttsManager: TextToSpeech?
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("All Events", "To-Do Events")
+    val tabs = listOf(
+        stringResource(id = R.string.all_events),
+        stringResource(id = R.string.todo_events)
+    )
     val context = LocalContext.current
     val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
 
@@ -1581,8 +1584,8 @@ fun EventTabView(
         ) {
             Text(
                 text = when (selectedTabIndex) {
-                    0 -> "${allEvents.size} event(s) on this date"
-                    1 -> "${todoEvents.size} to-do event(s) on this date"
+                    0 -> stringResource(id = R.string.events_count_format, allEvents.size)
+                    1 -> stringResource(id = R.string.todo_events_count_format, todoEvents.size)
                     else -> ""
                 },
                 style = MaterialTheme.typography.labelMedium,
@@ -1599,7 +1602,11 @@ fun EventTabView(
                     val pendingCount = todoEvents.size - completedCount
 
                     Text(
-                        text = "$pendingCount pending, $completedCount completed",
+                        text = stringResource(
+                            id = R.string.pending_completed_format,
+                            pendingCount,
+                            completedCount
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = accessibleColors.calendarText.copy(alpha = 0.6f)
                     )

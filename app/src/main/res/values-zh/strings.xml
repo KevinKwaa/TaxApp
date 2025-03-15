@@ -467,4 +467,17 @@
     <string name="error_null_response">无法分析图像。请上传清晰的收据或发票图像。</string>
     <string name="error_parsing_receipt">无法将图像识别为有效的收据。请上传更清晰的收据或发票图像。</string>
     <string name="error_failed_to_load_image">加载图像失败。请尝试使用其他图像。</string>
+
+    <string name="select_date">选择日期</string>
+    <string name="select_time">选择时间</string>
+    <string name="select_start_time">选择开始时间</string>
+    <string name="select_end_time">选择结束时间</string>
+
+    <string name="all_events">所有事件</string>
+    <string name="events_count_format">此日期有 %d 个事件</string>
+    <string name="todo_events_count_format">此日期有 %d 个待办事项</string>
+    <string name="pending_completed_format">%1$d 待处理，%2$d 已完成</string>
+    <string name="time_separator">至</string>
+
+    <string name="time_validator">结束时间必须在开始时间之后。</string>
 </resources>
