@@ -2,17 +2,13 @@ package com.example.taxapp.receiptcategory
 
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -300,54 +296,5 @@ class ReceiptViewModel : ViewModel() {
     }
 
     // Analyze all user receipts for tax insights
-    @RequiresApi(Build.VERSION_CODES.N)
-    fun analyzeTaxSavings(context: Context, onResult: (Map<String, Double>) -> Unit) {
-        if (!::geminiService.isInitialized) {
-            geminiService = GeminiService(context)
-        }
 
-        viewModelScope.launch {
-            isLoading = true
-
-            try {
-                Log.d("ReceiptViewModel", "Starting tax savings analysis")
-                // Get all user receipts
-                val receiptsResult = repository.getUserReceipts()
-                if (receiptsResult.isFailure) {
-                    Log.e("ReceiptViewModel", "Failed to fetch receipts", receiptsResult.exceptionOrNull())
-                    throw receiptsResult.exceptionOrNull() ?: Exception("Failed to fetch receipts")
-                }
-
-                val receipts = receiptsResult.getOrNull() ?: emptyList()
-                Log.d("ReceiptViewModel", "Retrieved ${receipts.size} receipts for analysis")
-
-                // No receipts to analyze
-                if (receipts.isEmpty()) {
-                    Log.d("ReceiptViewModel", "No receipts to analyze, returning empty map")
-                    onResult(emptyMap())
-                    return@launch
-                }
-
-                // Use Gemini to analyze tax savings
-                Log.d("ReceiptViewModel", "Calling geminiService.analyzeTaxSavings with ${receipts.size} receipts")
-                val savingsResult = geminiService.analyzeTaxSavings(receipts)
-
-                if (savingsResult.isFailure) {
-                    Log.e("ReceiptViewModel", "Failed to analyze tax savings", savingsResult.exceptionOrNull())
-                    throw savingsResult.exceptionOrNull() ?: Exception("Failed to analyze tax savings")
-                }
-
-                val savings = savingsResult.getOrNull() ?: emptyMap()
-                Log.d("ReceiptViewModel", "Analysis complete, returning results: $savings")
-                onResult(savings)
-
-            } catch (e: Exception) {
-                Log.e("ReceiptViewModel", "Error analyzing tax savings", e)
-                errorMessage = "Failed to analyze tax savings: ${e.localizedMessage}"
-                onResult(emptyMap())
-            } finally {
-                isLoading = false
-            }
-        }
-    }
 }

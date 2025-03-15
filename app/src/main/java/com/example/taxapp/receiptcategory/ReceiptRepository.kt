@@ -2,10 +2,8 @@ package com.example.taxapp.receiptcategory
 
 import android.net.Uri
 import android.util.Log
-import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
@@ -73,7 +71,7 @@ class ReceiptRepository {
             Log.d("ReceiptRepository", "Image URI: $imageUri")
 
             // Upload the image - using putFile instead of putBytes
-            val uploadTask = imageRef.putFile(imageUri).await()
+
 
             // Get download URL only after successful upload
             val downloadUrl = imageRef.downloadUrl.await().toString()

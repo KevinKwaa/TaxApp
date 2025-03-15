@@ -12,7 +12,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,24 +25,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -58,7 +52,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -73,9 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -83,12 +74,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
 import com.example.taxapp.accessibility.AccessibilityState
-import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.accessibility.ScreenReader
@@ -98,8 +87,6 @@ import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
 import com.example.taxapp.user.AppUtil
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -243,12 +230,7 @@ fun UploadReceiptScreen(
             modifier = modifier.padding(innerPadding),
             navController = navController,
             receiptViewModel = receiptViewModel,
-            showLanguageSelector = showLanguageSelector,
-            showAccessibilitySettings = showAccessibilitySettings,
-            onShowLanguageSelector = { showLanguageSelector = it },
-            onShowAccessibilitySettings = { showAccessibilitySettings = it },
             currentLanguageCode = currentLanguageCode,
-            onLanguageSelected = { currentLanguageCode = it },
             accessibilityState = accessibilityState
         )
 
@@ -284,12 +266,7 @@ fun UploadReceiptContent(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     receiptViewModel: ReceiptViewModel,
-    showLanguageSelector: Boolean,
-    showAccessibilitySettings: Boolean,
-    onShowLanguageSelector: (Boolean) -> Unit,
-    onShowAccessibilitySettings: (Boolean) -> Unit,
     currentLanguageCode: String,
-    onLanguageSelected: (String) -> Unit,
     accessibilityState: AccessibilityState
 ) {
     val context = LocalContext.current
@@ -439,7 +416,6 @@ fun UploadReceiptContent(
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
-    val isDarkMode = LocalDarkMode.current
     ScreenReader("Upload Receipt Screen")
     val ttsManager = LocalTtsManager.current
 

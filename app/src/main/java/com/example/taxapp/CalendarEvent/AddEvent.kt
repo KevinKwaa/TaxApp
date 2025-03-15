@@ -122,6 +122,7 @@ fun AddEventScreen(
 
     val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", locale)
     val displayDateFormat = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", locale)
+    val timeErrorMessage = stringResource(id = R.string.time_validator)
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Scaffold(
@@ -232,7 +233,7 @@ fun AddEventScreen(
 //                        }
 
                         // Validate end time is after start time
-                        val timeValidation = TimeValidator.validateTimeOrder(startTime, endTime)
+                        val timeValidation = TimeValidator.validateTimeOrder(startTime, endTime, timeErrorMessage)
                         if (!timeValidation.first) {
                             timeError = timeValidation.second
                             return@ExtendedFloatingActionButton
@@ -532,14 +533,6 @@ fun AddEventScreen(
                 },
                 onDismiss = { showDatePicker = false },
                 initialDate = selectedDate,
-//                validateDate = { date ->
-//                    // Example validation: Can't select dates in the past
-//                    if (DateValidator.isPastDate(date)) {
-//                        Pair(false, "Cannot select a date in the past.")
-//                    } else {
-//                        Pair(true, null)
-//                    }
-//                }
             )
         }
 
@@ -578,7 +571,7 @@ fun AddEventScreen(
             AccessibleTimePickerDialog(
                 onTimeSelected = { newTime ->
                     // Validate end time is after start time
-                    val validation = TimeValidator.validateTimeOrder(startTime, newTime)
+                    val validation = TimeValidator.validateTimeOrder(startTime, newTime, timeErrorMessage)
                     if (validation.first) {
                         endTime = newTime
                         timeError = null
@@ -609,7 +602,7 @@ fun AddEventScreen(
                 title = stringResource(id = R.string.select_end_time),
                 validateTime = { time ->
                     // Validate compared to start time
-                    TimeValidator.validateTimeOrder(startTime, time)
+                    TimeValidator.validateTimeOrder(startTime, time, timeErrorMessage)
                 }
             )
         }

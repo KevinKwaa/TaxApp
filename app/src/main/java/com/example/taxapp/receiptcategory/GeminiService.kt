@@ -4,9 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
+import androidx.core.graphics.scale
 import com.example.taxapp.R
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
@@ -14,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -271,7 +269,7 @@ class GeminiService(private val context: Context) {
                     val ratio = minOf(1024.0 / bitmap.width, 1024.0 / bitmap.height)
                     val width = (bitmap.width * ratio).toInt()
                     val height = (bitmap.height * ratio).toInt()
-                    return@withContext Bitmap.createScaledBitmap(bitmap, width, height, true)
+                    return@withContext bitmap.scale(width, height)
                 }
 
                 bitmap
@@ -286,7 +284,6 @@ class GeminiService(private val context: Context) {
      * Analyze tax savings opportunities based on receipt data
      * Takes a list of ReceiptModel and returns potential tax savings by category
      */
-    @RequiresApi(Build.VERSION_CODES.N)
     suspend fun analyzeTaxSavings(receipts: List<ReceiptModel>): Result<Map<String, Double>> {
         try {
             Log.d("GeminiService", "Analyzing tax savings for ${receipts.size} receipts")
@@ -306,14 +303,14 @@ class GeminiService(private val context: Context) {
 
             // Prepare prompt for Gemini
             val categoriesText = categoryTotals.entries.joinToString("\n") {
-                "- ${it.key}: RM ${String.format("%.2f", it.value)}"
+                "- ${it.key}: RM ${String.format(Locale.getDefault(), "%.2f", it.value)}"
             }
 
             val prompt = """
                 Based on the following spending in Malaysian tax relief categories:
                 $categoriesText
                 
-                Total spending: RM ${String.format("%.2f", totalSpending)}
+                Total spending: RM ${String.format(Locale.getDefault(), "%.2f", totalSpending)}
                 
                 Please analyze and provide:
                 1. Which categories qualify for tax relief in Malaysia

@@ -29,7 +29,7 @@ object TimeValidator {
      * Validate that end time is after start time
      * @return pair of (isValid, errorMessage)
      */
-    fun validateTimeOrder(startTime: String, endTime: String): Pair<Boolean, String?> {
+    fun validateTimeOrder(startTime: String, endTime: String, errorMessage: String): Pair<Boolean, String?> {
         // First check if both times are valid
         val startValid = validateTimeString(startTime)
         val endValid = validateTimeString(endTime)
@@ -48,7 +48,7 @@ object TimeValidator {
 
         // Compare hours first, then minutes
         if (endHour < startHour || (endHour == startHour && endMinute <= startMinute)) {
-            return Pair(false, "End time must be after start time.")
+            return Pair(false, errorMessage)
         }
 
         return Pair(true, null)

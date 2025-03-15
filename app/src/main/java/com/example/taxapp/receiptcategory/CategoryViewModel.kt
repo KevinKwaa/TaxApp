@@ -1,8 +1,6 @@
 package com.example.taxapp.receiptcategory
 
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -14,7 +12,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.UUID
 
 class CategoryViewModel : ViewModel() {
     private val repository = ReceiptRepository()
@@ -31,13 +28,6 @@ class CategoryViewModel : ViewModel() {
     var selectedYear by mutableStateOf<Int?>(null)
 
     // Edit receipt state (legacy support)
-    var isEditingReceipt by mutableStateOf(false)
-    var currentEditReceipt by mutableStateOf<ReceiptModel?>(null)
-    var editMerchantName by mutableStateOf("")
-    var editTotal by mutableStateOf("")
-    var editDate by mutableStateOf("")
-    var editCategory by mutableStateOf("")
-    var editExpenseItems by mutableStateOf<List<ExpenseItem>>(emptyList())
 
     // Edit expense item state (new, focused on individual items)
     var isEditingExpenseItem by mutableStateOf(false)
@@ -74,7 +64,6 @@ class CategoryViewModel : ViewModel() {
         loadCategoryData()
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     fun loadCategoryData() {
         viewModelScope.launch {
             isLoading = true
@@ -199,7 +188,6 @@ class CategoryViewModel : ViewModel() {
     }
 
     // Set the selected year and reload data
-    @RequiresApi(Build.VERSION_CODES.N)
     fun setSelectedYear(year: Int) {
         if (selectedYear != year) {
             selectedYear = year
@@ -224,7 +212,7 @@ class CategoryViewModel : ViewModel() {
 
     // Format currency for display
     fun formatCurrency(amount: Double): String {
-        return String.format("RM %.2f", amount)
+        return String.format(Locale.getDefault(), "%.2f", amount)
     }
 
     // Parse date from string
@@ -284,7 +272,6 @@ class CategoryViewModel : ViewModel() {
     }
 
     // Save edited expense item
-    @RequiresApi(Build.VERSION_CODES.N)
     fun saveEditedExpenseItem(onSuccess: () -> Unit, onError: (String) -> Unit) {
         val parentReceipt = findParentReceipt(currentEditExpenseItem ?: return)
         if (parentReceipt == null) {
@@ -406,84 +393,13 @@ class CategoryViewModel : ViewModel() {
     // Legacy methods for receipt editing (supporting backward compatibility)
 
     // Start editing receipt
-    fun startEditingReceipt(receipt: ReceiptModel) {
-        currentEditReceipt = receipt
-        editMerchantName = receipt.merchantName
-        editTotal = receipt.total.toString()
-        editDate = formatDate(receipt.date)
-        editCategory = receipt.category
-        editExpenseItems = receipt.items
-        isEditingReceipt = true
-    }
-
-    // Cancel editing
-    fun cancelEditing() {
-        isEditingReceipt = false
-        currentEditReceipt = null
-        clearEditFields()
-    }
 
     // Clear edit fields
-    private fun clearEditFields() {
-        editMerchantName = ""
-        editTotal = ""
-        editDate = ""
-        editCategory = ""
-        editExpenseItems = emptyList()
-    }
 
     // Save edited receipt
-    @RequiresApi(Build.VERSION_CODES.N)
-    fun saveEditedReceipt(onSuccess: () -> Unit, onError: (String) -> Unit) {
-        val currentReceipt = currentEditReceipt ?: return
 
-        viewModelScope.launch {
-            isLoading = true
-
-            try {
-                // Parse values
-                val totalAmount = editTotal.replace(",", ".").toDoubleOrNull() ?: 0.0
-                val receiptDate = parseDate(editDate)
-
-                // Create updated receipt
-                val updatedReceipt = currentReceipt.copy(
-                    merchantName = editMerchantName,
-                    total = totalAmount,
-                    date = receiptDate,
-                    category = editCategory,
-                    items = editExpenseItems,
-                    updatedAt = Timestamp.now()
-                )
-
-                // Update receipt in Firestore
-                val result = repository.updateReceipt(updatedReceipt)
-                if (result.isFailure) {
-                    throw result.exceptionOrNull() ?: Exception("Failed to update receipt")
-                }
-
-                // Refresh data
-                loadCategoryData()
-
-                // Reset edit state
-                isEditingReceipt = false
-                currentEditReceipt = null
-                clearEditFields()
-
-                onSuccess()
-            } catch (e: Exception) {
-                Log.e("CategoryViewModel", "Error updating receipt", e)
-                onError(e.localizedMessage ?: "Failed to update receipt")
-            } finally {
-                isLoading = false
-            }
-        }
-    }
 
     // Confirm delete receipt
-    fun confirmDeleteReceipt(receipt: ReceiptModel) {
-        receiptToDelete = receipt
-        showDeleteConfirmation = true
-    }
 
     // Delete receipt
     fun deleteReceipt(onSuccess: () -> Unit, onError: (String) -> Unit) {
@@ -540,7 +456,6 @@ class CategoryViewModel : ViewModel() {
     }
 
     // Clear all expenses for a specific year
-    @RequiresApi(Build.VERSION_CODES.N)
     fun clearExpensesForYear(onSuccess: () -> Unit, onError: (String) -> Unit) {
         val year = yearToClear ?: return
 

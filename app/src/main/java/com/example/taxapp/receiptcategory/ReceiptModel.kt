@@ -27,7 +27,3 @@ data class ExpenseItem(
     val date: Date = Date()
 )
 
-data class ExpenseItemWithReceipt(
-    val item: ExpenseItem,
-    val receipt: ReceiptModel
-)
