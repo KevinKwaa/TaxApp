@@ -83,7 +83,7 @@ fun AccessibleDatePickerDialog(
     onDateSelected: (LocalDate) -> Unit,
     onDismiss: () -> Unit,
     initialDate: LocalDate = LocalDate.now(),
-    //validateDate: ((LocalDate) -> Pair<Boolean, String?>)? = null
+    validateDate: ((LocalDate) -> Pair<Boolean, String?>)? = null
 ) {
     val isDarkMode = LocalDarkMode.current
     val accessibleColors = LocalThemeColors.current
@@ -110,17 +110,21 @@ fun AccessibleDatePickerDialog(
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate()
 
-                        // Validate the selected date if a validator is provided
-//                        if (validateDate != null) {
-//                            val validation = validateDate(selectedDate)
-//                            if (!validation.first) {
-//                                // Show validation error
-//                                dateError = validation.second
-//                                return@Button
-//                            }
-//                        }
+                        // Check if date is in the past
+                        if (DateValidator.isPastDate(selectedDate)) {
+                            dateError = "Cannot create an event in the past"
+                            return@Button
+                        }
 
-                        // If validation passes or no validator
+                        // Custom validation if provided
+                        if (validateDate != null) {
+                            val validation = validateDate(selectedDate)
+                            if (!validation.first) {
+                                dateError = validation.second
+                                return@Button
+                            }
+                        }
+
                         onDateSelected(selectedDate)
                         onDismiss()
                     }
@@ -128,7 +132,9 @@ fun AccessibleDatePickerDialog(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = accessibleColors.buttonBackground,
                     contentColor = accessibleColors.buttonText
-                )
+                ),
+                // Disable button when there's a date error
+                enabled = dateError == null
             ) {
                 Text(stringResource(id = R.string.ok))
             }
@@ -470,7 +476,7 @@ fun ImprovedNumberScroller(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AccessibleTimePickerDialog(
-    onTimeSelected: (String) -> Unit,
+    onTimeSelected:  (String) -> Unit,
     onDismiss: () -> Unit,
     initialTime: String = "09:00",
     title: String = stringResource(id = R.string.select_time),

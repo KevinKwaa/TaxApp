@@ -533,6 +533,7 @@ fun EventEditMode(
 
     // Date formatter for display
     val displayDateFormat = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", locale)
+    val timeErrorMessage = stringResource(id = R.string.time_validator)
 
     // Check if the event is past due (for to-do events)
     val isPastDue = isTodoEvent && !isCompleted &&
@@ -643,7 +644,7 @@ fun EventEditMode(
                     }
 
                     // Validate end time is after start time
-                    val timeValidation = TimeValidator.validateTimeOrder(startTime, endTime)
+                    val timeValidation = TimeValidator.validateTimeOrder(startTime, endTime, timeErrorMessage)
                     if (!timeValidation.first) {
                         timeError = timeValidation.second
                         return@FloatingActionButton
@@ -1189,7 +1190,7 @@ fun EventEditMode(
         AccessibleTimePickerDialog(
             onTimeSelected = { newTime ->
                 // Validate end time is after start time
-                val validation = TimeValidator.validateTimeOrder(startTime, newTime)
+                val validation = TimeValidator.validateTimeOrder(startTime, newTime, timeErrorMessage)
                 if (validation.first) {
                     endTime = newTime
                     timeError = null
@@ -1220,7 +1221,7 @@ fun EventEditMode(
             title = stringResource(id = R.string.select_end_time),
             validateTime = { time ->
                 // Validate compared to start time
-                TimeValidator.validateTimeOrder(startTime, time)
+                TimeValidator.validateTimeOrder(startTime, time, timeErrorMessage)
             }
         )
     }
