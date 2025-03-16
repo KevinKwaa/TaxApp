@@ -4,8 +4,7 @@ import android.app.Application
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import android.util.Log
-import com.example.taxapp.firebase.FirebaseManager
-import com.google.firebase.FirebaseApp
+import com.example.taxapp.user.FirebaseManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 

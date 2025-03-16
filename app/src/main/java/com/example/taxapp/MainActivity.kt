@@ -26,7 +26,7 @@ import com.example.taxapp.CalendarEvent.FadeTransition
 import com.example.taxapp.CalendarEvent.LoadingScreen
 import com.example.taxapp.CalendarEvent.TaxDeadlineHelper
 import com.example.taxapp.accessibility.AccessibilityRepository
-import com.example.taxapp.firebase.FirebaseManager
+import com.example.taxapp.user.FirebaseManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore

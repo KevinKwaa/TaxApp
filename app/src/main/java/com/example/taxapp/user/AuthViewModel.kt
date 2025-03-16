@@ -3,18 +3,15 @@ package com.example.taxapp.user
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.CalendarEvent.TaxDeadlineHelper
 import com.example.taxapp.R
-import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class AuthViewModel : ViewModel() {
     private val TAG = "AuthViewModel"

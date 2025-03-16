@@ -1,19 +1,16 @@
 package com.example.taxapp
 
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -52,7 +49,7 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import com.example.taxapp.firebase.FirebaseManager
+import com.example.taxapp.user.FirebaseManager
 import com.example.taxapp.receiptcategory.CategoryScreen
 import com.example.taxapp.receiptcategory.ReceiptSummaryScreen
 import com.example.taxapp.receiptcategory.ReceiptViewModel

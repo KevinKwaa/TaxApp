@@ -1,17 +1,15 @@
-package com.example.taxapp.firebase
+package com.example.taxapp.user
 
 import android.content.Context
 import android.util.Log
 import com.example.taxapp.CalendarEvent.EventRepository
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -107,11 +105,6 @@ object FirebaseManager {
     }
 
     // Get Auth instance - now using DEFAULT Firebase auth instance to match AuthViewModel
-    fun getAuthInstance(): FirebaseAuth {
-        return Firebase.auth.also {
-            Log.d(TAG, "Retrieved DEFAULT FirebaseAuth")
-        }
-    }
 
     // Get Firestore instance for auth/user data - using DEFAULT Firestore instance
     fun getAuthFirestore(): FirebaseFirestore {
@@ -190,9 +183,4 @@ object FirebaseManager {
         }
     }
 
-    fun getStorageInstance(): FirebaseStorage {
-        return FirebaseStorage.getInstance().also {
-            Log.d(TAG, "Retrieved DEFAULT FirebaseStorage")
-        }
-    }
 }

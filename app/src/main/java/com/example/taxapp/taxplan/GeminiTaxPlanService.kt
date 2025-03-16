@@ -3,6 +3,7 @@ package com.example.taxapp.taxplan
 import android.content.Context
 import android.util.Log
 import com.example.taxapp.BuildConfig
+import com.example.taxapp.user.FirebaseManager
 import com.example.taxapp.utils.NetworkUtil
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerateContentResponse
@@ -13,8 +14,6 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -112,7 +111,7 @@ class GeminiTaxPlanService(private val context: Context) {
         val result = mutableListOf<ExistingPlanData>()
 
         try {
-            val userId = com.example.taxapp.firebase.FirebaseManager.getCurrentUserId() ?: return result
+            val userId = FirebaseManager.getCurrentUserId() ?: return result
 
             // Fetch plans from Firestore
             val snapshot = Firebase.firestore.collection("tax_plans")

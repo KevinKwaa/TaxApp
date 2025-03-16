@@ -1,7 +1,7 @@
 package com.example.taxapp.taxplan
 
 import android.util.Log
-import com.example.taxapp.firebase.FirebaseManager
+import com.example.taxapp.user.FirebaseManager
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 

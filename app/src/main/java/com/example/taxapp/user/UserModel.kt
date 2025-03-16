@@ -5,9 +5,4 @@ data class UserModel(
     val uid : String,
     val password: String = ""
 
-    //val name : String,
-    //    val phone : String,
-    //    val dob: String,
-    //    val income : Double,
-
 )

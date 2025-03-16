@@ -72,10 +72,10 @@ object ValidationUtil {
             }
 
             if (day < 1 || day > maxDays) {
-                if (month == 2 && day == 29 && !isLeapYear(year)) {
-                    return ValidationResult(false, context.getString(R.string.error_dob_not_leap_year))
+                return if (month == 2 && day == 29 && !isLeapYear(year)) {
+                    ValidationResult(false, context.getString(R.string.error_dob_not_leap_year))
                 } else {
-                    return ValidationResult(false, context.getString(R.string.error_dob_invalid_day))
+                    ValidationResult(false, context.getString(R.string.error_dob_invalid_day))
                 }
             }
 
@@ -130,13 +130,6 @@ object ValidationUtil {
         }
     }
 
-    // Employment validation - Check if it's one of the valid options
-    fun validateEmployment(employment: String, context: Context): ValidationResult {
-        return when (employment) {
-            "employee", "self-employed" -> ValidationResult(true)
-            else -> ValidationResult(false, context.getString(R.string.error_employment_invalid))
-        }
-    }
 
     // Password validation - Check if it follows required format
     fun validatePassword(password: String, context: Context): ValidationResult {
@@ -160,23 +153,7 @@ object ValidationUtil {
     }
 
     // Combined validation for all fields
-    fun validateAllFields(
-        name: String,
-        phone: String,
-        dob: String,
-        income: String,
-        employment: String,
-        context: Context
-    ): Boolean {
-        val nameResult = validateName(name, context)
-        val phoneResult = validatePhone(phone, context)
-        val dobResult = validateDOB(dob, context)
-        val incomeResult = validateIncome(income, context)
-        val employmentResult = validateEmployment(employment, context)
 
-        return nameResult.isValid && phoneResult.isValid &&
-                dobResult.isValid && incomeResult.isValid && employmentResult.isValid
-    }
 
     // For backward compatibility - these methods use the app context to get strings
     // You should migrate all calls to the context versions above
@@ -243,31 +220,6 @@ object ValidationUtil {
         }
     }
 
-    fun validateEmployment(employment: String): ValidationResult {
-        return when (employment) {
-            "employee", "self-employed" -> ValidationResult(true)
-            else -> ValidationResult(false, "Please select a valid employment type")
-        }
-    }
-
-    fun validatePassword(password: String): ValidationResult {
-        return when {
-            password.isBlank() -> ValidationResult(false, "Password cannot be empty")
-            password.length < 8 -> ValidationResult(false, "Password must be at least 8 characters long")
-            !password.any { it.isUpperCase() } -> ValidationResult(false, "Password must contain at least one uppercase letter")
-            !password.any { it.isDigit() } -> ValidationResult(false, "Password must contain at least one number")
-            !password.any { !it.isLetterOrDigit() } -> ValidationResult(false, "Password must contain at least one special character")
-            else -> ValidationResult(true)
-        }
-    }
-
-    fun validatePasswordConfirmation(password: String, confirmPassword: String): ValidationResult {
-        return when {
-            confirmPassword.isBlank() -> ValidationResult(false, "Please confirm your password")
-            password != confirmPassword -> ValidationResult(false, "Passwords do not match")
-            else -> ValidationResult(true)
-        }
-    }
 }
 
 data class ValidationResult(

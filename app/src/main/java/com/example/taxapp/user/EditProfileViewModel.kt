@@ -1,6 +1,5 @@
 package com.example.taxapp.user
 
-import android.app.Application
 import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -10,16 +9,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.taxapp.CalendarEvent.EventRepository
 import com.example.taxapp.CalendarEvent.TaxDeadlineHelper
-import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class EditProfileViewModel : ViewModel() {
     private val TAG = "EditProfileViewModel"
@@ -35,11 +31,6 @@ class EditProfileViewModel : ViewModel() {
     var employment by mutableStateOf("employee")
     private var originalEmployment = "employee" // Track the original value
 
-    // Add this property to EditProfileViewModel
-    var password by mutableStateOf("••••••••") // Default masked value
-    private var actualPassword = "" // Store the actual password
-
-
     var email by mutableStateOf("")
     var name by mutableStateOf("")
     var phone by mutableStateOf("")
@@ -50,11 +41,9 @@ class EditProfileViewModel : ViewModel() {
 
     // Add a flag to indicate if tax events need refresh
     private val _needsEventsRefresh = MutableStateFlow(false)
-    val needsEventsRefresh: StateFlow<Boolean> = _needsEventsRefresh
 
     // State for tracking tax event updates
     private val _taxEventUpdateState = MutableStateFlow<TaxEventUpdateState>(TaxEventUpdateState.NotStarted)
-    val taxEventUpdateState: StateFlow<TaxEventUpdateState> = _taxEventUpdateState
 
     // Enum to track tax event update state
     enum class TaxEventUpdateState {
@@ -116,9 +105,6 @@ class EditProfileViewModel : ViewModel() {
     }
 
     // Public method to force refresh data (call this from UI when needed)
-    fun refreshData() {
-        getUserData()
-    }
 
     fun getUserData() {
         val userId = FirebaseManager.getCurrentUserId()
@@ -133,7 +119,7 @@ class EditProfileViewModel : ViewModel() {
         isLoading = true
         errorMessage = null // Clear any previous errors
 
-        Log.d(TAG, "Fetching user document from Firestore")
+        Log.d(TAG, "Fetching user document from FireStore")
         firestore.collection("users").document(userId)
             .get()
             .addOnSuccessListener { document ->
@@ -150,7 +136,7 @@ class EditProfileViewModel : ViewModel() {
 
                     // Get tax filing preference with default value "employee"
                     val employmentFromDoc = document.getString("employment") ?: "employee"
-                    Log.d(TAG, "Loaded employment status from Firestore: $employmentFromDoc")
+                    Log.d(TAG, "Loaded employment status from FireStore: $employmentFromDoc")
 
                     // Store original for comparison
                     originalEmployment = employmentFromDoc
@@ -254,7 +240,7 @@ class EditProfileViewModel : ViewModel() {
                             try {
                                 Log.d(TAG, "Employment changed from $prevEmployment to $employment - updating tax deadline events")
 
-                                // Wait a moment for Firestore to update profile
+                                // Wait a moment for FireStore to update profile
                                 delay(500)
 
                                 // IMPORTANT: First reset the repository to clear out any cached events
@@ -276,7 +262,7 @@ class EditProfileViewModel : ViewModel() {
 
                                     Log.d(TAG, "Tax event update completed: $success")
 
-                                    // Allow time for Firestore operations to complete
+                                    // Allow time for FireStore operations to complete
                                     viewModelScope.launch {
                                         // Force reset repository to ensure fresh data on next calendar view
                                         EventRepository.resetInstance()
@@ -286,7 +272,7 @@ class EditProfileViewModel : ViewModel() {
                                         val repo = EventRepository.getInstance()
                                         repo.forceRefresh()
 
-                                        // Give Firestore time to catch up
+                                        // Give FireStore time to catch up
                                         delay(500)
 
                                         // Signal completion only after everything is done
@@ -331,60 +317,7 @@ class EditProfileViewModel : ViewModel() {
     /**
      * Force update tax events based on current employment
      */
-    fun forceUpdateTaxEvents(onComplete: (Boolean) -> Unit = {}) {
-        viewModelScope.launch {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                isLoading = true
-                _taxEventUpdateState.value = TaxEventUpdateState.InProgress
 
-                try {
-                    // Make sure repository is fresh
-                    EventRepository.resetInstance()
-                    delay(300)
-
-                    // Force update events using the helper
-                    TaxDeadlineHelper.updateTaxDeadlineEvents(
-                        employment,
-                        viewModelScope
-                    ) { success ->
-                        _taxEventUpdateState.value = if (success) {
-                            TaxEventUpdateState.Success
-                        } else {
-                            TaxEventUpdateState.Failed
-                        }
-
-                        // Always force refresh to update UI, even on failure
-                        viewModelScope.launch {
-                            // Reset for fresh start
-                            EventRepository.resetInstance()
-                            delay(300)
-
-                            // Get a fresh instance to refresh data
-                            val repo = EventRepository.getInstance()
-                            repo.forceRefresh()
-
-                            isLoading = false
-                            onComplete(success)
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error in forceUpdateTaxEvents", e)
-                    _taxEventUpdateState.value = TaxEventUpdateState.Failed
-
-                    // Reset and refresh even on failure
-                    EventRepository.resetInstance()
-                    delay(300)
-                    EventRepository.getInstance().forceRefresh()
-
-                    isLoading = false
-                    onComplete(false)
-                }
-            } else {
-                // Not supported on this Android version
-                onComplete(false)
-            }
-        }
-    }
 
     override fun onCleared() {
         super.onCleared()

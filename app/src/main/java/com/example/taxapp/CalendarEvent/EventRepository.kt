@@ -3,10 +3,8 @@ package com.example.taxapp.CalendarEvent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.example.taxapp.firebase.FirebaseManager
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -23,7 +21,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Repository for managing events with Firebase Firestore

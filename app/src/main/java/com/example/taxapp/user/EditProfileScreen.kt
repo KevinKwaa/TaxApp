@@ -41,8 +41,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -77,17 +77,13 @@ import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
 import com.example.taxapp.accessibility.AccessibilityState
-import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.accessibility.ScreenReader
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,8 +92,6 @@ fun EditProfileScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     editProfileViewModel: EditProfileViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel(),
-    onProfileSaved: () -> Unit = {} // Add this callback parameter with default empty implementation
 ){
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -135,9 +129,6 @@ fun EditProfileScreen(
         }
     }
 
-    // Get the custom colors
-    val accessibleColors = LocalThemeColors.current
-    val isDarkMode = LocalDarkMode.current
     ScreenReader("Home Screen")
     val ttsManager = LocalTtsManager.current
 
@@ -259,8 +250,6 @@ fun EditProfileScreen(
             modifier = modifier.padding(innerPadding),
             navController = navController,
             editProfileViewModel = editProfileViewModel,
-            // Pass the current language code to the child
-            currentLanguageCode = currentLanguageCode
         )
     }
 
@@ -295,7 +284,6 @@ fun EditProfileScreenContent(
     navController: NavHostController,
     editProfileViewModel: EditProfileViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
-    currentLanguageCode: String,
     onProfileSaved: () -> Unit = {}
 ){
     // Use collectAsState to properly observe viewModel state
@@ -318,7 +306,6 @@ fun EditProfileScreenContent(
     var isFormValid by remember { mutableStateOf(false) }
 
     var context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     val coroutineScope = rememberCoroutineScope()
     val activity = context as? ComponentActivity
@@ -356,7 +343,6 @@ fun EditProfileScreenContent(
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
-    val isDarkMode = LocalDarkMode.current
     ScreenReader("Edit Profile Screen")
     val ttsManager = LocalTtsManager.current
 
@@ -638,7 +624,7 @@ fun EditProfileScreenContent(
                             }
                         }
 
-                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                         // self-employed filing option
                         Row(
@@ -767,7 +753,7 @@ fun EditProfileScreenContent(
                     color = accessibleColors.buttonBackground
                 )
             ) {
-                Text(text = stringResource(id = R.string.logout),)
+                Text(text = stringResource(id = R.string.logout))
             }
         }
 
