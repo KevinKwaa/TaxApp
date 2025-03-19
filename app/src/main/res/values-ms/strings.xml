@@ -1,20 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Calendar Screen -->
+    <!-- ==================== GENERAL APP STRINGS ==================== -->
     <string name="app_name">App Pengendali Cukai Pintar</string>
-    <string name="scheduler">Penjadual</string>
+    <string name="welcome_message">Selamat datang ke Pengendali Cukai Pintar</string>
+    <string name="welcome_description">Aplikasi bersepadu AI untuk membantu anda dalam pengisytiharan cukai</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Batal</string>
+    <string name="confirm">Sahkan</string>
+    <string name="delete">Padam</string>
+    <string name="back">Balik</string>
+    <string name="done">Selesai</string>
+    <string name="save">Simpan</string>
+    <string name="retry">Cuba semula</string>
+    <string name="try_again">Cuba Lagi</string>
+    <string name="error">Ralat</string>
+    <string name="got_it">Faham</string>
+    <string name="is_saving">Sedang menyimpan...</string>
+    <string name="home">Laman Utama</string>
+    <string name="acknowledge">Saya Faham</string>
+    <string name="rm">RM</string>
+    <string name="unknown_error">Ralat tidak diketahui</string>
+    <string name="going_back_home">Kembali ke laman utama</string>
+    <string name="back_to_home">Kembali ke laman utama</string>
+    <string name="going_home">Pergi ke laman utama</string>
+    <string name="no_data">Tiada data tersedia</string>
+    <string name="loading_data">Memuatkan data...</string>
+    <string name="error_message">Mesej Ralat</string>
+    <string name="version_requirement">Ciri ini memerlukan Android N atau lebih tinggi</string>
+    <string name="internet_required">Sambungan internet diperlukan</string>
+
+    <!-- ==================== MULTI-LANGUAGE ==================== -->
     <string name="current_language">Bahasa Semasa:</string>
     <string name="select_language">Pilih Bahasa:</string>
     <string name="language_english">English</string>
     <string name="language_chinese">中文</string>
     <string name="language_malay">Bahasa Melayu</string>
+    <string name="change_language">Tukar Bahasa</string>
+
+    <!-- ==================== NAVIGATION & ACTIONS ==================== -->
+    <string name="accessibility_settings">Tetapan Kebolehcapaian</string>
+    <string name="ai_information">Maklumat AI</string>
+    <string name="calendar">Kalendar</string>
+    <string name="account">Akaun</string>
+    <string name="scheduler">Penjadual</string>
+    <string name="tax_calendar">Kalendar Cukai</string>
+    <string name="upload_receipt">Muat Naik Resit</string>
+    <string name="tax_categories">Kategori Cukai</string>
+    <string name="tax_plan">Perancangan Cukai</string>
+    <string name="logout">Log Keluar</string>
+    <string name="profile">Profil</string>
+
+    <!-- ==================== AUTHENTICATION ==================== -->
+    <string name="login">Log Masuk</string>
+    <string name="register">Daftar</string>
+    <string name="email">E-mel</string>
+    <string name="password">Kata Laluan</string>
+    <string name="confirm_password">Sahkan kata laluan</string>
+    <string name="sign_in">Log Masuk</string>
+    <string name="sign_up">Daftar</string>
+    <string name="welcome_back">Selamat kembali</string>
+    <string name="create_account">Buat akaun</string>
+    <string name="sign_in_to_account">Log masuk ke akaun anda</string>
+    <string name="logging_in">Log masuk</string>
+    <string name="creating_account">Mencipta akaun</string>
+    <string name="password_requirements">Kata laluan mestilah sekurang-kurangnya 8 aksara dengan huruf besar, nombor dan aksara khas</string>
+    <string name="user_not_authenticated">Sila log masuk untuk menjana pelan cukai</string>
+
+    <!-- ==================== PROFILE ==================== -->
+    <string name="edit_profile">Edit Profil</string>
+    <string name="save_profile">Simpan Profil</string>
+    <string name="name">Nama</string>
+    <string name="phone">Nombor Telefon</string>
+    <string name="date_of_birth">Tarikh Lahir</string>
+    <string name="total_income">Jumlah Pendapatan</string>
+    <string name="complete_profile">Lengkapkan profil anda</string>
+    <string name="hello">Hello!</string>
+    <string name="going_to_profile">Pergi ke profil</string>
+    <string name="individual_employ">Pekerja Individu</string>
+    <string name="individual_description">Saya bekerja di bawah sebuah organisasi.</string>
+    <string name="self_employed">Bekerja Sendiri</string>
+    <string name="self_employed_description">Saya menjalankan perniagaan saya sendiri dan tidak bekerja dengan orang lain.</string>
+
+    <!-- ==================== CALENDAR & EVENTS ==================== -->
     <string name="events_for">Acara untuk %1$s</string>
     <string name="no_events">Tiada acara dijadualkan untuk hari ini</string>
     <string name="add_new_event">Tambah Acara Baru</string>
-    <string name="confirm">Sahkan</string>
-    <string name="cancel">Batal</string>
-
-    <!-- AddEventScreen and EditEventScreen -->
     <string name="event_details">Butiran Acara</string>
     <string name="edit_event">Edit Acara</string>
     <string name="event_name">Nama Acara</string>
@@ -25,8 +95,6 @@
     <string name="reminder_for_event">Peringatan untuk Acara:</string>
     <string name="save_event">Simpan Acara</string>
     <string name="save_changes">Simpan Perubahan</string>
-
-    <!-- EventDetailScreen -->
     <string name="date_colon">Tarikh: </string>
     <string name="time_colon">Masa: </string>
     <string name="description_colon">Penerangan:</string>
@@ -36,9 +104,45 @@
     <string name="delete_event">Padam Acara</string>
     <string name="back_to_calendar">Kembali ke Kalendar</string>
     <string name="delete_confirmation">Adakah anda pasti mahu memadam acara ini?</string>
-    <string name="delete">Padam</string>
+    <string name="tax_calendar_desc">Ikuti tarikh akhir cukai penting dan penjadualannya.</string>
+    <string name="going_to_calendar">Pergi ke kalendar</string>
+    <string name="select_date">Pilih Tarikh</string>
+    <string name="select_time">Pilih Masa</string>
+    <string name="select_start_time">Pilih Masa Mula</string>
+    <string name="select_end_time">Pilih Masa Tamat</string>
+    <string name="all_events">Semua Acara</string>
+    <string name="events_count_format">%d acara pada tarikh ini</string>
+    <string name="time_separator">hingga</string>
+    <string name="time_validator">Masa tamat mesti selepas masa mula.</string>
 
-    <!-- AccessibilitySettings -->
+    <!-- ==================== TO-DO EVENTS ==================== -->
+    <string name="make_todo_event">Acara Tugasan</string>
+    <string name="todo_events">Acara Untuk Dilakukan</string>
+    <string name="regular_events">Acara Biasa</string>
+    <string name="todo_status">Status Untuk Dilakukan</string>
+    <string name="pending">Belum Selesai</string>
+    <string name="completed">Selesai</string>
+    <string name="past_due">Terlewat Tempoh</string>
+    <string name="mark_as_completed">Tandakan sebagai selesai</string>
+    <string name="mark_as_complete">Tandakan Selesai</string>
+    <string name="mark_as_incomplete">Tandakan Tidak Selesai</string>
+    <string name="past_due_warning">Tugas ini telah terlewat tempoh!</string>
+    <string name="past_due_todo_events">Acara Untuk Dilakukan Yang Terlewat Tempoh</string>
+    <string name="past_due_message">Anda mempunyai %1$d acara untuk dilakukan yang telah terlewat tempoh. Sila semak atau jadualkan semula.</string>
+    <string name="no_todo_events">Tiada acara untuk dilakukan pada tarikh ini</string>
+    <string name="calendar_indicators">Petunjuk Kalendar</string>
+    <string name="regular_event">Acara Biasa</string>
+    <string name="pending_todo">Untuk Dilakukan Belum Selesai</string>
+    <string name="completed_todo">Untuk Dilakukan Selesai</string>
+    <string name="past_due_todo">Untuk Dilakukan Terlewat Tempoh</string>
+    <string name="todo_notification_channel">Peringatan Untuk Dilakukan</string>
+    <string name="todo_notification_title">Peringatan Untuk Dilakukan</string>
+    <string name="past_due_notification">Anda mempunyai %1$d tugas untuk dilakukan yang terlewat tempoh</string>
+    <string name="upcoming_due_notification">Anda mempunyai %1$d tugas untuk dilakukan yang akan tamat tempoh tidak lama lagi</string>
+    <string name="todo_events_count_format">%d acara to-do pada tarikh ini</string>
+    <string name="pending_completed_format">%1$d belum selesai, %2$d selesai</string>
+
+    <!-- ==================== ACCESSIBILITY SETTINGS ==================== -->
     <string name="accessibility_features">Fungsi Kemudahan</string>
     <string name="font_size">Saiz Font</string>
     <string name="text_to_speech">Teks kepada ucapan</string>
@@ -49,53 +153,30 @@
     <string name="apply_changes">Simpan Perubahan</string>
     <string name="stop_speaking">Berhenti Bercakap</string>
 
-    <!-- Chatbot -->
+    <!-- ==================== CHATBOT/AI ASSISTANT ==================== -->
     <string name="ai_assistant">Chatbot AI</string>
     <string name="chat_with_me">Sembang dengan saya</string>
     <string name="type_your_question">Taip soalan anda...</string>
     <string name="send_message">Hantar mesej</string>
     <string name="close_chat">Tutup chat</string>
+    <string name="ai_service_unavailable">Perkhidmatan AI tidak tersedia</string>
+    <string name="ai_generating">AI Sedang Menjana Pelan Cukai...</string>
+    <string name="generate_ai_plan">Jana pelan cukai berkuasa AI baru dengan pilihan tersuai.</string>
+    <string name="ai_tax_plan_generator">Penjana Pelan Cukai AI</string>
+    <string name="ai_feature_description">Ciri ini menggunakan AI untuk menganalisis pendapatan dan jenis pekerjaan anda untuk menjana cadangan penjimatan cukai yang diperibadikan.</string>
+    <string name="how_it_works">Bagaimana ia berfungsi:</string>
+    <string name="ai_step_1">1. AI menganalisis tahap pendapatan dan jenis pekerjaan anda</string>
+    <string name="ai_step_2">2. Ia mengenal pasti kategori pelepasan cukai yang berkaitan dengan situasi anda</string>
+    <string name="ai_step_3">3. Ia menjana cadangan khusus dengan anggaran penjimatan</string>
+    <string name="ai_note">Nota: Pastikan maklumat pendapatan dan pekerjaan anda dalam profil anda dikemas kini untuk cadangan yang paling tepat.</string>
 
-    <!-- General app strings -->
-    <string name="welcome_message">Selamat datang ke Pengendali Cukai Pintar</string>
-    <string name="tax_calendar">Kalendar Cukai</string>
-    <string name="upload_receipt">Muat Naik Resit</string>
-    <string name="tax_categories">Kategori Cukai</string>
-    <string name="tax_plan">Perancangan Cukai</string>
-    <string name="logout">Log Keluar</string>
-    <string name="welcome_description">Aplikasi bersepadu AI untuk membantu anda dalam pengisytiharan cukai</string>
-
-    <!-- Auth screens -->
-    <string name="login">Log Masuk</string>
-    <string name="register">Daftar</string>
-    <string name="email">E-mel</string>
-    <string name="password">Kata Laluan</string>
-    <string name="sign_in">Log Masuk</string>
-    <string name="sign_up">Daftar</string>
-    <string name="welcome_back">Selamat kembali</string>
-    <string name="create_account">Buat akaun</string>
-    <string name="sign_in_to_account">Log masuk ke akaun anda</string>
-    <string name="hello">Hello!</string>
-
-    <!-- Profile screens -->
-    <string name="profile">Profil</string>
-    <string name="edit_profile">Edit Profil</string>
-    <string name="save_profile">Simpan Profil</string>
-    <string name="name">Nama</string>
-    <string name="phone">Nombor Telefon</string>
-    <string name="date_of_birth">Tarikh Lahir</string>
-    <string name="total_income">Jumlah Pendapatan</string>
-    <string name="complete_profile">Lengkapkan profil anda</string>
-
-    <!-- Receipt Upload -->
+    <!-- ==================== RECEIPT UPLOAD & MANAGEMENT ==================== -->
     <string name="receipt_upload">Muat Naik Resit</string>
     <string name="take_photo">Ambil Gambar</string>
     <string name="from_gallery">Dari Galeri</string>
     <string name="receipt_processing">Memproses resit...</string>
     <string name="capture_receipt">Tangkap resit menggunakan kamera</string>
     <string name="select_from_gallery">Pilih resit dari galeri</string>
-
-    <!-- Receipt Details -->
     <string name="receipt_details">Butiran Resit</string>
     <string name="merchant_name">Nama Peniaga: </string>
     <string name="merchant">Peniaga </string>
@@ -104,8 +185,41 @@
     <string name="receipt_category">Kategori</string>
     <string name="expense_items">Item Perbelanjaan %1$s</string>
     <string name="confirm_save">Sahkan dan Simpan</string>
+    <string name="add_receipt">Tambah resit</string>
+    <string name="edit_receipt">Edit resit</string>
+    <string name="receipt_summary">Ringkasan resit</string>
+    <string name="receipt_add">Bagaimanakah anda ingin menambah resit anda?</string>
+    <string name="merchant_colon">Peniaga: %1$s</string>
+    <string name="add_item">Tambah Item</string>
+    <string name="save_item">Simpan Item</string>
+    <string name="delete_receipt_message">Adakah anda pasti mahu memadamkan resit ini? Tindakan ini tidak boleh dibuat asal.</string>
+    <string name="save_num_items">Simpan %1$s Item</string>
+    <string name="discard_changes">Buang Perubahan?</string>
+    <string name="cancel_confirmation_message">Adakah anda pasti mahu membatalkan? Semua barang perbelanjaan akan hilang.</string>
+    <string name="discard">Buang</string>
+    <string name="keep_editing">Teruskan Mengedit</string>
 
-    <!-- Categories -->
+    <!-- ==================== EXPENSE ITEMS ==================== -->
+    <string name="from">Dari:</string>
+    <string name="from_colon">Dari: %1$s</string>
+    <string name="date">Tarikh (DD/MM/YYYY)</string>
+    <string name="total_amount">Jumlah</string>
+    <string name="total_colon">Jumlah: %1$s</string>
+    <string name="items">Barang</string>
+    <string name="item">Barang</string>
+    <string name="item_description">Penerangan item</string>
+    <string name="no_item_add">Tiada item ditambah</string>
+    <string name="no_item">Tiada item dalam kategori ini</string>
+    <string name="amount">Jumlah (RM)</string>
+    <string name="cate">Kategori: %1$s</string>
+    <string name="subtotal">Jumlah kecil</string>
+    <string name="edit_expense_item">Edit Item Perbelanjaan</string>
+    <string name="delete_item">Padamkan item</string>
+    <string name="delete_item_confirmation">Adakah anda pasti mahu memadamkan item perbelanjaan ini?</string>
+    <string name="delete_item_message">Adakah anda pasti mahu memadamkan item perbelanjaan ini? Tindakan ini tidak boleh dibuat asal.</string>
+    <string name="no_item_found">Tiada item ditemui!</string>
+
+    <!-- ==================== CATEGORIES ==================== -->
     <string name="categories">Kategori</string>
     <string name="categories_summary">Ringkasan Kategori</string>
     <string name="total_expenses">Jumlah Perbelanjaan: %1$s</string>
@@ -117,147 +231,148 @@
     <string name="clear_year_message">Adakah anda pasti mahu memadamkan semua perbelanjaan untuk tahun %1$s? Tindakan ini tidak boleh dibuat asal.</string>
     <string name="clear_year_success">Semua perbelanjaan untuk %1$s telah dipadamkan</string>
     <string name="clear_year_expenses">Kosongkan Semua %1$s Perbelanjaan</string>
+    <string name="category">Kategori</string>
 
-    <!-- Tax Plan -->
+    <!-- ==================== TAX PLAN ==================== -->
     <string name="tax_plan_title">Perancangan Cukai</string>
     <string name="tax_savings">Potensi Penjimatan Cukai</string>
     <string name="tax_category_analysis">Analisis Kategori Cukai</string>
     <string name="analyze_receipts">Analisis Resit</string>
     <string name="tax_optimization">Cadangan Pengoptimuman Cukai</string>
-    <string name="no_data">Tiada data tersedia</string>
-    <string name="loading_data">Memuatkan data...</string>
-
-    <string name="error_message">Mesej Ralat</string>
-    <string name="retry">Cuba semula</string>
-    <string name="add_receipt">Tambah resit</string>
-    <string name="category">Kategori</string>
-    <string name="no_item">Tiada item dalam kategori ini</string>
-    <string name="from">Dari:</string>
-    <string name="from_colon">Dari: %1$s</string>
-    <string name="edit_receipt">Edit resit</string>
-    <string name="date">Tarikh (DD/MM/YYYY)</string>
-    <string name="total_amount">Jumlah</string>
-    <string name="items">Barang</string>
-    <string name="item">Barang</string>
-    <string name="no_item_add">Tiada item ditambah</string>
-    <string name="amount">Jumlah (RM)</string>
-    <string name="cate">Kategori: %1$s</string>
-
-    <string name="subtotal">Jumlah kecil</string>
-    <string name="valid_amount">Sila masukkan jumlah yang sah.</string>
-    <string name="item_description">Penerangan item</string>
-    <string name="delete_item">Padamkan item</string>
-    <string name="done">Selesai</string>
-    <string name="total_colon">Jumlah: %1$s</string>
-    <string name="rm">RM</string>
-    <string name="merchant_colon">Saudagar: %1$s</string>
-    <string name="back">Balik</string>
-    <string name="error">Ralat</string>
-    <string name="receipt_summary">Ringkasan resit</string>
-    <string name="receipt_add">Bagaimanakah anda ingin menambah resit anda?</string>
-    <string name="logging_in">Log masuk</string>
-    <string name="creating_account">Mencipta akaun</string>
-    <string name="no_item_found">Tiada item ditemui!</string>
-    <string name="individual_employ">Pekerja Individu</string>
-    <string name="individual_description">Saya bekerja di bawah sebuah organisasi.</string>
-    <string name="self_employed">Bekerja Sendiri</string>
-    <string name="self_employed_description">Saya menjalankan perniagaan saya sendiri dan tidak bekerja dengan orang lain.</string>
-
-    <!-- Tax Information Screen -->
-    <string name="tax_information">Maklumat Cukai</string>
-    <string name="back_to_home">Kembali ke laman utama</string>
-    <string name="going_back_home">Kembali ke laman utama</string>
-    <string name="going_home">Pergi ke laman utama</string>
-    <string name="going_to_profile">Pergi ke profil</string>
-    <string name="home">Laman Utama</string>
-
-    <!-- Tax Information Content -->
-    <string name="your_income_tax">Cukai Pendapatan Anda</string>
-    <string name="your_annual_income">Pendapatan Tahunan Anda:</string>
-    <string name="estimated_tax">Anggaran Cukai:</string>
-    <string name="effective_tax_rate">Kadar Cukai Efektif:</string>
-
-    <!-- Tax Rates Table -->
-    <string name="malaysia_income_tax_rates">Kadar Cukai Pendapatan Malaysia (2023)</string>
-    <string name="chargeable_income">Pendapatan Bercukai (RM)</string>
-    <string name="rate">Kadar (%)</string>
-    <string name="tax_rm">Cukai (RM)</string>
-
-    <!-- Tax Regulations -->
-    <string name="malaysia_tax_regulations">Peraturan Cukai Malaysia</string>
-    <string name="tax_regulations_desc">Cukai pendapatan di Malaysia diuruskan oleh Lembaga Hasil Dalam Negeri Malaysia (LHDN). Berikut adalah peraturan utama untuk pembayar cukai individu:</string>
-
-    <string name="filing_deadline">Tarikh Akhir Pengemukaan</string>
-    <string name="filing_deadline_desc">Bagi individu tanpa pendapatan perniagaan (hanya pendapatan pekerjaan), tarikh akhir pengisian cukai adalah 30 April setiap tahun. Bagi individu dengan pendapatan perniagaan, tarikh akhir adalah 30 Jun.</string>
-
-    <string name="tax_reliefs">Pelepasan Cukai</string>
-    <string name="tax_reliefs_desc">Pelbagai pelepasan cukai tersedia untuk mengurangkan pendapatan bercukai anda. Ini termasuk pelepasan peribadi, perbelanjaan perubatan, perbelanjaan gaya hidup, dan lain-lain.</string>
-
-    <string name="tax_deductions">Potongan Cukai</string>
-    <string name="tax_deductions_desc">Potongan cukai adalah perbelanjaan yang boleh ditolak daripada pendapatan anda sebelum mengira cukai. Ini termasuk sumbangan yang diluluskan kepada badan amal dan pembayaran zakat.</string>
-
-    <string name="payment_methods">Kaedah Pembayaran</string>
-    <string name="payment_methods_desc">Anda boleh membayar cukai anda melalui beberapa kaedah termasuk perbankan dalam talian (FPX), kad kredit, ATM, atau melalui kaunter pembayaran LHDN.</string>
-
-    <string name="pcb">PCB (Potongan Cukai Bulanan)</string>
-    <string name="pcb_desc">PCB adalah mekanisme di mana majikan memotong pembayaran cukai bulanan daripada gaji pekerja. Ini membantu mengagihkan beban cukai sepanjang tahun berbanding pembayaran sekaligus.</string>
-
-    <!-- Tax Relief Categories -->
-    <string name="tax_relief_categories">Kategori Pelepasan Cukai</string>
-    <string name="relief_categories_desc">Pelepasan cukai mengurangkan pendapatan bercukai anda, menurunkan beban cukai keseluruhan. Berikut adalah kategori utama pelepasan cukai yang tersedia di Malaysia:</string>
-
-    <string name="lifestyle_expenses">Perbelanjaan Gaya Hidup</string>
-    <string name="lifestyle_expenses_desc">Meliputi pembelian buku, komputer, telefon pintar, peralatan sukan, dan langganan internet.</string>
-
-    <string name="medical_expenses">Perbelanjaan Perubatan</string>
-    <string name="medical_expenses_desc">Termasuk rawatan penyakit serius, pemeriksaan kesihatan, dan perbelanjaan perubatan untuk ibu bapa.</string>
-
-    <string name="education_fees">Yuran Pendidikan</string>
-    <string name="education_fees_desc">Meliputi yuran untuk melanjutkan diploma, ijazah sarjana muda, sarjana, atau doktor falsafah di institusi yang diiktiraf.</string>
-
-    <string name="epf_contributions">Sumbangan KWSP</string>
-    <string name="epf_contributions_desc">Sumbangan Kumpulan Wang Simpanan Pekerja layak mendapat pelepasan cukai.</string>
-
-    <string name="life_insurance">Insurans Hayat</string>
-    <string name="life_insurance_desc">Premium yang dibayar untuk polisi insurans hayat layak mendapat pelepasan cukai.</string>
-
-    <string name="housing_loan_interest">Faedah Pinjaman Perumahan</string>
-    <string name="housing_loan_interest_desc">Faedah yang dibayar atas pinjaman perumahan untuk pembeli rumah kali pertama boleh dituntut sebagai pelepasan cukai.</string>
-
-    <!-- Disclaimer -->
-    <string name="tax_information_disclaimer">Penafian: Maklumat ini disediakan untuk panduan umum sahaja dan mungkin tidak mencerminkan perubahan undang-undang cukai terkini. Sila rujuk kepada profesional cukai atau layari laman web LHDN untuk maklumat yang paling tepat dan terkini.</string>
-
-    <!-- Tax Plan Screen -->
+    <string name="tax_plan_screen">Halaman Rancangan Cukai</string>
+    <string name="tax_plan_detail_screen">Halaman Perincian Pelan Cukai</string>
     <string name="tax_guide_title">Panduan Maklumat Cukai Malaysia</string>
     <string name="tax_guide_description">Pelajari tentang kadar cukai pendapatan Malaysia, peraturan, dan pelepasan cukai yang tersedia untuk membantu merancang kewangan anda dengan berkesan.</string>
-    <string name="view_tax_information">Lihat Maklumat Cukai</string>
-    <string name="going_to_tax_information">Pergi ke maklumat cukai</string>
-
+    <string name="generate_tax_plan">Hasilkan Pelan Cukai AI</string>
     <string name="tax_planning_tools">Alat Perancangan Cukai</string>
     <string name="tax_calculator">Kalkulator Cukai</string>
     <string name="tax_calculator_desc">Kira anggaran cukai anda berdasarkan pendapatan dan potongan yang berkenaan.</string>
     <string name="tax_calculator_coming_soon">Kalkulator cukai akan datang</string>
-
     <string name="deduction_optimizer">Pengoptimum Potongan</string>
     <string name="deduction_optimizer_desc">Cari cara untuk mengoptimumkan potongan cukai dan memaksimumkan penjimatan anda.</string>
     <string name="feature_coming_soon">Ciri akan datang</string>
-
-    <string name="tax_calendar_desc">Ikuti tarikh akhir cukai penting dan penjadualannya.</string>
-    <string name="going_to_calendar">Pergi ke kalendar</string>
-
+    <string name="view_tax_information">Lihat Maklumat Cukai</string>
+    <string name="going_to_tax_information">Pergi ke maklumat cukai</string>
     <string name="main_features">Ciri-ciri Utama</string>
     <string name="calendar_description">Jejaki tarikh dan tarikh akhir cukai penting</string>
     <string name="tax_plan_description">Optimumkan strategi penjimatan cukai anda</string>
     <string name="tax_info_description">Ketahui tentang peraturan cukai Malaysia</string>
+    <string name="visit_official_tax_portal">Layari Portal Cukai Rasmi Malaysia →</string>
+    <string name="no_tax_plans">Tiada pelan cukai lagi</string>
+    <string name="generate_to_start">Jana pelan cukai untuk memulakan</string>
+    <string name="view_plan">Lihat pelan</string>
+    <string name="delete_plan">Padam pelan</string>
+    <string name="potential_savings">Potensi Penjimatan: %1$s</string>
+    <string name="suggestions_count">%1$d cadangan</string>
+    <string name="plan_not_found">Pelan tidak dijumpai</string>
+    <string name="tax_saving_suggestions">Cadangan Penjimatan Cukai</string>
+    <string name="no_suggestions_available">Tiada cadangan tersedia</string>
+    <string name="implemented">Telah Dilaksanakan</string>
+    <string name="not_implemented">Belum dilaksanakan</string>
+    <string name="potential_tax_savings">Potensi Penjimatan Cukai: %1$s</string>
+    <string name="create_new_tax_plan">Cipta Pelan Cukai Baru</string>
+    <string name="plan_name_optional">Nama Pelan (Pilihan)</string>
+    <string name="plan_name_placeholder">contoh: Pelan Cukai Saya 2025</string>
+    <string name="select_plan_type">Pilih Jenis Pelan:</string>
+    <string name="generate_plan">Jana Pelan</string>
+    <string name="delete_tax_plan">Padam Pelan Cukai</string>
+    <string name="tax_plan_generated">Pelan cukai berjaya dijana</string>
+    <string name="tax_plan_deleted">Pelan cukai berjaya dipadamkan</string>
+    <string name="delete_confirm">Padamkan Pengesahan</string>
 
-    <!-- Validation Error Messages in Malay -->
+    <!-- ==================== TAX PLAN TYPES ==================== -->
+    <string name="standard_tax_plan">Pelan Cukai Standard</string>
+    <string name="future_income_plan">Pelan Pendapatan Masa Depan (20% pendapatan lebih tinggi)</string>
+    <string name="business_venture_plan">Pelan Usaha Perniagaan</string>
+    <string name="standard_plan">Pelan Standard</string>
+    <string name="future_income_plan_title">Pelan Pendapatan Masa Depan</string>
+    <string name="business_plan_title">Pelan Perniagaan</string>
+    <string name="standard_plan_description">Pelan cukai peribadi berdasarkan pendapatan semasa dan status pekerjaan anda</string>
+    <string name="future_plan_description">Pelan cukai yang dioptimumkan untuk pertumbuhan pendapatan masa depan dan kecekapan cukai jangka panjang</string>
+    <string name="business_plan_description">Pelan cukai yang direka untuk usaha perniagaan dengan fokus pada potongan perniagaan</string>
+
+    <!-- ==================== TAX PLAN ERROR MESSAGES ==================== -->
+    <string name="error_loading_plans">Ralat memuat pelan cukai</string>
+    <string name="error_viewing_plan">Ralat melihat pelan cukai</string>
+    <string name="error_generating_plan">Ralat menjana pelan cukai</string>
+    <string name="error_deleting_plan">Ralat memadam pelan cukai</string>
+
+    <!-- ==================== TAX CATEGORY NAMES ==================== -->
+    <string name="category_lifestyle">Gaya Hidup</string>
+    <string name="category_medical">Perubatan</string>
+    <string name="category_education">Pendidikan</string>
+    <string name="category_epf">Sumbangan KWSP</string>
+    <string name="category_sspn">Simpanan SSPN</string>
+    <string name="category_donation">Derma</string>
+    <string name="category_insurance">Premium Insurans</string>
+    <string name="category_business_expenses">Perbelanjaan Perniagaan</string>
+    <string name="category_home_office">Pejabat Di Rumah</string>
+    <string name="category_investment">Pelaburan</string>
+    <string name="category_retirement">Perancangan Persaraan</string>
+    <string name="category_capital_investment">Pelaburan Modal</string>
+    <string name="category_business_structure">Struktur Perniagaan</string>
+
+    <!-- ==================== DEFAULT TAX SUGGESTIONS ==================== -->
+    <string name="lifestyle_suggestion">Maksimumkan pelepasan gaya hidup RM2,500 anda dengan menyimpan resit untuk buku, elektronik, peralatan sukan, dan langganan internet.</string>
+    <string name="medical_suggestion">Jejaki perbelanjaan perubatan untuk diri sendiri dan tanggungan untuk pelepasan sehingga RM8,000.</string>
+    <string name="employee_epf_suggestion">Pastikan anda memaksimumkan sumbangan KWSP wajib 11% anda untuk pelepasan cukai sehingga RM4,000.</string>
+    <string name="self_employed_epf_suggestion">Buat sumbangan KWSP secara sukarela sehingga RM4,000 setahun untuk pelepasan cukai.</string>
+    <string name="education_suggestion">Tuntut pelepasan pendidikan sehingga RM7,000 untuk kursus pembangunan kemahiran atau pendidikan lanjutan.</string>
+    <string name="donation_suggestion">Buat derma kepada organisasi yang diluluskan untuk potongan cukai.</string>
+    <string name="investment_suggestion">Pertimbangkan kenderaan pelaburan cekap cukai seperti unit amanah dengan insentif cukai.</string>
+    <string name="education_future_suggestion">Melabur dalam kursus pembangunan kemahiran dengan pelepasan cukai sehingga RM7,000 untuk meningkatkan potensi pendapatan masa depan.</string>
+    <string name="retirement_suggestion">Lengkapkan KWSP anda dengan sumbangan Skim Persaraan Swasta (PRS) untuk pelepasan cukai tambahan sehingga RM3,000.</string>
+    <string name="business_expenses_suggestion">Jejak dan dokumen semua perbelanjaan berkaitan perniagaan termasuk bekalan pejabat, utiliti, dan perkhidmatan profesional.</string>
+    <string name="home_office_suggestion">Jika anda bekerja dari rumah, peruntukkan sebahagian dari sewa, utiliti dan internet sebagai perbelanjaan perniagaan.</string>
+    <string name="capital_investment_suggestion">Rancang pelaburan modal untuk memanfaatkan elaun modal dan insentif untuk pengembangan perniagaan.</string>
+    <string name="business_structure_suggestion">Semak struktur perniagaan anda (pemilikan tunggal vs. Sdn Bhd) untuk mengoptimumkan layanan cukai berdasarkan pertumbuhan anda yang diunjurkan.</string>
+    <string name="sspn_suggestion">Pertimbangkan simpanan SSPN untuk pendidikan anak-anak dengan pelepasan cukai sehingga RM8,000.</string>
+
+    <!-- ==================== TAX INFORMATION ==================== -->
+    <string name="tax_information">Maklumat Cukai</string>
+    <string name="your_income_tax">Cukai Pendapatan Anda</string>
+    <string name="your_annual_income">Pendapatan Tahunan Anda:</string>
+    <string name="estimated_tax">Anggaran Cukai:</string>
+    <string name="effective_tax_rate">Kadar Cukai Efektif:</string>
+    <string name="malaysia_income_tax_rates">Kadar Cukai Pendapatan Malaysia (2023)</string>
+    <string name="chargeable_income">Pendapatan Bercukai (RM)</string>
+    <string name="rate">Kadar (%)</string>
+    <string name="tax_rm">Cukai (RM)</string>
+    <string name="malaysia_tax_regulations">Peraturan Cukai Malaysia</string>
+    <string name="tax_regulations_desc">Cukai pendapatan di Malaysia diuruskan oleh Lembaga Hasil Dalam Negeri Malaysia (LHDN). Berikut adalah peraturan utama untuk pembayar cukai individu:</string>
+    <string name="filing_deadline">Tarikh Akhir Pengemukaan</string>
+    <string name="filing_deadline_desc">Bagi individu tanpa pendapatan perniagaan (hanya pendapatan pekerjaan), tarikh akhir pengisian cukai adalah 30 April setiap tahun. Bagi individu dengan pendapatan perniagaan, tarikh akhir adalah 30 Jun.</string>
+    <string name="tax_reliefs">Pelepasan Cukai</string>
+    <string name="tax_reliefs_desc">Pelbagai pelepasan cukai tersedia untuk mengurangkan pendapatan bercukai anda. Ini termasuk pelepasan peribadi, perbelanjaan perubatan, perbelanjaan gaya hidup, dan lain-lain.</string>
+    <string name="tax_deductions">Potongan Cukai</string>
+    <string name="tax_deductions_desc">Potongan cukai adalah perbelanjaan yang boleh ditolak daripada pendapatan anda sebelum mengira cukai. Ini termasuk sumbangan yang diluluskan kepada badan amal dan pembayaran zakat.</string>
+    <string name="payment_methods">Kaedah Pembayaran</string>
+    <string name="payment_methods_desc">Anda boleh membayar cukai anda melalui beberapa kaedah termasuk perbankan dalam talian (FPX), kad kredit, ATM, atau melalui kaunter pembayaran LHDN.</string>
+    <string name="pcb">PCB (Potongan Cukai Bulanan)</string>
+    <string name="pcb_desc">PCB adalah mekanisme di mana majikan memotong pembayaran cukai bulanan daripada gaji pekerja. Ini membantu mengagihkan beban cukai sepanjang tahun berbanding pembayaran sekaligus.</string>
+    <string name="tax_relief_categories">Kategori Pelepasan Cukai</string>
+    <string name="relief_categories_desc">Pelepasan cukai mengurangkan pendapatan bercukai anda, menurunkan beban cukai keseluruhan. Berikut adalah kategori utama pelepasan cukai yang tersedia di Malaysia:</string>
+    <string name="lifestyle_expenses">Perbelanjaan Gaya Hidup</string>
+    <string name="lifestyle_expenses_desc">Meliputi pembelian buku, komputer, telefon pintar, peralatan sukan, dan langganan internet.</string>
+    <string name="medical_expenses">Perbelanjaan Perubatan</string>
+    <string name="medical_expenses_desc">Termasuk rawatan penyakit serius, pemeriksaan kesihatan, dan perbelanjaan perubatan untuk ibu bapa.</string>
+    <string name="education_fees">Yuran Pendidikan</string>
+    <string name="education_fees_desc">Meliputi yuran untuk melanjutkan diploma, ijazah sarjana muda, sarjana, atau doktor falsafah di institusi yang diiktiraf.</string>
+    <string name="epf_contributions">Sumbangan KWSP</string>
+    <string name="epf_contributions_desc">Sumbangan Kumpulan Wang Simpanan Pekerja layak mendapat pelepasan cukai.</string>
+    <string name="life_insurance">Insurans Hayat</string>
+    <string name="life_insurance_desc">Premium yang dibayar untuk polisi insurans hayat layak mendapat pelepasan cukai.</string>
+    <string name="housing_loan_interest">Faedah Pinjaman Perumahan</string>
+    <string name="housing_loan_interest_desc">Faedah yang dibayar atas pinjaman perumahan untuk pembeli rumah kali pertama boleh dituntut sebagai pelepasan cukai.</string>
+    <string name="tax_information_disclaimer">Penafian: Maklumat ini disediakan untuk panduan umum sahaja dan mungkin tidak mencerminkan perubahan undang-undang cukai terkini. Sila rujuk kepada profesional cukai atau layari laman web LHDN untuk maklumat yang paling tepat dan terkini.</string>
+
+    <!-- ==================== VALIDATION ERROR MESSAGES ==================== -->
+    <string name="valid_amount">Sila masukkan jumlah yang sah.</string>
     <string name="error_not_a_receipt">Imej yang dimuat naik nampaknya bukan resit atau invois. Sila pastikan anda memuat naik resit yang sah.</string>
     <string name="error_unable_to_analyze_image">Tidak dapat menganalisis imej. Sila muat naik imej resit atau invois yang jelas.</string>
     <string name="error_image_not_recognized">Imej itu tidak dapat dikenali sebagai resit yang sah. Sila muat naik imej resit atau invois yang lebih jelas.</string>
     <string name="invalid_receipt_image">Imej Resit Tidak Sah</string>
-    <string name="ok">OK</string>
     <string name="not_a_receipt">Bukan Resit</string>
-    <string name="try_again">Cuba Lagi</string>
     <string name="upload_valid_receipt">Sila muat naik imej resit atau invois yang sah.</string>
     <string name="error_name_empty">Nama tidak boleh kosong</string>
     <string name="error_name_too_short">Nama terlalu pendek</string>
@@ -276,172 +391,23 @@
     <string name="error_income_invalid_chars">Pendapatan hanya boleh mengandungi nombor, koma, dan titik</string>
     <string name="error_income_negative">Pendapatan tidak boleh negatif</string>
     <string name="error_income_format">Format pendapatan tidak sah</string>
+    <string name="error_income_invalid_format">Format pendapatan tidak sah</string>
     <string name="error_employment_invalid">Sila pilih jenis pekerjaan yang sah</string>
     <string name="error_password_empty">Kata laluan tidak boleh kosong</string>
     <string name="error_password_too_short">Kata laluan mestilah sekurang-kurangnya 8 aksara</string>
     <string name="error_password_no_uppercase">Kata laluan mestilah mengandungi sekurang-kurangnya satu huruf besar</string>
+    <string name="error_password_uppercase">Kata laluan mesti mengandungi sekurang-kurangnya satu huruf besar</string>
     <string name="error_password_no_digit">Kata laluan mestilah mengandungi sekurang-kurangnya satu nombor</string>
+    <string name="error_password_digit">Kata laluan mesti mengandungi sekurang-kurangnya satu nombor</string>
     <string name="error_password_no_special">Kata laluan mestilah mengandungi sekurang-kurangnya satu aksara khas</string>
+    <string name="error_password_special_char">Kata laluan mesti mengandungi sekurang-kurangnya satu aksara khas</string>
     <string name="error_password_confirmation_empty">Sila sahkan kata laluan anda</string>
+    <string name="error_confirm_password_empty">Sila sahkan kata laluan anda</string>
     <string name="error_password_mismatch">Kata laluan tidak sepadan</string>
-    <string name="confirm_password">Sahkan kata laluan</string>
+    <string name="error_passwords_dont_match">Kata laluan tidak sepadan</string>
     <string name="error_email_empty">E-mel tidak boleh kosong</string>
     <string name="error_email_format">Format e-mel tidak sah</string>
-    <string name="password_requirements">Kata laluan mestilah sekurang-kurangnya 8 aksara dengan huruf besar, nombor dan aksara khas</string>
-    <string name="is_saving">Sedang menyimpan...</string>
-    <string name="add_item">Tambah Item</string>
-    <string name="save_item">Simpan Item</string>
-    <string name="generate_tax_plan">Hasilkan Pelan Cukai AI</string>
-
-    <!-- Navigation and Action strings -->
-    <string name="change_language">Tukar Bahasa</string>
-    <string name="accessibility_settings">Tetapan Kebolehcapaian</string>
-    <string name="ai_information">Maklumat AI</string>
-    <string name="calendar">Kalendar</string>
-    <string name="account">Akaun</string>
-
-    <!-- Tax Plan UI strings -->
-    <string name="ai_tax_plan_generator">Penjana Pelan Cukai AI</string>
-    <string name="ai_feature_description">Ciri ini menggunakan AI untuk menganalisis pendapatan dan jenis pekerjaan anda untuk menjana cadangan penjimatan cukai yang diperibadikan.</string>
-    <string name="how_it_works">Bagaimana ia berfungsi:</string>
-    <string name="ai_step_1">1. AI menganalisis tahap pendapatan dan jenis pekerjaan anda</string>
-    <string name="ai_step_2">2. Ia mengenal pasti kategori pelepasan cukai yang berkaitan dengan situasi anda</string>
-    <string name="ai_step_3">3. Ia menjana cadangan khusus dengan anggaran penjimatan</string>
-    <string name="ai_note">Nota: Pastikan maklumat pendapatan dan pekerjaan anda dalam profil anda dikemas kini untuk cadangan yang paling tepat.</string>
-    <string name="got_it">Faham</string>
-
-    <!-- Tax Plan List screen -->
-    <string name="no_tax_plans">Tiada pelan cukai lagi</string>
-    <string name="generate_to_start">Jana pelan cukai untuk memulakan</string>
-    <string name="ai_generating">AI Sedang Menjana Pelan Cukai...</string>
-    <string name="view_plan">Lihat pelan</string>
-    <string name="delete_plan">Padam pelan</string>
-    <string name="potential_savings">Potensi Penjimatan: %1$s</string>
-    <string name="suggestions_count">%1$d cadangan</string>
-
-    <!-- Tax Plan Detail screen -->
-    <string name="plan_not_found">Pelan tidak dijumpai</string>
-    <string name="tax_saving_suggestions">Cadangan Penjimatan Cukai</string>
-    <string name="no_suggestions_available">Tiada cadangan tersedia</string>
-    <string name="implemented">Telah Dilaksanakan</string>
-    <string name="not_implemented">Belum dilaksanakan</string>
-    <string name="potential_tax_savings">Potensi Penjimatan Cukai: %1$s</string>
-
-    <!-- Create/Delete Tax Plan Dialog -->
-    <string name="create_new_tax_plan">Cipta Pelan Cukai Baru</string>
-    <string name="generate_ai_plan">Jana pelan cukai berkuasa AI baru dengan pilihan tersuai.</string>
-    <string name="plan_name_optional">Nama Pelan (Pilihan)</string>
-    <string name="plan_name_placeholder">contoh: Pelan Cukai Saya 2025</string>
-    <string name="select_plan_type">Pilih Jenis Pelan:</string>
-    <string name="standard_tax_plan">Pelan Cukai Standard</string>
-    <string name="future_income_plan">Pelan Pendapatan Masa Depan (20% pendapatan lebih tinggi)</string>
-    <string name="business_venture_plan">Pelan Usaha Perniagaan</string>
-    <string name="generate_plan">Jana Pelan</string>
-    <string name="delete_tax_plan">Padam Pelan Cukai</string>
-
-    <!-- Success/Error messages -->
-    <string name="tax_plan_generated">Pelan cukai berjaya dijana</string>
-    <string name="tax_plan_deleted">Pelan cukai berjaya dipadamkan</string>
-    <string name="version_requirement">Ciri ini memerlukan Android N atau lebih tinggi</string>
-    <string name="user_not_authenticated">Sila log masuk untuk menjana pelan cukai</string>
-    <string name="error_loading_plans">Ralat memuat pelan cukai</string>
-    <string name="error_viewing_plan">Ralat melihat pelan cukai</string>
-    <string name="error_generating_plan">Ralat menjana pelan cukai</string>
-    <string name="error_deleting_plan">Ralat memadam pelan cukai</string>
-    <string name="unknown_error">Ralat tidak diketahui</string>
-    <string name="ai_service_unavailable">Perkhidmatan AI tidak tersedia</string>
-    <string name="internet_required">Sambungan internet diperlukan</string>
-
-    <!-- Plan Type Descriptions -->
-    <string name="standard_plan">Pelan Standard</string>
-    <string name="future_income_plan_title">Pelan Pendapatan Masa Depan</string>
-    <string name="business_plan_title">Pelan Perniagaan</string>
-    <string name="standard_plan_description">Pelan cukai peribadi berdasarkan pendapatan semasa dan status pekerjaan anda</string>
-    <string name="future_plan_description">Pelan cukai yang dioptimumkan untuk pertumbuhan pendapatan masa depan dan kecekapan cukai jangka panjang</string>
-    <string name="business_plan_description">Pelan cukai yang direka untuk usaha perniagaan dengan fokus pada potongan perniagaan</string>
-
-    <!-- Tax Plan Category Names -->
-    <string name="category_lifestyle">Gaya Hidup</string>
-    <string name="category_medical">Perubatan</string>
-    <string name="category_education">Pendidikan</string>
-    <string name="category_epf">Sumbangan KWSP</string>
-    <string name="category_sspn">Simpanan SSPN</string>
-    <string name="category_donation">Derma</string>
-    <string name="category_insurance">Premium Insurans</string>
-    <string name="category_business_expenses">Perbelanjaan Perniagaan</string>
-    <string name="category_home_office">Pejabat Di Rumah</string>
-    <string name="category_investment">Pelaburan</string>
-    <string name="category_retirement">Perancangan Persaraan</string>
-    <string name="category_capital_investment">Pelaburan Modal</string>
-    <string name="category_business_structure">Struktur Perniagaan</string>
-
-    <!-- Default Tax Suggestions -->
-    <string name="lifestyle_suggestion">Maksimumkan pelepasan gaya hidup RM2,500 anda dengan menyimpan resit untuk buku, elektronik, peralatan sukan, dan langganan internet.</string>
-    <string name="medical_suggestion">Jejaki perbelanjaan perubatan untuk diri sendiri dan tanggungan untuk pelepasan sehingga RM8,000.</string>
-    <string name="employee_epf_suggestion">Pastikan anda memaksimumkan sumbangan KWSP wajib 11% anda untuk pelepasan cukai sehingga RM4,000.</string>
-    <string name="self_employed_epf_suggestion">Buat sumbangan KWSP secara sukarela sehingga RM4,000 setahun untuk pelepasan cukai.</string>
-    <string name="education_suggestion">Tuntut pelepasan pendidikan sehingga RM7,000 untuk kursus pembangunan kemahiran atau pendidikan lanjutan.</string>
-    <string name="donation_suggestion">Buat derma kepada organisasi yang diluluskan untuk potongan cukai.</string>
-    <string name="investment_suggestion">Pertimbangkan kenderaan pelaburan cekap cukai seperti unit amanah dengan insentif cukai.</string>
-    <string name="education_future_suggestion">Melabur dalam kursus pembangunan kemahiran dengan pelepasan cukai sehingga RM7,000 untuk meningkatkan potensi pendapatan masa depan.</string>
-    <string name="retirement_suggestion">Lengkapkan KWSP anda dengan sumbangan Skim Persaraan Swasta (PRS) untuk pelepasan cukai tambahan sehingga RM3,000.</string>
-    <string name="business_expenses_suggestion">Jejak dan dokumen semua perbelanjaan berkaitan perniagaan termasuk bekalan pejabat, utiliti, dan perkhidmatan profesional.</string>
-    <string name="home_office_suggestion">Jika anda bekerja dari rumah, peruntukkan sebahagian dari sewa, utiliti dan internet sebagai perbelanjaan perniagaan.</string>
-    <string name="capital_investment_suggestion">Rancang pelaburan modal untuk memanfaatkan elaun modal dan insentif untuk pengembangan perniagaan.</string>
-    <string name="business_structure_suggestion">Semak struktur perniagaan anda (pemilikan tunggal vs. Sdn Bhd) untuk mengoptimumkan layanan cukai berdasarkan pertumbuhan anda yang diunjurkan.</string>
-    <string name="sspn_suggestion">Pertimbangkan simpanan SSPN untuk pendidikan anak-anak dengan pelepasan cukai sehingga RM8,000.</string>
-
-    <string name="tax_plan_screen">Halaman Rancangan Cukai</string>
-    <string name="tax_plan_detail_screen">Halaman Perincian Pelan Cukai</string>
-    <string name="delete_confirm">Padamkan Pengesahan</string>
-    <string name="delete_item_message">Adakah anda pasti mahu memadamkan item perbelanjaan ini? Tindakan ini tidak boleh dibuat asal.</string>
-    <string name="delete_receipt_message">Adakah anda pasti mahu memadamkan resit ini? Tindakan ini tidak boleh dibuat asal.</string>
-    <string name="edit_expense_item">Edit Item Perbelanjaan</string>
-    <string name="save">Simpan</string>
-    <string name="save_num_items">Simpan %1$s Item</string>
-    <string name="discard_changes">Buang Perubahan?</string>
-    <string name="cancel_confirmation_message">Adakah anda pasti mahu membatalkan? Semua barang perbelanjaan akan hilang.</string>
-    <string name="discard">Buang</string>
-    <string name="keep_editing">Teruskan Mengedit</string>
-    <string name="delete_item_confirmation">Adakah anda pasti mahu memadamkan item perbelanjaan ini?</string>
-
-    <!-- Calender to do add ons-->
-    <string name="make_todo_event">Acara Tugasan</string>
-    <string name="todo_events">Acara Untuk Dilakukan</string>
-    <string name="regular_events">Acara Biasa</string>
-    <string name="todo_status">Status Untuk Dilakukan</string>
-    <string name="pending">Belum Selesai</string>
-    <string name="completed">Selesai</string>
-    <string name="past_due">Terlewat Tempoh</string>
-    <string name="mark_as_completed">Tandakan sebagai selesai</string>
-    <string name="mark_as_complete">Tandakan Selesai</string>
-    <string name="mark_as_incomplete">Tandakan Tidak Selesai</string>
-    <string name="past_due_warning">Tugas ini telah terlewat tempoh!</string>
-    <string name="past_due_todo_events">Acara Untuk Dilakukan Yang Terlewat Tempoh</string>
-    <string name="past_due_message">Anda mempunyai %1$d acara untuk dilakukan yang telah terlewat tempoh. Sila semak atau jadualkan semula.</string>
-    <string name="acknowledge">Saya Faham</string>
-    <string name="no_todo_events">Tiada acara untuk dilakukan pada tarikh ini</string>
-    <string name="calendar_indicators">Petunjuk Kalendar</string>
-    <string name="regular_event">Acara Biasa</string>
-    <string name="pending_todo">Untuk Dilakukan Belum Selesai</string>
-    <string name="completed_todo">Untuk Dilakukan Selesai</string>
-    <string name="past_due_todo">Untuk Dilakukan Terlewat Tempoh</string>
-    <string name="todo_notification_channel">Peringatan Untuk Dilakukan</string>
-    <string name="todo_notification_title">Peringatan Untuk Dilakukan</string>
-    <string name="past_due_notification">Anda mempunyai %1$d tugas untuk dilakukan yang terlewat tempoh</string>
-    <string name="upcoming_due_notification">Anda mempunyai %1$d tugas untuk dilakukan yang akan tamat tempoh tidak lama lagi</string>
-
-    <string name="visit_official_tax_portal">Layari Portal Cukai Rasmi Malaysia →</string>
-    <string name="error_income_invalid_format">Format pendapatan tidak sah</string>
-    <string name="error_password_uppercase">Kata laluan mesti mengandungi sekurang-kurangnya satu huruf besar</string>
-    <string name="error_password_digit">Kata laluan mesti mengandungi sekurang-kurangnya satu nombor</string>
-    <string name="error_password_special_char">Kata laluan mesti mengandungi sekurang-kurangnya satu aksara khas</string>
-
-    <!-- Password confirmation validation -->
-    <string name="error_confirm_password_empty">Sila sahkan kata laluan anda</string>
-    <string name="error_passwords_dont_match">Kata laluan tidak sepadan</string>
     <string name="error_user_not_logged_in">Pengguna tidak log masuk</string>
-
     <string name="error_item_description_required">Deskripsi diperlukan</string>
     <string name="error_description_too_short">Deskripsi mestilah sekurang-kurangnya 2 aksara</string>
     <string name="error_merchant_required">Nama peniaga diperlukan</string>
@@ -451,8 +417,6 @@
     <string name="error_amount_format">Format jumlah tidak sah</string>
     <string name="error_amount_positive">Jumlah mestilah lebih besar daripada sifar</string>
     <string name="error_invalid_input">Sila betulkan ralat sebelum menyimpan</string>
-
-
     <string name="error_empty_description">Deskripsi tidak boleh kosong</string>
     <string name="error_empty_merchant">Nama peniaga tidak boleh kosong</string>
     <string name="error_invalid_date_format">Sila gunakan format DD/MM/YYYY</string>
@@ -460,21 +424,7 @@
     <string name="error_invalid_amount">Sila masukkan nombor yang sah</string>
     <string name="error_negative_amount">Jumlah mestilah lebih besar daripada sifar</string>
     <string name="error_empty_category">Sila pilih kategori</string>
-
     <string name="error_null_response">Tidak dapat menganalisis imej. Sila muat naik imej resit atau invois yang jelas.</string>
     <string name="error_parsing_receipt">Imej tidak dapat dikenali sebagai resit yang sah. Sila muat naik imej resit atau invois yang lebih jelas.</string>
     <string name="error_failed_to_load_image">Gagal memuat imej. Sila cuba lagi dengan imej yang berbeza.</string>
-
-    <string name="select_date">Pilih Tarikh</string>
-    <string name="select_time">Pilih Masa</string>
-    <string name="select_start_time">Pilih Masa Mula</string>
-    <string name="select_end_time">Pilih Masa Tamat</string>
-
-    <string name="all_events">Semua Acara</string>
-    <string name="events_count_format">%d acara pada tarikh ini</string>
-    <string name="todo_events_count_format">%d acara to-do pada tarikh ini</string>
-    <string name="pending_completed_format">%1$d belum selesai, %2$d selesai</string>
-    <string name="time_separator">hingga</string>
-
-    <string name="time_validator">Masa tamat mesti selepas masa mula.</string>
 </resources>

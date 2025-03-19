@@ -1,20 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Calendar Screen -->
+    <!-- ==================== GENERAL APP STRINGS ==================== -->
     <string name="app_name">智能税务处理应用程序</string>
-    <string name="scheduler">日程安排</string>
+    <string name="welcome_message">欢迎使用智能税务处理程序</string>
+    <string name="welcome_description">一款人工智能集成应用程序，帮助您进行纳税申报</string>
+    <string name="ok">好的</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确认</string>
+    <string name="delete">删除</string>
+    <string name="back">后退</string>
+    <string name="done">完毕</string>
+    <string name="save">保存</string>
+    <string name="retry">重试</string>
+    <string name="try_again">再试一次</string>
+    <string name="error">错误</string>
+    <string name="got_it">明白了</string>
+    <string name="is_saving">保存中...</string>
+    <string name="home">主页</string>
+    <string name="acknowledge">我知道了</string>
+    <string name="rm">RM</string>
+    <string name="unknown_error">未知错误</string>
+    <string name="going_back_home">正在返回主页</string>
+    <string name="back_to_home">返回主页</string>
+    <string name="going_home">前往主页</string>
+    <string name="no_data">没有可用数据</string>
+    <string name="loading_data">加载数据中...</string>
+    <string name="error_message">错误信息</string>
+    <string name="version_requirement">此功能需要 Android N 或更高版本</string>
+    <string name="internet_required">需要互联网连接</string>
+
+    <!-- ==================== MULTI-LANGUAGE ==================== -->
     <string name="current_language">当前语言：</string>
     <string name="select_language">选择语言：</string>
     <string name="language_english">English</string>
     <string name="language_chinese">中文</string>
     <string name="language_malay">Bahasa Melayu</string>
+    <string name="change_language">更改语言</string>
+
+    <!-- ==================== NAVIGATION & ACTIONS ==================== -->
+    <string name="accessibility_settings">无障碍设置</string>
+    <string name="ai_information">AI 信息</string>
+    <string name="calendar">日历</string>
+    <string name="account">账户</string>
+    <string name="scheduler">日程安排</string>
+    <string name="tax_calendar">税务日历</string>
+    <string name="upload_receipt">上传收据</string>
+    <string name="tax_categories">税务类别</string>
+    <string name="tax_plan">税务规划</string>
+    <string name="logout">退出登录</string>
+    <string name="profile">个人资料</string>
+
+    <!-- ==================== AUTHENTICATION ==================== -->
+    <string name="login">登录</string>
+    <string name="register">注册</string>
+    <string name="email">电子邮箱</string>
+    <string name="password">密码</string>
+    <string name="confirm_password">确认密码</string>
+    <string name="sign_in">登录</string>
+    <string name="sign_up">注册</string>
+    <string name="welcome_back">欢迎回来</string>
+    <string name="create_account">创建账户</string>
+    <string name="sign_in_to_account">登录您的账户</string>
+    <string name="logging_in">正在登录</string>
+    <string name="creating_account">创建帐户</string>
+    <string name="password_requirements">密码长度必须至少为 8 个字符，包含大写字母、数字和特殊字符</string>
+    <string name="user_not_authenticated">请登录以生成税务计划</string>
+
+    <!-- ==================== PROFILE ==================== -->
+    <string name="edit_profile">编辑个人资料</string>
+    <string name="save_profile">保存个人资料</string>
+    <string name="name">姓名</string>
+    <string name="phone">电话号码</string>
+    <string name="date_of_birth">出生日期</string>
+    <string name="total_income">总收入</string>
+    <string name="complete_profile">完成您的个人资料</string>
+    <string name="hello">你好呀！</string>
+    <string name="going_to_profile">前往个人资料</string>
+    <string name="individual_employ">个人雇员</string>
+    <string name="individual_description">我受雇于一个组织。</string>
+    <string name="self_employed">自雇</string>
+    <string name="self_employed_description">我经营自己的生意，不受雇于别人。</string>
+
+    <!-- ==================== CALENDAR & EVENTS ==================== -->
     <string name="events_for">%1$s 的事件</string>
     <string name="no_events">这一天没有安排事件</string>
     <string name="add_new_event">添加新事件</string>
-    <string name="confirm">确认</string>
-    <string name="cancel">取消</string>
-
-    <!-- AddEventScreen and EditEventScreen -->
     <string name="event_details">事件详情</string>
     <string name="edit_event">编辑事件</string>
     <string name="event_name">事件名称</string>
@@ -25,8 +95,6 @@
     <string name="reminder_for_event">事件提醒：</string>
     <string name="save_event">保存事件</string>
     <string name="save_changes">保存更改</string>
-
-    <!-- EventDetailScreen -->
     <string name="date_colon">日期：</string>
     <string name="time_colon">时间：</string>
     <string name="description_colon">描述：</string>
@@ -36,9 +104,45 @@
     <string name="delete_event">删除事件</string>
     <string name="back_to_calendar">返回日历</string>
     <string name="delete_confirmation">您确定要删除此事件吗？</string>
-    <string name="delete">删除</string>
+    <string name="tax_calendar_desc">跟踪重要的税务截止日期和日程安排。</string>
+    <string name="going_to_calendar">前往日历</string>
+    <string name="select_date">选择日期</string>
+    <string name="select_time">选择时间</string>
+    <string name="select_start_time">选择开始时间</string>
+    <string name="select_end_time">选择结束时间</string>
+    <string name="all_events">所有事件</string>
+    <string name="events_count_format">此日期有 %d 个事件</string>
+    <string name="time_separator">至</string>
+    <string name="time_validator">结束时间必须在开始时间之后。</string>
 
-    <!-- AccessibilitySettings -->
+    <!-- ==================== TO-DO EVENTS ==================== -->
+    <string name="make_todo_event">待办事项事件</string>
+    <string name="todo_events">待办事项</string>
+    <string name="regular_events">普通事项</string>
+    <string name="todo_status">待办状态</string>
+    <string name="pending">待办中</string>
+    <string name="completed">已完成</string>
+    <string name="past_due">已逾期</string>
+    <string name="mark_as_completed">标记为已完成</string>
+    <string name="mark_as_complete">标记完成</string>
+    <string name="mark_as_incomplete">标记未完成</string>
+    <string name="past_due_warning">此待办事项已逾期！</string>
+    <string name="past_due_todo_events">逾期待办事项</string>
+    <string name="past_due_message">您有 %1$d 个待办事项已逾期。请检查或重新安排。</string>
+    <string name="no_todo_events">此日期没有待办事项</string>
+    <string name="calendar_indicators">日历指示符</string>
+    <string name="regular_event">普通事项</string>
+    <string name="pending_todo">待办中</string>
+    <string name="completed_todo">已完成待办</string>
+    <string name="past_due_todo">逾期待办</string>
+    <string name="todo_notification_channel">待办事项提醒</string>
+    <string name="todo_notification_title">待办事项提醒</string>
+    <string name="past_due_notification">您有 %1$d 个待办事项已逾期</string>
+    <string name="upcoming_due_notification">您有 %1$d 个待办事项即将到期</string>
+    <string name="todo_events_count_format">此日期有 %d 个待办事项</string>
+    <string name="pending_completed_format">%1$d 待处理，%2$d 已完成</string>
+
+    <!-- ==================== ACCESSIBILITY SETTINGS ==================== -->
     <string name="accessibility_features">辅助功能</string>
     <string name="font_size">字体大小</string>
     <string name="text_to_speech">文字转语音</string>
@@ -49,53 +153,30 @@
     <string name="apply_changes">应用更改</string>
     <string name="stop_speaking">停止说话</string>
 
-    <!-- Chatbot -->
+    <!-- ==================== CHATBOT/AI ASSISTANT ==================== -->
     <string name="ai_assistant">人工智能助手</string>
     <string name="chat_with_me">跟我聊天</string>
     <string name="type_your_question">输入您的问题...</string>
     <string name="send_message">发送消息</string>
     <string name="close_chat">关闭聊天</string>
+    <string name="ai_service_unavailable">AI 服务不可用</string>
+    <string name="ai_generating">AI 正在生成税务计划...</string>
+    <string name="generate_ai_plan">使用自定义选项生成新的 AI 驱动税务计划。</string>
+    <string name="ai_tax_plan_generator">AI 税务计划生成器</string>
+    <string name="ai_feature_description">此功能使用 AI 分析您的收入和就业类型，生成个性化的节税建议。</string>
+    <string name="how_it_works">工作原理：</string>
+    <string name="ai_step_1">1. AI 分析您的收入水平和就业类型</string>
+    <string name="ai_step_2">2. 识别适用于您情况的税务减免类别</string>
+    <string name="ai_step_3">3. 生成具体建议并估算节省金额</string>
+    <string name="ai_note">注意：请确保您的个人资料中的收入和就业信息是最新的，以获得最准确的建议。</string>
 
-    <!-- General app strings -->
-    <string name="welcome_message">欢迎使用智能税务处理程序</string>
-    <string name="tax_calendar">税务日历</string>
-    <string name="upload_receipt">上传收据</string>
-    <string name="tax_categories">税务类别</string>
-    <string name="tax_plan">税务规划</string>
-    <string name="logout">退出登录</string>
-    <string name="welcome_description">一款人工智能集成应用程序，帮助您进行纳税申报</string>
-
-    <!-- Auth screens -->
-    <string name="login">登录</string>
-    <string name="register">注册</string>
-    <string name="email">电子邮箱</string>
-    <string name="password">密码</string>
-    <string name="sign_in">登录</string>
-    <string name="sign_up">注册</string>
-    <string name="welcome_back">欢迎回来</string>
-    <string name="create_account">创建账户</string>
-    <string name="sign_in_to_account">登录您的账户</string>
-    <string name="hello">你好呀！</string>
-
-    <!-- Profile screens -->
-    <string name="profile">个人资料</string>
-    <string name="edit_profile">编辑个人资料</string>
-    <string name="save_profile">保存个人资料</string>
-    <string name="name">姓名</string>
-    <string name="phone">电话号码</string>
-    <string name="date_of_birth">出生日期</string>
-    <string name="total_income">总收入</string>
-    <string name="complete_profile">完成您的个人资料</string>
-
-    <!-- Receipt Upload -->
+    <!-- ==================== RECEIPT UPLOAD & MANAGEMENT ==================== -->
     <string name="receipt_upload">上传收据</string>
     <string name="take_photo">拍照</string>
     <string name="from_gallery">从相册选取</string>
     <string name="receipt_processing">处理收据中...</string>
     <string name="capture_receipt">使用相机拍摄收据</string>
     <string name="select_from_gallery">从相册选择收据</string>
-
-    <!-- Receipt Details -->
     <string name="receipt_details">收据详情</string>
     <string name="merchant_name">商家：</string>
     <string name="merchant">商家</string>
@@ -104,8 +185,42 @@
     <string name="receipt_category">类别</string>
     <string name="expense_items">支出物品 %1$s</string>
     <string name="confirm_save">确认并保存</string>
+    <string name="add_receipt">添加收据</string>
+    <string name="edit_receipt">编辑收据</string>
+    <string name="receipt_summary">收据摘要</string>
+    <string name="receipt_add">您想如何添加收据？</string>
+    <string name="merchant_colon">商家: %1$s</string>
+    <string name="add_item">添加物品</string>
+    <string name="save_item">保存</string>
+    <string name="delete_receipt_message">您确定要删除此收据吗？此操作无法撤消。</string>
+    <string name="save_num_items">保存 %1$s 物品</string>
+    <string name="discard_changes">放弃更改？</string>
+    <string name="cancel_confirmation_message">您确定要取消吗？所有费用物品将会丢失。</string>
+    <string name="discard">放弃</string>
+    <string name="keep_editing">继续更改</string>
 
-    <!-- Categories -->
+    <!-- ==================== EXPENSE ITEMS ==================== -->
+    <string name="from">从:</string>
+    <string name="from_colon">从: %1$s</string>
+    <string name="date">日期（日/月/年）</string>
+    <string name="total_amount">总金额</string>
+    <string name="total_colon">总额: %1$s</string>
+    <string name="items">物品</string>
+    <string name="item">物品</string>
+    <string name="item_description">物品描述</string>
+    <string name="no_item_add">没有添加任何物品</string>
+    <string name="no_item">该类别中没有商品</string>
+    <string name="amount">金额 (RM)</string>
+    <string name="cate">类别: %1$s</string>
+    <string name="subtotal">小计</string>
+    <string name="edit_expense_item">编辑费用物品</string>
+    <string name="delete_item">删除物品</string>
+    <string name="delete_item_confirmation">您确实要删除此费用物品吗？</string>
+    <string name="delete_item_message">您确定要删除此费用物品吗？此操作无法撤消。</string>
+    <string name="no_item_found">没有找到物品！</string>
+    <string name="valid_amount">请输入有效金额。</string>
+
+    <!-- ==================== CATEGORIES ==================== -->
     <string name="categories">类别</string>
     <string name="categories_summary">类别摘要</string>
     <string name="total_expenses">总支出：%1$s</string>
@@ -117,146 +232,147 @@
     <string name="clear_year_message">您确定要删除 %1$s 年的所有费用吗？此操作无法撤消。</string>
     <string name="clear_year_success">%1$s 的所有支出已删除</string>
     <string name="clear_year_expenses">清除所有 %1$s 支出</string>
+    <string name="category">类别</string>
 
-    <!-- Tax Plan -->
+    <!-- ==================== TAX PLAN ==================== -->
     <string name="tax_plan_title">税务规划</string>
     <string name="tax_savings">潜在税务节省</string>
     <string name="tax_category_analysis">税务类别分析</string>
     <string name="analyze_receipts">分析收据</string>
     <string name="tax_optimization">税务优化建议</string>
-    <string name="no_data">没有可用数据</string>
-    <string name="loading_data">加载数据中...</string>
-
-    <string name="error_message">错误信息</string>
-    <string name="retry">重试</string>
-    <string name="add_receipt">添加收据</string>
-    <string name="category">类别</string>
-    <string name="no_item">该类别中没有商品</string>
-    <string name="from">从:</string>
-    <string name="from_colon">从: %1$s</string>
-    <string name="edit_receipt">编辑收据</string>
-    <string name="date">日期（日/月/年）</string>
-    <string name="total_amount">总金额</string>
-    <string name="items">物品</string>
-    <string name="item">物品</string>
-    <string name="no_item_add">没有添加任何物品</string>
-    <string name="amount">金额 (RM)</string>
-    <string name="cate">类别: %1$s</string>
-    <string name="subtotal">小计</string>
-    <string name="item_description">物品描述</string>
-    <string name="valid_amount">请输入有效金额。</string>
-    <string name="delete_item">删除物品</string>
-    <string name="done">完毕</string>
-    <string name="total_colon">总额: %1$s</string>
-    <string name="rm">RM</string>
-    <string name="merchant_colon">商人: %1$s</string>
-    <string name="back">后退</string>
-    <string name="error">错误</string>
-    <string name="receipt_summary">收据摘要</string>
-    <string name="receipt_add">您想如何添加收据？</string>
-    <string name="logging_in">正在登录</string>
-    <string name="creating_account">创建帐户</string>
-    <string name="no_item_found">没有找到物品！</string>
-    <string name="individual_employ">个人雇员</string>
-    <string name="individual_description">我受雇于一个组织。</string>
-    <string name="self_employed">自雇</string>
-    <string name="self_employed_description">我经营自己的生意，不受雇于别人。</string>
-
-    <!-- Tax Information Screen -->
-    <string name="tax_information">税务信息</string>
-    <string name="back_to_home">返回主页</string>
-    <string name="going_back_home">正在返回主页</string>
-    <string name="going_home">前往主页</string>
-    <string name="going_to_profile">前往个人资料</string>
-    <string name="home">主页</string>
-
-    <!-- Tax Information Content -->
-    <string name="your_income_tax">您的所得税</string>
-    <string name="your_annual_income">您的年收入：</string>
-    <string name="estimated_tax">预估税额：</string>
-    <string name="effective_tax_rate">有效税率：</string>
-
-    <!-- Tax Rates Table -->
-    <string name="malaysia_income_tax_rates">马来西亚所得税率（2023）</string>
-    <string name="chargeable_income">应税收入（令吉）</string>
-    <string name="rate">税率（%）</string>
-    <string name="tax_rm">税额（令吉）</string>
-
-    <!-- Tax Regulations -->
-    <string name="malaysia_tax_regulations">马来西亚税务法规</string>
-    <string name="tax_regulations_desc">马来西亚的所得税由马来西亚内陆税收局（LHDN）管理。以下是个人纳税人的主要法规：</string>
-
-    <string name="filing_deadline">申报截止日期</string>
-    <string name="filing_deadline_desc">对于没有商业收入（仅有雇佣收入）的个人，报税截止日期为每年4月30日。对于有商业收入的个人，截止日期为6月30日。</string>
-
-    <string name="tax_reliefs">税务减免</string>
-    <string name="tax_reliefs_desc">有各种税务减免可用于减少您的应税收入。这些包括个人减免、医疗费用、生活方式开支等。</string>
-
-    <string name="tax_deductions">税务扣除</string>
-    <string name="tax_deductions_desc">税务扣除是在计算税款前可从收入中扣除的费用。这包括获批准的慈善捐款和伊斯兰教什一税（zakat）付款。</string>
-
-    <string name="payment_methods">付款方式</string>
-    <string name="payment_methods_desc">您可以通过多种方式支付税款，包括网上银行（FPX）、信用卡、ATM或通过LHDN付款柜台。</string>
-
-    <string name="pcb">PCB（每月税款扣除）</string>
-    <string name="pcb_desc">PCB是雇主从雇员薪资中每月扣除税款的机制。这有助于全年分摊税负，而不是一次性付款。</string>
-
-    <!-- Tax Relief Categories -->
-    <string name="tax_relief_categories">税务减免类别</string>
-    <string name="relief_categories_desc">税务减免可降低您的应税收入，减轻整体税负。以下是马来西亚可用的主要税务减免类别：</string>
-
-    <string name="lifestyle_expenses">生活方式开支</string>
-    <string name="lifestyle_expenses_desc">包括购买书籍、电脑、智能手机、体育器材和互联网订阅。</string>
-
-    <string name="medical_expenses">医疗费用</string>
-    <string name="medical_expenses_desc">包括严重疾病治疗、体检和父母的医疗费用。</string>
-
-    <string name="education_fees">教育费用</string>
-    <string name="education_fees_desc">包括在认可机构攻读文凭、本科学位、硕士或博士学位的费用。</string>
-
-    <string name="epf_contributions">公积金缴款</string>
-    <string name="epf_contributions_desc">雇员公积金缴款有资格获得税务减免。</string>
-
-    <string name="life_insurance">人寿保险</string>
-    <string name="life_insurance_desc">为人寿保险单支付的保费有资格获得税务减免。</string>
-
-    <string name="housing_loan_interest">房贷利息</string>
-    <string name="housing_loan_interest_desc">首次购房者的房贷利息可作为税务减免申报。</string>
-
-    <!-- Disclaimer -->
-    <string name="tax_information_disclaimer">免责声明：此信息仅供一般指导，可能不反映最新的税法变更。请咨询税务专业人士或访问LHDN网站获取最准确和最新的信息。</string>
-
-    <!-- Tax Plan Screen -->
+    <string name="tax_plan_screen">税务计划页面</string>
+    <string name="tax_plan_detail_screen">税务计划详情页面</string>
     <string name="tax_guide_title">马来西亚税务信息指南</string>
     <string name="tax_guide_description">了解马来西亚所得税率、法规和可用的税务减免，帮助您有效规划财务。</string>
-    <string name="view_tax_information">查看税务信息</string>
-    <string name="going_to_tax_information">前往税务信息</string>
-
+    <string name="generate_tax_plan">生成人工智能税务计划</string>
     <string name="tax_planning_tools">税务规划工具</string>
     <string name="tax_calculator">税款计算器</string>
     <string name="tax_calculator_desc">根据您的收入和适用扣除项计算预估税款。</string>
     <string name="tax_calculator_coming_soon">税款计算器即将推出</string>
-
     <string name="deduction_optimizer">扣除优化器</string>
     <string name="deduction_optimizer_desc">寻找优化税务扣除和最大化节税的方法。</string>
     <string name="feature_coming_soon">功能即将推出</string>
-
-    <string name="tax_calendar_desc">跟踪重要的税务截止日期和日程安排。</string>
-    <string name="going_to_calendar">前往日历</string>
-
+    <string name="view_tax_information">查看税务信息</string>
+    <string name="going_to_tax_information">前往税务信息</string>
     <string name="main_features">主要特点</string>
     <string name="calendar_description">追踪重要的纳税日期和截止日期</string>
     <string name="tax_plan_description">优化您的节税策略</string>
     <string name="tax_info_description">了解马来西亚税收法规</string>
+    <string name="visit_official_tax_portal">访问马来西亚官方税务门户 →</string>
+    <string name="no_tax_plans">暂无税务计划</string>
+    <string name="generate_to_start">生成税务计划以开始</string>
+    <string name="view_plan">查看计划</string>
+    <string name="delete_plan">删除计划</string>
+    <string name="potential_savings">潜在节省：%1$s</string>
+    <string name="suggestions_count">%1$d 条建议</string>
+    <string name="plan_not_found">找不到计划</string>
+    <string name="tax_saving_suggestions">节税建议</string>
+    <string name="no_suggestions_available">暂无可用建议</string>
+    <string name="implemented">已实施</string>
+    <string name="not_implemented">尚未实施</string>
+    <string name="potential_tax_savings">潜在税务节省：%1$s</string>
+    <string name="create_new_tax_plan">创建新税务计划</string>
+    <string name="plan_name_optional">计划名称（可选）</string>
+    <string name="plan_name_placeholder">例如：我的 2025 年税务计划</string>
+    <string name="select_plan_type">选择计划类型：</string>
+    <string name="generate_plan">生成计划</string>
+    <string name="delete_tax_plan">删除税务计划</string>
+    <string name="tax_plan_generated">税务计划生成成功</string>
+    <string name="tax_plan_deleted">税务计划删除成功</string>
+    <string name="delete_confirm">删除确认</string>
 
-    <!-- Validation Error Messages in Chinese (Simplified) -->
+    <!-- ==================== TAX PLAN TYPES ==================== -->
+    <string name="standard_tax_plan">标准税务计划</string>
+    <string name="future_income_plan">未来收入计划（收入增加 20%）</string>
+    <string name="business_venture_plan">商业创业计划</string>
+    <string name="standard_plan">标准计划</string>
+    <string name="future_income_plan_title">未来收入计划</string>
+    <string name="business_plan_title">商业计划</string>
+    <string name="standard_plan_description">基于您当前收入和就业状态的个性化税务计划</string>
+    <string name="future_plan_description">针对未来收入增长和长期税务效率优化的税务计划</string>
+    <string name="business_plan_description">专为商业创业设计的税务计划，重点关注商业扣除</string>
+
+    <!-- ==================== TAX PLAN ERROR MESSAGES ==================== -->
+    <string name="error_loading_plans">加载税务计划时出错</string>
+    <string name="error_viewing_plan">查看税务计划时出错</string>
+    <string name="error_generating_plan">生成税务计划时出错</string>
+    <string name="error_deleting_plan">删除税务计划时出错</string>
+
+    <!-- ==================== TAX CATEGORY NAMES ==================== -->
+    <string name="category_lifestyle">生活方式</string>
+    <string name="category_medical">医疗</string>
+    <string name="category_education">教育</string>
+    <string name="category_epf">公积金缴纳</string>
+    <string name="category_sspn">SSPN 储蓄</string>
+    <string name="category_donation">捐赠</string>
+    <string name="category_insurance">保险费</string>
+    <string name="category_business_expenses">商业支出</string>
+    <string name="category_home_office">家庭办公</string>
+    <string name="category_investment">投资</string>
+    <string name="category_retirement">退休规划</string>
+    <string name="category_capital_investment">资本投资</string>
+    <string name="category_business_structure">商业结构</string>
+
+    <!-- ==================== DEFAULT TAX SUGGESTIONS ==================== -->
+    <string name="lifestyle_suggestion">通过保留书籍、电子产品、体育设备和互联网订阅的收据，最大化您的 RM2,500 生活方式减免。</string>
+    <string name="medical_suggestion">追踪您自己和家属的医疗费用，获取高达 RM8,000 的减免。</string>
+    <string name="employee_epf_suggestion">确保您最大化 11% 的强制性公积金缴纳，获取高达 RM4,000 的税务减免。</string>
+    <string name="self_employed_epf_suggestion">每年自愿向公积金缴纳高达 RM4,000，获取税务减免。</string>
+    <string name="education_suggestion">申请高达 RM7,000 的教育减免，用于技能发展课程或继续教育。</string>
+    <string name="donation_suggestion">向获批准的组织捐款以获取税务扣除。</string>
+    <string name="investment_suggestion">考虑具有税收优惠的税务高效投资工具，如单位信托基金。</string>
+    <string name="education_future_suggestion">投资于具有高达 RM7,000 税务减免的技能发展课程，提高未来收入潜力。</string>
+    <string name="retirement_suggestion">通过私人退休计划 (PRS) 缴纳补充您的公积金，获取高达 RM3,000 的额外税务减免。</string>
+    <string name="business_expenses_suggestion">追踪并记录所有商业相关支出，包括办公用品、水电费和专业服务。</string>
+    <string name="home_office_suggestion">如果您在家工作，将部分租金、水电费和互联网费用分配为商业支出。</string>
+    <string name="capital_investment_suggestion">规划资本投资，利用资本津贴和商业扩张激励措施。</string>
+    <string name="business_structure_suggestion">根据您的预期增长，审查您的商业结构（独资企业与有限公司）以优化税务处理。</string>
+    <string name="sspn_suggestion">考虑为子女教育设立 SSPN 储蓄，获取高达 RM8,000 的税务减免。</string>
+
+    <!-- ==================== TAX INFORMATION ==================== -->
+    <string name="tax_information">税务信息</string>
+    <string name="your_income_tax">您的所得税</string>
+    <string name="your_annual_income">您的年收入：</string>
+    <string name="estimated_tax">预估税额：</string>
+    <string name="effective_tax_rate">有效税率：</string>
+    <string name="malaysia_income_tax_rates">马来西亚所得税率（2023）</string>
+    <string name="chargeable_income">应税收入（令吉）</string>
+    <string name="rate">税率（%）</string>
+    <string name="tax_rm">税额（令吉）</string>
+    <string name="malaysia_tax_regulations">马来西亚税务法规</string>
+    <string name="tax_regulations_desc">马来西亚的所得税由马来西亚内陆税收局（LHDN）管理。以下是个人纳税人的主要法规：</string>
+    <string name="filing_deadline">申报截止日期</string>
+    <string name="filing_deadline_desc">对于没有商业收入（仅有雇佣收入）的个人，报税截止日期为每年4月30日。对于有商业收入的个人，截止日期为6月30日。</string>
+    <string name="tax_reliefs">税务减免</string>
+    <string name="tax_reliefs_desc">有各种税务减免可用于减少您的应税收入。这些包括个人减免、医疗费用、生活方式开支等。</string>
+    <string name="tax_deductions">税务扣除</string>
+    <string name="tax_deductions_desc">税务扣除是在计算税款前可从收入中扣除的费用。这包括获批准的慈善捐款和伊斯兰教什一税（zakat）付款。</string>
+    <string name="payment_methods">付款方式</string>
+    <string name="payment_methods_desc">您可以通过多种方式支付税款，包括网上银行（FPX）、信用卡、ATM或通过LHDN付款柜台。</string>
+    <string name="pcb">PCB（每月税款扣除）</string>
+    <string name="pcb_desc">PCB是雇主从雇员薪资中每月扣除税款的机制。这有助于全年分摊税负，而不是一次性付款。</string>
+    <string name="tax_relief_categories">税务减免类别</string>
+    <string name="relief_categories_desc">税务减免可降低您的应税收入，减轻整体税负。以下是马来西亚可用的主要税务减免类别：</string>
+    <string name="lifestyle_expenses">生活方式开支</string>
+    <string name="lifestyle_expenses_desc">包括购买书籍、电脑、智能手机、体育器材和互联网订阅。</string>
+    <string name="medical_expenses">医疗费用</string>
+    <string name="medical_expenses_desc">包括严重疾病治疗、体检和父母的医疗费用。</string>
+    <string name="education_fees">教育费用</string>
+    <string name="education_fees_desc">包括在认可机构攻读文凭、本科学位、硕士或博士学位的费用。</string>
+    <string name="epf_contributions">公积金缴款</string>
+    <string name="epf_contributions_desc">雇员公积金缴款有资格获得税务减免。</string>
+    <string name="life_insurance">人寿保险</string>
+    <string name="life_insurance_desc">为人寿保险单支付的保费有资格获得税务减免。</string>
+    <string name="housing_loan_interest">房贷利息</string>
+    <string name="housing_loan_interest_desc">首次购房者的房贷利息可作为税务减免申报。</string>
+    <string name="tax_information_disclaimer">免责声明：此信息仅供一般指导，可能不反映最新的税法变更。请咨询税务专业人士或访问LHDN网站获取最准确和最新的信息。</string>
+
+    <!-- ==================== VALIDATION ERROR MESSAGES ==================== -->
     <string name="error_not_a_receipt">上传的图片看起来不像是收据或发票。请确保您上传的是有效的收据。</string>
     <string name="error_unable_to_analyze_image">无法分析图像。请上传收据或发票的清晰图像。</string>
     <string name="error_image_not_recognized">无法将该图片识别为有效收据。请上传更清晰的收据或发票图片。</string>
     <string name="invalid_receipt_image">收据图片无效</string>
-    <string name="ok">好的</string>
     <string name="not_a_receipt">不是收据</string>
-    <string name="try_again">再试一次</string>
     <string name="upload_valid_receipt">请上传有效的收据或发票图像。</string>
     <string name="error_name_empty">姓名不能为空</string>
     <string name="error_name_too_short">姓名太短</string>
@@ -275,176 +391,23 @@
     <string name="error_income_invalid_chars">收入只能包含数字、逗号和句点</string>
     <string name="error_income_negative">收入不能为负数</string>
     <string name="error_income_format">收入格式无效</string>
+    <string name="error_income_invalid_format">收入格式无效</string>
     <string name="error_employment_invalid">请选择有效的就业类型</string>
     <string name="error_password_empty">密码不能为空</string>
     <string name="error_password_too_short">密码长度必须至少为8个字符</string>
     <string name="error_password_no_uppercase">密码必须包含至少一个大写字母</string>
+    <string name="error_password_uppercase">密码必须包含至少一个大写字母</string>
     <string name="error_password_no_digit">密码必须包含至少一个数字</string>
+    <string name="error_password_digit">密码必须包含至少一个数字</string>
     <string name="error_password_no_special">密码必须包含至少一个特殊字符</string>
+    <string name="error_password_special_char">密码必须包含至少一个特殊字符</string>
     <string name="error_password_confirmation_empty">请确认您的密码</string>
+    <string name="error_confirm_password_empty">请确认您的密码</string>
     <string name="error_password_mismatch">两次输入的密码不匹配</string>
-    <string name="confirm_password">确认密码</string>
+    <string name="error_passwords_dont_match">密码不匹配</string>
     <string name="error_email_empty">邮箱不能为空</string>
     <string name="error_email_format">电子邮件格式无效</string>
-    <string name="password_requirements">密码长度必须至少为 8 个字符，包含大写字母、数字和特殊字符</string>
-    <string name="is_saving">保存中。。。</string>
-    <string name="add_item">添加物品</string>
-    <string name="save_item">保存</string>
-    <string name="generate_tax_plan">生成人工智能税务计划</string>
-
-    <!-- Navigation and Action strings -->
-    <string name="change_language">更改语言</string>
-    <string name="accessibility_settings">无障碍设置</string>
-    <string name="ai_information">AI 信息</string>
-    <string name="calendar">日历</string>
-    <string name="account">账户</string>
-
-    <!-- Tax Plan UI strings -->
-    <string name="ai_tax_plan_generator">AI 税务计划生成器</string>
-    <string name="ai_feature_description">此功能使用 AI 分析您的收入和就业类型，生成个性化的节税建议。</string>
-    <string name="how_it_works">工作原理：</string>
-    <string name="ai_step_1">1. AI 分析您的收入水平和就业类型</string>
-    <string name="ai_step_2">2. 识别适用于您情况的税务减免类别</string>
-    <string name="ai_step_3">3. 生成具体建议并估算节省金额</string>
-    <string name="ai_note">注意：请确保您的个人资料中的收入和就业信息是最新的，以获得最准确的建议。</string>
-    <string name="got_it">明白了</string>
-
-    <!-- Tax Plan List screen -->
-    <string name="no_tax_plans">暂无税务计划</string>
-    <string name="generate_to_start">生成税务计划以开始</string>
-    <string name="ai_generating">AI 正在生成税务计划...</string>
-    <string name="view_plan">查看计划</string>
-    <string name="delete_plan">删除计划</string>
-    <string name="potential_savings">潜在节省：%1$s</string>
-    <string name="suggestions_count">%1$d 条建议</string>
-
-    <!-- Tax Plan Detail screen -->
-    <string name="plan_not_found">找不到计划</string>
-    <string name="tax_saving_suggestions">节税建议</string>
-    <string name="no_suggestions_available">暂无可用建议</string>
-    <string name="implemented">已实施</string>
-    <string name="not_implemented">尚未实施</string>
-    <string name="potential_tax_savings">潜在税务节省：%1$s</string>
-
-    <!-- Create/Delete Tax Plan Dialog -->
-    <string name="create_new_tax_plan">创建新税务计划</string>
-    <string name="generate_ai_plan">使用自定义选项生成新的 AI 驱动税务计划。</string>
-    <string name="plan_name_optional">计划名称（可选）</string>
-    <string name="plan_name_placeholder">例如：我的 2025 年税务计划</string>
-    <string name="select_plan_type">选择计划类型：</string>
-    <string name="standard_tax_plan">标准税务计划</string>
-    <string name="future_income_plan">未来收入计划（收入增加 20%）</string>
-    <string name="business_venture_plan">商业创业计划</string>
-    <string name="generate_plan">生成计划</string>
-    <string name="delete_tax_plan">删除税务计划</string>
-
-    <!-- Success/Error messages -->
-    <string name="tax_plan_generated">税务计划生成成功</string>
-    <string name="tax_plan_deleted">税务计划删除成功</string>
-    <string name="version_requirement">此功能需要 Android N 或更高版本</string>
-    <string name="user_not_authenticated">请登录以生成税务计划</string>
-    <string name="error_loading_plans">加载税务计划时出错</string>
-    <string name="error_viewing_plan">查看税务计划时出错</string>
-    <string name="error_generating_plan">生成税务计划时出错</string>
-    <string name="error_deleting_plan">删除税务计划时出错</string>
-    <string name="unknown_error">未知错误</string>
-    <string name="ai_service_unavailable">AI 服务不可用</string>
-    <string name="internet_required">需要互联网连接</string>
-
-    <!-- Plan Type Descriptions -->
-    <string name="standard_plan">标准计划</string>
-    <string name="future_income_plan_title">未来收入计划</string>
-    <string name="business_plan_title">商业计划</string>
-    <string name="standard_plan_description">基于您当前收入和就业状态的个性化税务计划</string>
-    <string name="future_plan_description">针对未来收入增长和长期税务效率优化的税务计划</string>
-    <string name="business_plan_description">专为商业创业设计的税务计划，重点关注商业扣除</string>
-
-    <!-- Tax Plan Category Names -->
-    <string name="category_lifestyle">生活方式</string>
-    <string name="category_medical">医疗</string>
-    <string name="category_education">教育</string>
-    <string name="category_epf">公积金缴纳</string>
-    <string name="category_sspn">SSPN 储蓄</string>
-    <string name="category_donation">捐赠</string>
-    <string name="category_insurance">保险费</string>
-    <string name="category_business_expenses">商业支出</string>
-    <string name="category_home_office">家庭办公</string>
-    <string name="category_investment">投资</string>
-    <string name="category_retirement">退休规划</string>
-    <string name="category_capital_investment">资本投资</string>
-    <string name="category_business_structure">商业结构</string>
-
-    <!-- Default Tax Suggestions -->
-    <string name="lifestyle_suggestion">通过保留书籍、电子产品、体育设备和互联网订阅的收据，最大化您的 RM2,500 生活方式减免。</string>
-    <string name="medical_suggestion">追踪您自己和家属的医疗费用，获取高达 RM8,000 的减免。</string>
-    <string name="employee_epf_suggestion">确保您最大化 11% 的强制性公积金缴纳，获取高达 RM4,000 的税务减免。</string>
-    <string name="self_employed_epf_suggestion">每年自愿向公积金缴纳高达 RM4,000，获取税务减免。</string>
-    <string name="education_suggestion">申请高达 RM7,000 的教育减免，用于技能发展课程或继续教育。</string>
-    <string name="donation_suggestion">向获批准的组织捐款以获取税务扣除。</string>
-    <string name="investment_suggestion">考虑具有税收优惠的税务高效投资工具，如单位信托基金。</string>
-    <string name="education_future_suggestion">投资于具有高达 RM7,000 税务减免的技能发展课程，提高未来收入潜力。</string>
-    <string name="retirement_suggestion">通过私人退休计划 (PRS) 缴纳补充您的公积金，获取高达 RM3,000 的额外税务减免。</string>
-    <string name="business_expenses_suggestion">追踪并记录所有商业相关支出，包括办公用品、水电费和专业服务。</string>
-    <string name="home_office_suggestion">如果您在家工作，将部分租金、水电费和互联网费用分配为商业支出。</string>
-    <string name="capital_investment_suggestion">规划资本投资，利用资本津贴和商业扩张激励措施。</string>
-    <string name="business_structure_suggestion">根据您的预期增长，审查您的商业结构（独资企业与有限公司）以优化税务处理。</string>
-    <string name="sspn_suggestion">考虑为子女教育设立 SSPN 储蓄，获取高达 RM8,000 的税务减免。</string>
-
-    <string name="tax_plan_screen">税务计划页面</string>
-    <string name="tax_plan_detail_screen">税务计划详情页面</string>
-    <string name="delete_confirm">删除确认</string>
-    <string name="delete_item_message">您确定要删除此费用物品吗？此操作无法撤消。</string>
-    <string name="delete_receipt_message">您确定要删除此收据吗？此操作无法撤消。</string>
-    <string name="edit_expense_item">编辑费用物品</string>
-    <string name="save">保存</string>
-    <string name="save_num_items">保存 %1$s 物品</string>
-    <string name="discard_changes">放弃更改？</string>
-    <string name="cancel_confirmation_message">您确定要取消吗？所有费用物品将会丢失。</string>
-    <string name="discard">放弃</string>
-    <string name="keep_editing">继续更改</string>
-    <string name="delete_item_confirmation">您确实要删除此费用物品吗？</string>
-
-    <!-- Calender to do add ons-->
-    <string name="make_todo_event">待办事项事件</string>
-    <string name="todo_events">待办事项</string>
-    <string name="regular_events">普通事项</string>
-    <string name="todo_status">待办状态</string>
-    <string name="pending">待办中</string>
-    <string name="completed">已完成</string>
-    <string name="past_due">已逾期</string>
-    <string name="mark_as_completed">标记为已完成</string>
-    <string name="mark_as_complete">标记完成</string>
-    <string name="mark_as_incomplete">标记未完成</string>
-    <string name="past_due_warning">此待办事项已逾期！</string>
-    <string name="past_due_todo_events">逾期待办事项</string>
-    <string name="past_due_message">您有 %1$d 个待办事项已逾期。请检查或重新安排。</string>
-    <string name="acknowledge">我知道了</string>
-    <string name="no_todo_events">此日期没有待办事项</string>
-    <string name="calendar_indicators">日历指示符</string>
-    <string name="regular_event">普通事项</string>
-    <string name="pending_todo">待办中</string>
-    <string name="completed_todo">已完成待办</string>
-    <string name="past_due_todo">逾期待办</string>
-    <string name="todo_notification_channel">待办事项提醒</string>
-    <string name="todo_notification_title">待办事项提醒</string>
-    <string name="past_due_notification">您有 %1$d 个待办事项已逾期</string>
-    <string name="upcoming_due_notification">您有 %1$d 个待办事项即将到期</string>
-
-    <string name="visit_official_tax_portal">访问马来西亚官方税务门户 →</string>
-
-    <string name="error_income_invalid_format">收入格式无效</string>
-    <string name="error_password_uppercase">密码必须包含至少一个大写字母</string>
-    <string name="error_password_digit">密码必须包含至少一个数字</string>
-    <string name="error_password_special_char">密码必须包含至少一个特殊字符</string>
-
-    <!-- Password confirmation validation -->
-    <string name="error_confirm_password_empty">请确认您的密码</string>
-    <string name="error_passwords_dont_match">密码不匹配</string>
     <string name="error_user_not_logged_in">用户未登录</string>
-
-    Here's the translation of all the error messages to Simplified Chinese:
-
-    ```
     <string name="error_item_description_required">必须填写描述</string>
     <string name="error_description_too_short">描述至少需要2个字符</string>
     <string name="error_merchant_required">必须填写商家名称</string>
@@ -454,8 +417,6 @@
     <string name="error_amount_format">金额格式无效</string>
     <string name="error_amount_positive">金额必须大于零</string>
     <string name="error_invalid_input">保存前请修正错误</string>
-
-
     <string name="error_empty_description">描述不能为空</string>
     <string name="error_empty_merchant">商家名称不能为空</string>
     <string name="error_invalid_date_format">请使用DD/MM/YYYY格式</string>
@@ -463,21 +424,7 @@
     <string name="error_invalid_amount">请输入有效数字</string>
     <string name="error_negative_amount">金额必须大于零</string>
     <string name="error_empty_category">请选择一个类别</string>
-
     <string name="error_null_response">无法分析图像。请上传清晰的收据或发票图像。</string>
     <string name="error_parsing_receipt">无法将图像识别为有效的收据。请上传更清晰的收据或发票图像。</string>
     <string name="error_failed_to_load_image">加载图像失败。请尝试使用其他图像。</string>
-
-    <string name="select_date">选择日期</string>
-    <string name="select_time">选择时间</string>
-    <string name="select_start_time">选择开始时间</string>
-    <string name="select_end_time">选择结束时间</string>
-
-    <string name="all_events">所有事件</string>
-    <string name="events_count_format">此日期有 %d 个事件</string>
-    <string name="todo_events_count_format">此日期有 %d 个待办事项</string>
-    <string name="pending_completed_format">%1$d 待处理，%2$d 已完成</string>
-    <string name="time_separator">至</string>
-
-    <string name="time_validator">结束时间必须在开始时间之后。</string>
 </resources>

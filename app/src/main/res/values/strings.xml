@@ -1,18 +1,89 @@
 <resources>
+    <!-- ==================== GENERAL APP STRINGS ==================== -->
     <string name="app_name">Smart Tax Handler</string>
-    <string name="scheduler">Scheduler</string>
+    <string name="welcome_message">Welcome to Smart Tax Handler</string>
+    <string name="welcome_description">An AI integrated app to help you in tax declaration</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="delete">Delete</string>
+    <string name="back">Back</string>
+    <string name="done">Done</string>
+    <string name="save">Save</string>
+    <string name="retry">Retry</string>
+    <string name="try_again">Try Again</string>
+    <string name="error">Error</string>
+    <string name="got_it">Got it</string>
+    <string name="is_saving">Saving...</string>
+    <string name="home">Home</string>
+    <string name="acknowledge">I Understand</string>
+    <string name="rm">RM</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="going_back_home">Going back to home</string>
+    <string name="back_to_home">Back to home</string>
+    <string name="going_home">Going to home screen</string>
+    <string name="no_data">No data available</string>
+    <string name="loading_data">Loading data...</string>
+    <string name="error_message">Error message</string>
+    <string name="version_requirement">This feature requires Android N or higher</string>
+    <string name="internet_required">Internet connection required</string>
+
+    <!-- ==================== MULTI-LANGUAGE ==================== -->
     <string name="current_language">Current Language:</string>
     <string name="select_language">Select Language:</string>
     <string name="language_english">English</string>
     <string name="language_chinese">中文</string>
     <string name="language_malay">Bahasa Melayu</string>
+    <string name="change_language">Change Language</string>
+
+    <!-- ==================== NAVIGATION & ACTIONS ==================== -->
+    <string name="accessibility_settings">Accessibility Settings</string>
+    <string name="ai_information">AI Information</string>
+    <string name="calendar">Calendar</string>
+    <string name="account">Account</string>
+    <string name="scheduler">Scheduler</string>
+    <string name="tax_calendar">Tax Calendar</string>
+    <string name="upload_receipt">Upload Receipt</string>
+    <string name="tax_categories">Tax Categories</string>
+    <string name="tax_plan">Tax Plan</string>
+    <string name="logout">Logout</string>
+    <string name="profile">Profile</string>
+
+    <!-- ==================== AUTHENTICATION ==================== -->
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="welcome_back">Welcome back</string>
+    <string name="create_account">Create an account</string>
+    <string name="sign_in_to_account">Sign in to your account</string>
+    <string name="logging_in">Logging in</string>
+    <string name="creating_account">Creating account</string>
+    <string name="password_requirements">Password must be at least 8 characters with uppercase, number, and special character</string>
+    <string name="user_not_authenticated">Please sign in to generate a tax plan</string>
+
+    <!-- ==================== PROFILE ==================== -->
+    <string name="edit_profile">Edit Profile</string>
+    <string name="save_profile">Save Profile</string>
+    <string name="name">Name</string>
+    <string name="phone">Phone Number</string>
+    <string name="date_of_birth">Date Of Birth</string>
+    <string name="total_income">Total Income</string>
+    <string name="complete_profile">Complete your profile</string>
+    <string name="hello">Hello there!</string>
+    <string name="going_to_profile">Going to profile</string>
+    <string name="individual_employ">Individual Employee</string>
+    <string name="individual_description">I am employed under an organization.</string>
+    <string name="self_employed">Self-Employed</string>
+    <string name="self_employed_description">I run my own business and not employed by others.</string>
+
+    <!-- ==================== CALENDAR & EVENTS ==================== -->
     <string name="events_for">Events for %1$s</string>
     <string name="no_events">No events scheduled for this day</string>
     <string name="add_new_event">Add New Event</string>
-    <string name="confirm">Confirm</string>
-    <string name="cancel">Cancel</string>
-
-    <!-- AddEventScreen and EditEventScreen -->
     <string name="event_details">Event Details</string>
     <string name="edit_event">Edit Event</string>
     <string name="event_name">Event Name</string>
@@ -23,8 +94,6 @@
     <string name="reminder_for_event">Reminder for Event:</string>
     <string name="save_event">Save Event</string>
     <string name="save_changes">Save Changes</string>
-
-    <!-- EventDetailScreen -->
     <string name="date_colon">Date:  </string>
     <string name="time_colon">Time: </string>
     <string name="description_colon">Description:</string>
@@ -34,9 +103,45 @@
     <string name="delete_event">Delete Event</string>
     <string name="back_to_calendar">Back to Calendar</string>
     <string name="delete_confirmation">Are you sure you want to delete this event?</string>
-    <string name="delete">Delete</string>
+    <string name="tax_calendar_desc">Keep track of important tax deadlines and scheduling.</string>
+    <string name="going_to_calendar">Going to calendar</string>
+    <string name="select_date">Select Date</string>
+    <string name="select_time">Select Time</string>
+    <string name="select_start_time">Select Start Time</string>
+    <string name="select_end_time">Select End Time</string>
+    <string name="all_events">All Events</string>
+    <string name="events_count_format">%d event(s) on this date</string>
+    <string name="time_separator">to</string>
+    <string name="time_validator">End time must be after start time.</string>
 
-    <!-- AccessibilitySettings -->
+    <!-- ==================== TO-DO EVENTS ==================== -->
+    <string name="make_todo_event">To-do Event: </string>
+    <string name="todo_events">To-Do Events</string>
+    <string name="regular_events">Regular Events</string>
+    <string name="todo_status">To-Do Status</string>
+    <string name="pending">Pending</string>
+    <string name="completed">Completed</string>
+    <string name="past_due">Past Due</string>
+    <string name="mark_as_completed">Mark as completed</string>
+    <string name="mark_as_complete">Mark as Complete</string>
+    <string name="mark_as_incomplete">Mark as Incomplete</string>
+    <string name="past_due_warning">This to-do is past due!</string>
+    <string name="past_due_todo_events">Past Due To-Do Events</string>
+    <string name="past_due_message">You have %1$d to-do events that are past due. Please review or reschedule them.</string>
+    <string name="no_todo_events">No to-do events for this date</string>
+    <string name="calendar_indicators">Calendar Indicators</string>
+    <string name="regular_event">Regular Event</string>
+    <string name="pending_todo">Pending To-Do</string>
+    <string name="completed_todo">Completed To-Do</string>
+    <string name="past_due_todo">Past Due To-Do</string>
+    <string name="todo_notification_channel">To-Do Reminders</string>
+    <string name="todo_notification_title">To-Do Reminder</string>
+    <string name="past_due_notification">You have %1$d past due to-do tasks</string>
+    <string name="upcoming_due_notification">You have %1$d to-do tasks due soon</string>
+    <string name="todo_events_count_format">%d to-do event(s) on this date</string>
+    <string name="pending_completed_format">%1$d pending, %2$d completed</string>
+
+    <!-- ==================== ACCESSIBILITY SETTINGS ==================== -->
     <string name="accessibility_features">Accessibility Features</string>
     <string name="font_size">Font Size</string>
     <string name="text_to_speech">Text to Speech</string>
@@ -47,53 +152,30 @@
     <string name="apply_changes">Apply Changes</string>
     <string name="stop_speaking">Stop Speaking</string>
 
-    <!-- Chatbot -->
+    <!-- ==================== CHATBOT/AI ASSISTANT ==================== -->
     <string name="ai_assistant">AI Chatbot</string>
     <string name="chat_with_me">Chat with me</string>
     <string name="type_your_question">Type your question...</string>
     <string name="send_message">Send message</string>
     <string name="close_chat">Close chat</string>
+    <string name="ai_service_unavailable">AI service unavailable</string>
+    <string name="ai_generating">AI Generating Tax Plan...</string>
+    <string name="generate_ai_plan">Generate a new AI-powered tax plan with custom options.</string>
+    <string name="ai_tax_plan_generator">AI Tax Plan Generator</string>
+    <string name="ai_feature_description">This feature uses AI to analyze your income and employment type to generate personalized tax-saving suggestions.</string>
+    <string name="how_it_works">How it works:</string>
+    <string name="ai_step_1">1. The AI analyzes your income level and employment type</string>
+    <string name="ai_step_2">2. It identifies applicable tax relief categories for your situation</string>
+    <string name="ai_step_3">3. It generates specific suggestions with estimated savings</string>
+    <string name="ai_note">Note: Make sure your income and employment information are up-to-date in your profile for the most accurate suggestions.</string>
 
-    <!-- General app strings -->
-    <string name="welcome_message">Welcome to Smart Tax Handler</string>
-    <string name="tax_calendar">Tax Calendar</string>
-    <string name="upload_receipt">Upload Receipt</string>
-    <string name="tax_categories">Tax Categories</string>
-    <string name="tax_plan">Tax Plan</string>
-    <string name="logout">Logout</string>
-    <string name="welcome_description">An AI integrated app to help you in tax declaration</string>
-
-    <!-- Auth screens -->
-    <string name="login">Login</string>
-    <string name="register">Register</string>
-    <string name="email">Email</string>
-    <string name="password">Password</string>
-    <string name="sign_in">Sign In</string>
-    <string name="sign_up">Sign Up</string>
-    <string name="welcome_back">Welcome back</string>
-    <string name="create_account">Create an account</string>
-    <string name="sign_in_to_account">Sign in to your account</string>
-
-    <!-- Profile screens -->
-    <string name="profile">Profile</string>
-    <string name="edit_profile">Edit Profile</string>
-    <string name="save_profile">Save Profile</string>
-    <string name="name">Name</string>
-    <string name="phone">Phone Number</string>
-    <string name="date_of_birth">Date Of Birth</string>
-    <string name="total_income">Total Income</string>
-    <string name="complete_profile">Complete your profile</string>
-    <string name="hello">Hello there!</string>
-
-    <!-- Receipt Upload -->
+    <!-- ==================== RECEIPT UPLOAD & MANAGEMENT ==================== -->
     <string name="receipt_upload">Upload Receipt</string>
     <string name="take_photo">Take Photo</string>
     <string name="from_gallery">From Gallery</string>
     <string name="receipt_processing">Processing receipt...</string>
     <string name="capture_receipt">Capture receipt using camera</string>
     <string name="select_from_gallery">Select receipt from gallery</string>
-
-    <!-- Receipt Details -->
     <string name="receipt_details">Receipt Details</string>
     <string name="merchant_name">Merchant: </string>
     <string name="merchant">Merchant </string>
@@ -102,8 +184,41 @@
     <string name="receipt_category">Category</string>
     <string name="expense_items">Expense Items %1$s</string>
     <string name="confirm_save">Confirm and Save</string>
+    <string name="add_receipt">Add receipt</string>
+    <string name="edit_receipt">Edit receipt</string>
+    <string name="receipt_summary">Receipt Summary</string>
+    <string name="receipt_add">How would you like to add your receipt?</string>
+    <string name="merchant_colon">Merchant: %1$s</string>
+    <string name="add_item">Add Item</string>
+    <string name="save_item">Save Item</string>
+    <string name="delete_receipt_message">Are you sure you want to delete this receipt? This action cannot be undone.</string>
+    <string name="save_num_items">Save %1$s Items</string>
+    <string name="discard_changes">Discard Changes?</string>
+    <string name="cancel_confirmation_message">Are you sure you want to cancel? All expense items will be lost.</string>
+    <string name="discard">Discard</string>
+    <string name="keep_editing">Keep Editing</string>
 
-    <!-- Categories -->
+    <!-- ==================== EXPENSE ITEMS ==================== -->
+    <string name="from">From:</string>
+    <string name="from_colon">From: %1$s</string>
+    <string name="date">Date (DD/MM/YYYY)</string>
+    <string name="total_amount">Total amount: </string>
+    <string name="total_colon">Total: %1$s</string>
+    <string name="items">Items</string>
+    <string name="item">Item</string>
+    <string name="item_description">Item description</string>
+    <string name="no_item_add">No items added</string>
+    <string name="no_item">No item in this category</string>
+    <string name="amount">Amount (RM)</string>
+    <string name="cate">Category: %1$s</string>
+    <string name="subtotal">Subtotal</string>
+    <string name="edit_expense_item">Edit Expense Item</string>
+    <string name="delete_item">Delete item</string>
+    <string name="delete_item_confirmation">Are you sure you want to delete this expense item?</string>
+    <string name="delete_item_message">Are you sure you want to delete this expense item? This action cannot be undone.</string>
+    <string name="no_item_found">No item found!</string>
+
+    <!-- ==================== CATEGORIES ==================== -->
     <string name="categories">Categories</string>
     <string name="categories_summary">Categories Summary</string>
     <string name="total_expenses">Total Expenses: %1$s</string>
@@ -115,147 +230,148 @@
     <string name="clear_year_message">Are you sure you want to delete all expenses for the year %1$s? This action cannot be undone.</string>
     <string name="clear_year_success">All expenses for %1$s have been deleted</string>
     <string name="clear_year_expenses">Clear All %1$s Expenses</string>
+    <string name="category">Category</string>
 
-    <!-- Tax Plan -->
+    <!-- ==================== TAX PLAN ==================== -->
     <string name="tax_plan_title">Tax Planning</string>
     <string name="tax_savings">Potential Tax Savings</string>
     <string name="tax_category_analysis">Tax Category Analysis</string>
     <string name="analyze_receipts">Analyze Receipts</string>
     <string name="tax_optimization">Tax Optimization Recommendations</string>
-    <string name="no_data">No data available</string>
-    <string name="loading_data">Loading data...</string>
-    <string name="error_message">Error message</string>
-    <string name="retry">Retry</string>
-    <string name="add_receipt">Add receipt</string>
-    <string name="category">Category</string>
-    <string name="no_item">No item in this category</string>
-    <string name="from">From:</string>
-    <string name="from_colon">From: %1$s</string>
-    <string name="edit_receipt">Edit receipt</string>
-    <string name="date">Date (DD/MM/YYYY)</string>
-    <string name="total_amount">Total amount: </string>
-    <string name="items">Items</string>
-    <string name="item">Item</string>
-    <string name="no_item_add">No items added</string>
-    <string name="amount">Amount (RM)</string>
-    <string name="cate">Category: %1$s</string>
-    <string name="subtotal">Subtotal</string>
-    <string name="valid_amount">Please enter a valid amount.</string>
-    <string name="item_description">Item description</string>
-    <string name="delete_item">Delete item</string>
-    <string name="done">Done</string>
-    <string name="total_colon">Total: %1$s</string>
-    <string name="rm">RM</string>
-    <string name="merchant_colon">Merchant: %1$s</string>
-    <string name="back">Back</string>
-    <string name="error">Error</string>
-    <string name="receipt_summary">Receipt Summary</string>
-    <string name="receipt_add">How would you like to add your receipt?</string>
-    <string name="logging_in">Logging in</string>
-    <string name="creating_account">Creating account</string>
-    <string name="no_item_found">No item found!</string>
-    <string name="individual_employ">Individual Employee</string>
-    <string name="individual_description">I am employed under an organization.</string>
-    <string name="self_employed">Self-Employed</string>
-    <string name="self_employed_description">I run my own business and not employed by others.</string>
-
-    <!-- Tax Information Screen -->
-    <string name="tax_information">Tax Information</string>
-    <string name="back_to_home">Back to home</string>
-    <string name="going_back_home">Going back to home</string>
-    <string name="going_home">Going to home screen</string>
-    <string name="going_to_profile">Going to profile</string>
-    <string name="home">Home</string>
-
-    <!-- Tax Information Content -->
-    <string name="your_income_tax">Your Income Tax</string>
-    <string name="your_annual_income">Your Annual Income:</string>
-    <string name="estimated_tax">Estimated Tax:</string>
-    <string name="effective_tax_rate">Effective Tax Rate:</string>
-
-    <!-- Tax Rates Table -->
-    <string name="malaysia_income_tax_rates">Malaysia Income Tax Rates (2023)</string>
-    <string name="chargeable_income">Chargeable Income (RM)</string>
-    <string name="rate">Rate (%)</string>
-    <string name="tax_rm">Tax (RM)</string>
-
-    <!-- Tax Regulations -->
-    <string name="malaysia_tax_regulations">Malaysia Tax Regulations</string>
-    <string name="tax_regulations_desc">Income tax in Malaysia is administered by the Inland Revenue Board of Malaysia (LHDN). Here are key regulations for individual taxpayers:</string>
-
-    <string name="filing_deadline">Filing Deadline</string>
-    <string name="filing_deadline_desc">For individuals without business income (employment income only), the tax filing deadline is April 30th each year. For individuals with business income, the deadline is June 30th.</string>
-
-    <string name="tax_reliefs">Tax Reliefs</string>
-    <string name="tax_reliefs_desc">Various tax reliefs are available to reduce your chargeable income. These include personal relief, medical expenses, lifestyle expenses, and more.</string>
-
-    <string name="tax_deductions">Tax Deductions</string>
-    <string name="tax_deductions_desc">Tax deductions are expenses that can be subtracted from your income before calculating tax. These include approved donations to charity and zakat payments.</string>
-
-    <string name="payment_methods">Payment Methods</string>
-    <string name="payment_methods_desc">You can pay your taxes through several methods including online banking (FPX), credit card, ATM, or through LHDN payment counters.</string>
-
-    <string name="pcb">PCB (Monthly Tax Deduction)</string>
-    <string name="pcb_desc">PCB is a mechanism where employers deduct monthly tax payments from employees\' salaries. This helps distribute the tax burden throughout the year rather than a lump sum payment.</string>
-
-    <!-- Tax Relief Categories -->
-    <string name="tax_relief_categories">Tax Relief Categories</string>
-    <string name="relief_categories_desc">Tax reliefs reduce your chargeable income, lowering your overall tax burden. Below are the main categories of tax reliefs available in Malaysia:</string>
-
-    <string name="lifestyle_expenses">Lifestyle Expenses</string>
-    <string name="lifestyle_expenses_desc">Covers purchases of books, computers, smartphones, sports equipment, and internet subscriptions.</string>
-
-    <string name="medical_expenses">Medical Expenses</string>
-    <string name="medical_expenses_desc">Includes serious disease treatment, medical check-ups, and medical expenses for parents.</string>
-
-    <string name="education_fees">Education Fees</string>
-    <string name="education_fees_desc">Covers fees for pursuing diplomas, undergraduate degrees, masters, or doctorates at recognized institutions.</string>
-
-    <string name="epf_contributions">EPF Contributions</string>
-    <string name="epf_contributions_desc">Employee Provident Fund contributions are eligible for tax relief.</string>
-
-    <string name="life_insurance">Life Insurance</string>
-    <string name="life_insurance_desc">Premiums paid for life insurance policies qualify for tax relief.</string>
-
-    <string name="housing_loan_interest">Housing Loan Interest</string>
-    <string name="housing_loan_interest_desc">Interest paid on housing loans for first-time homebuyers can be claimed as tax relief.</string>
-
-    <!-- Disclaimer -->
-    <string name="tax_information_disclaimer">Disclaimer: This information is provided for general guidance only and may not reflect the most recent tax law changes. Please consult with a tax professional or visit the LHDN website for the most accurate and up-to-date information.</string>
-
-    <!-- Tax Plan Screen -->
+    <string name="tax_plan_screen">Tax Plan Screen</string>
+    <string name="tax_plan_detail_screen">Tax Plan Detail Screen</string>
     <string name="tax_guide_title">Malaysia Tax Information Guide</string>
     <string name="tax_guide_description">Learn about Malaysian income tax rates, regulations, and available tax reliefs to help plan your finances effectively.</string>
-    <string name="view_tax_information">View Tax Information</string>
-    <string name="going_to_tax_information">Going to tax information</string>
-
+    <string name="generate_tax_plan">Generate AI Tax Plan</string>
     <string name="tax_planning_tools">Tax Planning Tools</string>
     <string name="tax_calculator">Tax Calculator</string>
     <string name="tax_calculator_desc">Calculate your estimated tax based on your income and applicable deductions.</string>
     <string name="tax_calculator_coming_soon">Tax calculator coming soon</string>
-
     <string name="deduction_optimizer">Deduction Optimizer</string>
     <string name="deduction_optimizer_desc">Find ways to optimize your tax deductions and maximize your savings.</string>
     <string name="feature_coming_soon">Feature coming soon</string>
-
-    <string name="tax_calendar_desc">Keep track of important tax deadlines and scheduling.</string>
-    <string name="going_to_calendar">Going to calendar</string>
-
-    <!-- Tax Plan Screen -->
+    <string name="view_tax_information">View Tax Information</string>
+    <string name="going_to_tax_information">Going to tax information</string>
     <string name="main_features">Main Features</string>
     <string name="calendar_description">Track important tax dates and deadlines</string>
     <string name="tax_plan_description">Optimize your tax savings strategies</string>
     <string name="tax_info_description">Learn about Malaysian tax regulations</string>
+    <string name="visit_official_tax_portal">Visit Official Malaysian Tax Portal →</string>
+    <string name="no_tax_plans">No tax plans yet</string>
+    <string name="generate_to_start">Generate a tax plan to get started</string>
+    <string name="view_plan">View plan</string>
+    <string name="delete_plan">Delete plan</string>
+    <string name="potential_savings">Potential Savings: %1$s</string>
+    <string name="suggestions_count">%1$d suggestions</string>
+    <string name="plan_not_found">Plan not found</string>
+    <string name="tax_saving_suggestions">Tax Saving Suggestions</string>
+    <string name="no_suggestions_available">No suggestions available</string>
+    <string name="implemented">Implemented</string>
+    <string name="not_implemented">Not implemented yet</string>
+    <string name="potential_tax_savings">Potential Tax Savings: %1$s</string>
+    <string name="create_new_tax_plan">Create New Tax Plan</string>
+    <string name="plan_name_optional">Plan Name (Optional)</string>
+    <string name="plan_name_placeholder">e.g., My Tax Plan 2025</string>
+    <string name="select_plan_type">Select Plan Type:</string>
+    <string name="generate_plan">Generate Plan</string>
+    <string name="delete_tax_plan">Delete Tax Plan</string>
+    <string name="tax_plan_generated">Tax plan generated successfully</string>
+    <string name="tax_plan_deleted">Tax plan deleted successfully</string>
+    <string name="delete_confirm">Delete Confirmation</string>
 
+    <!-- ==================== TAX PLAN TYPES ==================== -->
+    <string name="standard_tax_plan">Standard Tax Plan</string>
+    <string name="future_income_plan">Future Income Plan (20% higher income)</string>
+    <string name="business_venture_plan">Business Venture Plan</string>
+    <string name="standard_plan">Standard Plan</string>
+    <string name="future_income_plan_title">Future Income Plan</string>
+    <string name="business_plan_title">Business Plan</string>
+    <string name="standard_plan_description">Personalized tax plan based on your current income and employment status</string>
+    <string name="future_plan_description">Tax plan optimized for future income growth and long-term tax efficiency</string>
+    <string name="business_plan_description">Tax plan designed for business ventures with focus on business deductions</string>
 
-    <!-- Validation Error Messages -->
+    <!-- ==================== TAX PLAN ERROR MESSAGES ==================== -->
+    <string name="error_loading_plans">Error loading tax plans</string>
+    <string name="error_viewing_plan">Error viewing tax plan</string>
+    <string name="error_generating_plan">Error generating tax plan</string>
+    <string name="error_deleting_plan">Error deleting tax plan</string>
+
+    <!-- ==================== TAX CATEGORY NAMES ==================== -->
+    <string name="category_lifestyle">Lifestyle</string>
+    <string name="category_medical">Medical</string>
+    <string name="category_education">Education</string>
+    <string name="category_epf">EPF Contribution</string>
+    <string name="category_sspn">SSPN Savings</string>
+    <string name="category_donation">Donation</string>
+    <string name="category_insurance">Insurance Premium</string>
+    <string name="category_business_expenses">Business Expenses</string>
+    <string name="category_home_office">Home Office</string>
+    <string name="category_investment">Investment</string>
+    <string name="category_retirement">Retirement Planning</string>
+    <string name="category_capital_investment">Capital Investment</string>
+    <string name="category_business_structure">Business Structure</string>
+
+    <!-- ==================== DEFAULT TAX SUGGESTIONS ==================== -->
+    <string name="lifestyle_suggestion">Maximize your RM2,500 lifestyle relief by keeping receipts for books, electronics, sports equipment, and internet subscriptions.</string>
+    <string name="medical_suggestion">Track medical expenses for yourself and dependents for relief up to RM8,000.</string>
+    <string name="employee_epf_suggestion">Ensure you\'re maximizing your mandatory EPF contribution of 11% for tax relief up to RM4,000.</string>
+    <string name="self_employed_epf_suggestion">Make voluntary EPF contributions up to RM4,000 annually for tax relief.</string>
+    <string name="education_suggestion">Claim education relief of up to RM7,000 for skills development courses or further education.</string>
+    <string name="donation_suggestion">Make donations to approved organizations for tax deductions.</string>
+    <string name="investment_suggestion">Consider tax-efficient investment vehicles like unit trusts with tax incentives.</string>
+    <string name="education_future_suggestion">Invest in skill development courses with tax relief up to RM7,000 to increase future earning potential.</string>
+    <string name="retirement_suggestion">Supplement your EPF with Private Retirement Scheme (PRS) contributions for additional tax relief up to RM3,000.</string>
+    <string name="business_expenses_suggestion">Track and document all business-related expenses including office supplies, utilities, and professional services.</string>
+    <string name="home_office_suggestion">If you work from home, allocate a portion of rent, utilities and internet as business expenses.</string>
+    <string name="capital_investment_suggestion">Plan capital investments to take advantage of capital allowances and incentives for business expansion.</string>
+    <string name="business_structure_suggestion">Review your business structure (sole proprietorship vs. LLC) to optimize tax treatment based on your projected growth.</string>
+    <string name="sspn_suggestion">Consider SSPN savings for children\'s education with tax relief up to RM8,000.</string>
+
+    <!-- ==================== TAX INFORMATION ==================== -->
+    <string name="tax_information">Tax Information</string>
+    <string name="your_income_tax">Your Income Tax</string>
+    <string name="your_annual_income">Your Annual Income:</string>
+    <string name="estimated_tax">Estimated Tax:</string>
+    <string name="effective_tax_rate">Effective Tax Rate:</string>
+    <string name="malaysia_income_tax_rates">Malaysia Income Tax Rates (2023)</string>
+    <string name="chargeable_income">Chargeable Income (RM)</string>
+    <string name="rate">Rate (%)</string>
+    <string name="tax_rm">Tax (RM)</string>
+    <string name="malaysia_tax_regulations">Malaysia Tax Regulations</string>
+    <string name="tax_regulations_desc">Income tax in Malaysia is administered by the Inland Revenue Board of Malaysia (LHDN). Here are key regulations for individual taxpayers:</string>
+    <string name="filing_deadline">Filing Deadline</string>
+    <string name="filing_deadline_desc">For individuals without business income (employment income only), the tax filing deadline is April 30th each year. For individuals with business income, the deadline is June 30th.</string>
+    <string name="tax_reliefs">Tax Reliefs</string>
+    <string name="tax_reliefs_desc">Various tax reliefs are available to reduce your chargeable income. These include personal relief, medical expenses, lifestyle expenses, and more.</string>
+    <string name="tax_deductions">Tax Deductions</string>
+    <string name="tax_deductions_desc">Tax deductions are expenses that can be subtracted from your income before calculating tax. These include approved donations to charity and zakat payments.</string>
+    <string name="payment_methods">Payment Methods</string>
+    <string name="payment_methods_desc">You can pay your taxes through several methods including online banking (FPX), credit card, ATM, or through LHDN payment counters.</string>
+    <string name="pcb">PCB (Monthly Tax Deduction)</string>
+    <string name="pcb_desc">PCB is a mechanism where employers deduct monthly tax payments from employees\' salaries. This helps distribute the tax burden throughout the year rather than a lump sum payment.</string>
+    <string name="tax_relief_categories">Tax Relief Categories</string>
+    <string name="relief_categories_desc">Tax reliefs reduce your chargeable income, lowering your overall tax burden. Below are the main categories of tax reliefs available in Malaysia:</string>
+    <string name="lifestyle_expenses">Lifestyle Expenses</string>
+    <string name="lifestyle_expenses_desc">Covers purchases of books, computers, smartphones, sports equipment, and internet subscriptions.</string>
+    <string name="medical_expenses">Medical Expenses</string>
+    <string name="medical_expenses_desc">Includes serious disease treatment, medical check-ups, and medical expenses for parents.</string>
+    <string name="education_fees">Education Fees</string>
+    <string name="education_fees_desc">Covers fees for pursuing diplomas, undergraduate degrees, masters, or doctorates at recognized institutions.</string>
+    <string name="epf_contributions">EPF Contributions</string>
+    <string name="epf_contributions_desc">Employee Provident Fund contributions are eligible for tax relief.</string>
+    <string name="life_insurance">Life Insurance</string>
+    <string name="life_insurance_desc">Premiums paid for life insurance policies qualify for tax relief.</string>
+    <string name="housing_loan_interest">Housing Loan Interest</string>
+    <string name="housing_loan_interest_desc">Interest paid on housing loans for first-time homebuyers can be claimed as tax relief.</string>
+    <string name="tax_information_disclaimer">Disclaimer: This information is provided for general guidance only and may not reflect the most recent tax law changes. Please consult with a tax professional or visit the LHDN website for the most accurate and up-to-date information.</string>
+
+    <!-- ==================== VALIDATION ERROR MESSAGES ==================== -->
+    <string name="valid_amount">Please enter a valid amount.</string>
     <string name="error_not_a_receipt">The uploaded image doesn\'t appear to be a receipt or invoice. Please ensure you\'re uploading a valid receipt.</string>
     <string name="error_unable_to_analyze_image">Unable to analyze the image. Please upload a clear image of a receipt or invoice.</string>
     <string name="error_image_not_recognized">The image couldn\'t be recognized as a valid receipt. Please upload a clearer image of a receipt or invoice.</string>
     <string name="invalid_receipt_image">Invalid Receipt Image</string>
-    <string name="ok">OK</string>
     <string name="not_a_receipt">Not a Receipt</string>
-    <string name="try_again">Try Again</string>
     <string name="upload_valid_receipt">Please upload a valid receipt or invoice image.</string>
     <string name="error_name_empty">Name cannot be empty</string>
     <string name="error_name_too_short">Name is too short</string>
@@ -274,173 +390,23 @@
     <string name="error_income_invalid_chars">Income can only contain numbers, commas, and periods</string>
     <string name="error_income_negative">Income cannot be negative</string>
     <string name="error_income_format">Invalid income format</string>
+    <string name="error_income_invalid_format">Invalid income format</string>
     <string name="error_employment_invalid">Please select a valid employment type</string>
     <string name="error_password_empty">Password cannot be empty</string>
     <string name="error_password_too_short">Password must be at least 8 characters long</string>
     <string name="error_password_no_uppercase">Password must contain at least one uppercase letter</string>
+    <string name="error_password_uppercase">Password must contain at least one uppercase letter</string>
     <string name="error_password_no_digit">Password must contain at least one number</string>
+    <string name="error_password_digit">Password must contain at least one number</string>
     <string name="error_password_no_special">Password must contain at least one special character</string>
+    <string name="error_password_special_char">Password must contain at least one special character</string>
     <string name="error_password_confirmation_empty">Please confirm your password</string>
+    <string name="error_confirm_password_empty">Please confirm your password</string>
     <string name="error_password_mismatch">Passwords do not match</string>
-    <string name="confirm_password">Confirm password</string>
+    <string name="error_passwords_dont_match">Passwords do not match</string>
     <string name="error_email_empty">Email cannot be empty</string>
     <string name="error_email_format">Invalid email format</string>
-    <string name="password_requirements">Password must be at least 8 characters with uppercase, number, and special character</string>
-    <string name="is_saving">Saving...</string>
-    <string name="add_item">Add Item</string>
-    <string name="save_item">Save Item</string>
-    <string name="generate_tax_plan">Generate AI Tax Plan</string>
-
-    <!-- Navigation and Action strings -->
-    <string name="change_language">Change Language</string>
-    <string name="accessibility_settings">Accessibility Settings</string>
-    <string name="ai_information">AI Information</string>
-    <string name="calendar">Calendar</string>
-    <string name="account">Account</string>
-
-    <!-- Tax Plan UI strings -->
-    <string name="ai_tax_plan_generator">AI Tax Plan Generator</string>
-    <string name="ai_feature_description">This feature uses AI to analyze your income and employment type to generate personalized tax-saving suggestions.</string>
-    <string name="how_it_works">How it works:</string>
-    <string name="ai_step_1">1. The AI analyzes your income level and employment type</string>
-    <string name="ai_step_2">2. It identifies applicable tax relief categories for your situation</string>
-    <string name="ai_step_3">3. It generates specific suggestions with estimated savings</string>
-    <string name="ai_note">Note: Make sure your income and employment information are up-to-date in your profile for the most accurate suggestions.</string>
-    <string name="got_it">Got it</string>
-
-    <!-- Tax Plan List screen -->
-    <string name="no_tax_plans">No tax plans yet</string>
-    <string name="generate_to_start">Generate a tax plan to get started</string>
-    <string name="ai_generating">AI Generating Tax Plan...</string>
-    <string name="view_plan">View plan</string>
-    <string name="delete_plan">Delete plan</string>
-    <string name="potential_savings">Potential Savings: %1$s</string>
-    <string name="suggestions_count">%1$d suggestions</string>
-
-    <!-- Tax Plan Detail screen -->
-    <string name="plan_not_found">Plan not found</string>
-    <string name="tax_saving_suggestions">Tax Saving Suggestions</string>
-    <string name="no_suggestions_available">No suggestions available</string>
-    <string name="implemented">Implemented</string>
-    <string name="not_implemented">Not implemented yet</string>
-    <string name="potential_tax_savings">Potential Tax Savings: %1$s</string>
-
-    <!-- Create/Delete Tax Plan Dialog -->
-    <string name="create_new_tax_plan">Create New Tax Plan</string>
-    <string name="generate_ai_plan">Generate a new AI-powered tax plan with custom options.</string>
-    <string name="plan_name_optional">Plan Name (Optional)</string>
-    <string name="plan_name_placeholder">e.g., My Tax Plan 2025</string>
-    <string name="select_plan_type">Select Plan Type:</string>
-    <string name="standard_tax_plan">Standard Tax Plan</string>
-    <string name="future_income_plan">Future Income Plan (20% higher income)</string>
-    <string name="business_venture_plan">Business Venture Plan</string>
-    <string name="generate_plan">Generate Plan</string>
-    <string name="delete_tax_plan">Delete Tax Plan</string>
-
-    <!-- Success/Error messages -->
-    <string name="tax_plan_generated">Tax plan generated successfully</string>
-    <string name="tax_plan_deleted">Tax plan deleted successfully</string>
-    <string name="version_requirement">This feature requires Android N or higher</string>
-    <string name="user_not_authenticated">Please sign in to generate a tax plan</string>
-    <string name="error_loading_plans">Error loading tax plans</string>
-    <string name="error_viewing_plan">Error viewing tax plan</string>
-    <string name="error_generating_plan">Error generating tax plan</string>
-    <string name="error_deleting_plan">Error deleting tax plan</string>
-    <string name="unknown_error">Unknown error</string>
-    <string name="ai_service_unavailable">AI service unavailable</string>
-    <string name="internet_required">Internet connection required</string>
-
-    <!-- Plan Type Descriptions -->
-    <string name="standard_plan">Standard Plan</string>
-    <string name="future_income_plan_title">Future Income Plan</string>
-    <string name="business_plan_title">Business Plan</string>
-    <string name="standard_plan_description">Personalized tax plan based on your current income and employment status</string>
-    <string name="future_plan_description">Tax plan optimized for future income growth and long-term tax efficiency</string>
-    <string name="business_plan_description">Tax plan designed for business ventures with focus on business deductions</string>
-
-    <!-- Tax Plan Category Names -->
-    <string name="category_lifestyle">Lifestyle</string>
-    <string name="category_medical">Medical</string>
-    <string name="category_education">Education</string>
-    <string name="category_epf">EPF Contribution</string>
-    <string name="category_sspn">SSPN Savings</string>
-    <string name="category_donation">Donation</string>
-    <string name="category_insurance">Insurance Premium</string>
-    <string name="category_business_expenses">Business Expenses</string>
-    <string name="category_home_office">Home Office</string>
-    <string name="category_investment">Investment</string>
-    <string name="category_retirement">Retirement Planning</string>
-    <string name="category_capital_investment">Capital Investment</string>
-    <string name="category_business_structure">Business Structure</string>
-
-    <!-- Default Tax Suggestions -->
-    <string name="lifestyle_suggestion">Maximize your RM2,500 lifestyle relief by keeping receipts for books, electronics, sports equipment, and internet subscriptions.</string>
-    <string name="medical_suggestion">Track medical expenses for yourself and dependents for relief up to RM8,000.</string>
-    <string name="employee_epf_suggestion">Ensure you\'re maximizing your mandatory EPF contribution of 11% for tax relief up to RM4,000.</string>
-    <string name="self_employed_epf_suggestion">Make voluntary EPF contributions up to RM4,000 annually for tax relief.</string>
-    <string name="education_suggestion">Claim education relief of up to RM7,000 for skills development courses or further education.</string>
-    <string name="donation_suggestion">Make donations to approved organizations for tax deductions.</string>
-    <string name="investment_suggestion">Consider tax-efficient investment vehicles like unit trusts with tax incentives.</string>
-    <string name="education_future_suggestion">Invest in skill development courses with tax relief up to RM7,000 to increase future earning potential.</string>
-    <string name="retirement_suggestion">Supplement your EPF with Private Retirement Scheme (PRS) contributions for additional tax relief up to RM3,000.</string>
-    <string name="business_expenses_suggestion">Track and document all business-related expenses including office supplies, utilities, and professional services.</string>
-    <string name="home_office_suggestion">If you work from home, allocate a portion of rent, utilities and internet as business expenses.</string>
-    <string name="capital_investment_suggestion">Plan capital investments to take advantage of capital allowances and incentives for business expansion.</string>
-    <string name="business_structure_suggestion">Review your business structure (sole proprietorship vs. LLC) to optimize tax treatment based on your projected growth.</string>
-    <string name="sspn_suggestion">Consider SSPN savings for children\'s education with tax relief up to RM8,000.</string>
-
-    <string name="tax_plan_screen">Tax Plan Screen</string>
-    <string name="tax_plan_detail_screen">Tax Plan Detail Screen</string>
-    <string name="delete_confirm">Delete Confirmation</string>
-    <string name="delete_item_message">Are you sure you want to delete this expense item? This action cannot be undone.</string>
-    <string name="delete_receipt_message">Are you sure you want to delete this receipt? This action cannot be undone.</string>
-    <string name="edit_expense_item">Edit Expense Item</string>
-    <string name="save">Save</string>
-    <string name="save_num_items">Save %1$s Items</string>
-    <string name="discard_changes">Discard Changes?</string>
-    <string name="cancel_confirmation_message">Are you sure you want to cancel? All expense items will be lost.</string>
-    <string name="discard">Discard</string>
-    <string name="keep_editing">Keep Editing</string>
-    <string name="delete_item_confirmation">Are you sure you want to delete this expense item?</string>
-
-    <!-- Calendar to do features -->
-    <string name="make_todo_event">To-do Event: </string>
-    <string name="todo_events">To-Do Events</string>
-    <string name="regular_events">Regular Events</string>
-    <string name="todo_status">To-Do Status</string>
-    <string name="pending">Pending</string>
-    <string name="completed">Completed</string>
-    <string name="past_due">Past Due</string>
-    <string name="mark_as_completed">Mark as completed</string>
-    <string name="mark_as_complete">Mark as Complete</string>
-    <string name="mark_as_incomplete">Mark as Incomplete</string>
-    <string name="past_due_warning">This to-do is past due!</string>
-    <string name="past_due_todo_events">Past Due To-Do Events</string>
-    <string name="past_due_message">You have %1$d to-do events that are past due. Please review or reschedule them.</string>
-    <string name="acknowledge">I Understand</string>
-    <string name="no_todo_events">No to-do events for this date</string>
-    <string name="calendar_indicators">Calendar Indicators</string>
-    <string name="regular_event">Regular Event</string>
-    <string name="pending_todo">Pending To-Do</string>
-    <string name="completed_todo">Completed To-Do</string>
-    <string name="past_due_todo">Past Due To-Do</string>
-    <string name="todo_notification_channel">To-Do Reminders</string>
-    <string name="todo_notification_title">To-Do Reminder</string>
-    <string name="past_due_notification">You have %1$d past due to-do tasks</string>
-    <string name="upcoming_due_notification">You have %1$d to-do tasks due soon</string>
-
-    <string name="visit_official_tax_portal">Visit Official Malaysian Tax Portal →</string>
-
-    <string name="error_income_invalid_format">Invalid income format</string>
-    <string name="error_password_uppercase">Password must contain at least one uppercase letter</string>
-    <string name="error_password_digit">Password must contain at least one number</string>
-    <string name="error_password_special_char">Password must contain at least one special character</string>
-
-    <!-- Password confirmation validation -->
-    <string name="error_confirm_password_empty">Please confirm your password</string>
-    <string name="error_passwords_dont_match">Passwords do not match</string>
     <string name="error_user_not_logged_in">User not logged in</string>
-
     <string name="error_item_description_required">Description is required</string>
     <string name="error_description_too_short">Description must be at least 2 characters</string>
     <string name="error_merchant_required">Merchant name is required</string>
@@ -450,7 +416,6 @@
     <string name="error_amount_format">Invalid amount format</string>
     <string name="error_amount_positive">Amount must be greater than zero</string>
     <string name="error_invalid_input">Please fix the errors before saving</string>
-
     <string name="error_empty_description">Description cannot be empty</string>
     <string name="error_empty_merchant">Merchant name cannot be empty</string>
     <string name="error_invalid_date_format">Please use DD/MM/YYYY format</string>
@@ -458,21 +423,7 @@
     <string name="error_invalid_amount">Please enter a valid number</string>
     <string name="error_negative_amount">Amount must be greater than zero</string>
     <string name="error_empty_category">Please select a category</string>
-
     <string name="error_null_response">Unable to analyze the image. Please upload a clear image of a receipt or invoice.</string>
     <string name="error_parsing_receipt">The image couldn\'t be recognized as a valid receipt. Please upload a clearer image of a receipt or invoice.</string>
     <string name="error_failed_to_load_image">Failed to load image. Please try again with a different image.</string>
-
-    <string name="select_date">Select Date</string>
-    <string name="select_time">Select Time</string>
-    <string name="select_start_time">Select Start Time</string>
-    <string name="select_end_time">Select End Time</string>
-
-    <string name="all_events">All Events</string>
-    <string name="events_count_format">%d event(s) on this date</string>
-    <string name="todo_events_count_format">%d to-do event(s) on this date</string>
-    <string name="pending_completed_format">%1$d pending, %2$d completed</string>
-    <string name="time_separator">to</string>
-
-    <string name="time_validator">End time must be after start time.</string>
 </resources>

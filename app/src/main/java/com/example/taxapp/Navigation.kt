@@ -221,22 +221,22 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     modifier = modifier,
                     navController = navController,
                     editProfileViewModel = editProfileViewModel,
-                    authViewModel = authViewModel,
-                    onProfileSaved = {
-                        // Set the flag to indicate profile was updated
-                        profileUpdated.value = true
-                        Log.d("Navigation", "Profile updated flag set to true")
-
-                        // Force reset the repository to ensure fresh data
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            EventRepository.resetInstance()
-                        }
-
-                        // Navigate back to home
-                        navController.navigate("home") {
-                            popUpTo("editProfile") { inclusive = true }
-                        }
-                    }
+                    //authViewModel = authViewModel,
+//                    onProfileSaved = {
+//                        // Set the flag to indicate profile was updated
+//                        profileUpdated.value = true
+//                        Log.d("Navigation", "Profile updated flag set to true")
+//
+//                        // Force reset the repository to ensure fresh data
+//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                            EventRepository.resetInstance()
+//                        }
+//
+//                        // Navigate back to home
+//                        navController.navigate("home") {
+//                            popUpTo("editProfile") { inclusive = true }
+//                        }
+//                    }
                 )
             }
 
@@ -244,9 +244,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             composable("home") {
                 val authViewModel: AuthViewModel = viewModel()
                 HomeScreen(
-                    modifier = modifier,
+                    //modifier = modifier,
                     navController = navController,
-                    authViewModel = authViewModel
+                    //authViewModel = authViewModel
                 )
             }
 
