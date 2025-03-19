@@ -1,7 +1,5 @@
 package com.example.taxapp.accessibility
 
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,8 +10,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
-import android.speech.tts.TextToSpeech
 
 // A button that speaks text when clicked
 @Composable

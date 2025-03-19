@@ -157,12 +157,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         _isHistoryViewActive.value = !_isHistoryViewActive.value
     }
 
-    fun clearChat() {
-        _chatState.value = _chatState.value.copy(messages = emptyList())
-        // Also clear conversation history in the AI service
-        aiService.clearConversationHistory()
-    }
-
     fun clearChatHistory() {
         val userId = currentUserId
         if (userId == null) {
@@ -195,15 +189,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 Log.e(TAG, "Error deleting message", e)
             }
         }
-    }
-
-    /**
-     * Format a timestamp for display
-     */
-    fun formatTimestamp(timestamp: Long): String {
-        val date = Date(timestamp)
-        val format = SimpleDateFormat("MMM d, yyyy hh:mm a", Locale.getDefault())
-        return format.format(date)
     }
 }
 

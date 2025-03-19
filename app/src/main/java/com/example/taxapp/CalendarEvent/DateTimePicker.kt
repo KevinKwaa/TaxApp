@@ -1,7 +1,6 @@
 package com.example.taxapp.CalendarEvent
 
 import android.os.Build
-import android.text.Layout
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,40 +8,25 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDefaults
-import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -53,17 +37,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathSegment
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.example.taxapp.R
-import com.example.taxapp.accessibility.AccessibleColors
 import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import java.time.Instant
@@ -85,7 +64,6 @@ fun AccessibleDatePickerDialog(
     initialDate: LocalDate = LocalDate.now(),
     validateDate: ((LocalDate) -> Pair<Boolean, String?>)? = null
 ) {
-    val isDarkMode = LocalDarkMode.current
     val accessibleColors = LocalThemeColors.current
 
     // State for validation error
@@ -210,7 +188,6 @@ fun AccessibleDatePickerDialog(
  * An improved time picker dialog with 5-minute increments and validation
  */
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImprovedTimePickerDialog(
     onTimeSelected: (String) -> Unit,
@@ -219,7 +196,6 @@ fun ImprovedTimePickerDialog(
     title: String = stringResource(id = R.string.select_time),
     validateTime: ((String) -> Pair<Boolean, String?>)? = null
 ) {
-    val isDarkMode = LocalDarkMode.current
     val accessibleColors = LocalThemeColors.current
 
     // Parse initial time
@@ -394,7 +370,6 @@ fun ImprovedNumberScroller(
     primaryColor: Color,
     modifier: Modifier = Modifier
 ) {
-    val accessibleColors = LocalThemeColors.current
 
     Column(
         modifier = modifier,
@@ -490,26 +465,4 @@ fun AccessibleTimePickerDialog(
         title = title,
         validateTime = validateTime
     )
-}
-
-/**
- * Helper function to format a date according to the user's locale
- */
-@RequiresApi(Build.VERSION_CODES.O)
-fun formatDate(date: LocalDate, locale: java.util.Locale): String {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", locale)
-    return date.format(formatter)
-}
-
-/**
- * Helper function to parse a time string into a LocalTime
- */
-@RequiresApi(Build.VERSION_CODES.O)
-fun parseTime(timeString: String): LocalTime {
-    return try {
-        LocalTime.parse(timeString, DateTimeFormatter.ofPattern("HH:mm"))
-    } catch (e: Exception) {
-        // Default to current time if parsing fails
-        LocalTime.now()
-    }
 }

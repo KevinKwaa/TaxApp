@@ -5,15 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
 
-/**
- * Utility class to check for network connectivity
- */
 object NetworkUtil {
-    /**
-     * Check if the device has an active internet connection
-     * @param context Application context
-     * @return true if there is an active internet connection, false otherwise
-     */
     // Modify NetworkUtil to log more details
     fun isOnline(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

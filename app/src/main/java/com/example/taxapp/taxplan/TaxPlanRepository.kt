@@ -88,33 +88,6 @@ class TaxPlanRepository {
     }
 
     /**
-     * Update a tax plan
-     */
-    suspend fun updateTaxPlan(taxPlan: TaxPlan): Result<Unit> {
-        return try {
-            val currentUserId = FirebaseManager.getCurrentUserId()
-                ?: return Result.failure(Exception("User not authenticated"))
-
-            // Verify ownership
-            if (taxPlan.userId != currentUserId) {
-                return Result.failure(Exception("Unauthorized access to tax plan"))
-            }
-
-            // Update in Firestore
-            firestore.collection(COLLECTION_NAME)
-                .document(taxPlan.id)
-                .set(taxPlan)
-                .await()
-
-            Log.d(TAG, "Tax plan updated: ${taxPlan.id}")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating tax plan", e)
-            Result.failure(e)
-        }
-    }
-
-    /**
      * Delete a tax plan
      */
     suspend fun deleteTaxPlan(planId: String): Result<Unit> {

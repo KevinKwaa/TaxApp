@@ -2,17 +2,12 @@ package com.example.taxapp.chatbot
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,9 +44,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,76 +62,6 @@ import com.example.taxapp.R
 import com.example.taxapp.accessibility.LocalDarkMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
-import kotlinx.coroutines.delay
-
-//@Composable
-//fun ChatFAB(
-//    modifier: Modifier = Modifier
-//) {
-//    // Get the ViewModel using the viewModel() function with the LocalContext.current as the ViewModelStoreOwner
-//    val context = LocalContext.current
-//    val chatViewModel: ChatViewModel = viewModel(
-//        factory = ViewModelFactory(context.applicationContext as Application)
-//    )
-//
-//    val chatState by chatViewModel.chatState.collectAsState()
-//    val isHistoryViewActive by chatViewModel.isHistoryViewActive.collectAsState()
-//    val accessibleColors = LocalThemeColors.current
-//    val ttsManager = LocalTtsManager.current
-//
-//    // Get message count for badge
-//    val chatHistory by chatViewModel.chatHistory.collectAsState()
-//    val messageCount = chatHistory.size
-//
-//    Box(modifier = modifier) {
-//        // Chat FAB with badge
-//        BadgedBox(
-//            badge = {
-//                if (messageCount > 0) {
-//                    Badge {
-//                        val displayCount = if (messageCount > 99) "99+" else messageCount.toString()
-//                        Text(text = displayCount)
-//                    }
-//                }
-//            },
-//            modifier = Modifier
-//                .align(Alignment.BottomEnd)
-//                .padding(16.dp)
-//        ) {
-//            FloatingActionButton(
-//                onClick = {
-//                    chatViewModel.toggleChatVisibility()
-//                    ttsManager?.speak("Opening chat assistant")
-//                },
-//                modifier = Modifier.semantics {
-//                    contentDescription = "Open AI chat assistant"
-//                },
-//                containerColor = accessibleColors.buttonBackground,
-//                contentColor = accessibleColors.buttonText
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Filled.ChatBubble,
-//                    contentDescription = null
-//                )
-//            }
-//        }
-//
-//        // Chat Dialog
-//        if (chatState.isChatVisible) {
-//            if (isHistoryViewActive) {
-//                ChatHistoryScreen(
-//                    chatViewModel = chatViewModel,
-//                    onClose = { chatViewModel.toggleHistoryView() }
-//                )
-//            } else {
-//                ChatDialog(
-//                    chatViewModel = chatViewModel,
-//                    isProcessing = chatState.isProcessing
-//                )
-//            }
-//        }
-//    }
-//}
 
 @Composable
 fun ChatFAB(
@@ -229,7 +151,6 @@ fun ChatDialog(
 ) {
     val chatState by chatViewModel.chatState.collectAsState()
     val accessibleColors = LocalThemeColors.current
-    val isDarkMode = LocalDarkMode.current
     val ttsManager = LocalTtsManager.current
 
     // Get message count for badge and history button
@@ -480,9 +401,6 @@ fun ChatMessageItem(message: ChatMessage) {
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
     val ttsManager = LocalTtsManager.current
-
-    val alignment = if (message.type == MessageType.USER)
-        Alignment.End else Alignment.Start
 
     val backgroundColor = if (message.type == MessageType.USER)
         accessibleColors.selectedDay

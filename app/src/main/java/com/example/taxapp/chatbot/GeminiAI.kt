@@ -6,13 +6,8 @@ import com.example.taxapp.BuildConfig
 import com.example.taxapp.utils.NetworkUtil
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.GenerateContentResponse
-import com.google.ai.client.generativeai.type.GenerationConfig
 import com.google.ai.client.generativeai.type.RequestOptions
-import com.google.ai.client.generativeai.type.content
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 
 /**
@@ -23,17 +18,10 @@ import kotlinx.coroutines.withContext
 class GeminiAIService(private val context: Context) {
     // Initialize the Gemini GenerativeModel
     private val generativeModel by lazy {
-//        try {
-//            val response = GenerativeModel.listModels(BuildConfig.GEMINI_API_KEY)
-//            Log.d("GeminiAIService", "Available models: $response")
-//        } catch (e: Exception) {
-//            Log.e("GeminiAIService", "Error listing models", e)
-//        }
+
         val requestOptions = RequestOptions(apiVersion = "v1")
 
         try {
-            //Log.d("GeminiAIService", "API Key: ${BuildConfig.GEMINI_API_KEY.take(5)}...")
-            //Log.d("GeminiAIService", "Network Status: ${NetworkUtil.isOnline(context)}")
             GenerativeModel(
                 modelName = "gemini-2.0-flash",
                 apiKey = BuildConfig.GEMINI_API_KEY,
@@ -151,32 +139,6 @@ class GeminiAIService(private val context: Context) {
     /**
      * Build a context-aware prompt including chat history and app-specific guidance
      */
-//    private fun buildPrompt(userMessage: String): String {
-//        val promptBuilder = StringBuilder()
-//
-//        // Add app-specific context and guidelines
-//        promptBuilder.append("You are an AI assistant for a scheduling and calendar app called TaxApp. ")
-//        promptBuilder.append("Your role is to help users with features like creating events, setting reminders, ")
-//        promptBuilder.append("changing language settings (the app supports English, Chinese, and Malay), ")
-//        promptBuilder.append("and using accessibility features (text-to-speech, high contrast mode, ")
-//        promptBuilder.append("font size adjustment, color blind mode, and dark mode). ")
-//        promptBuilder.append("Keep your responses concise, helpful, and friendly. ")
-//
-//        // Add chat history for context
-//        if (chatHistory.isNotEmpty()) {
-//            promptBuilder.append("\n\nPrevious conversation:\n")
-//            chatHistory.forEach { (userMsg, botMsg) ->
-//                promptBuilder.append("User: $userMsg\n")
-//                promptBuilder.append("Assistant: $botMsg\n")
-//            }
-//        }
-//
-//        // Add the current user message
-//        promptBuilder.append("\nUser: $userMessage\n")
-//        promptBuilder.append("Assistant: ")
-//
-//        return promptBuilder.toString()
-//    }
 
     private fun buildPrompt(userMessage: String): String {
         return StringBuilder().apply {
@@ -206,12 +168,5 @@ class GeminiAIService(private val context: Context) {
                 Log.w("GeminiAIService", "Empty or null response from Gemini")
                 "I'm sorry, I couldn't generate a meaningful response."
             }
-    }
-
-    /**
-     * Clear the conversation history
-     */
-    fun clearConversationHistory() {
-        chatHistory.clear()
     }
 }

@@ -8,7 +8,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -32,7 +31,6 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
@@ -120,7 +118,6 @@ fun AddEventScreen(
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
 
-    val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", locale)
     val displayDateFormat = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", locale)
     val timeErrorMessage = stringResource(id = R.string.time_validator)
 
@@ -225,12 +222,6 @@ fun AddEventScreen(
                             // Show error for empty event name
                             return@ExtendedFloatingActionButton
                         }
-
-//                        // Validate date is not in the past
-//                        if (DateValidator.isPastDate(selectedDate)) {
-//                            dateError = "Cannot create an event in the past."
-//                            return@ExtendedFloatingActionButton
-//                        }
 
                         // Validate end time is after start time
                         val timeValidation = TimeValidator.validateTimeOrder(startTime, endTime, timeErrorMessage)
@@ -649,13 +640,6 @@ fun AddEventScreen(
                     // Update language code
                     currentLanguageCode = languageCode
 
-                    // Get the updated locale from language manager
-                    val newLocale = when (languageCode) {
-                        "zh" -> Locale.CHINA
-                        "ms" -> Locale("ms", "MY")
-                        else -> Locale.ENGLISH
-                    }
-
                     // Update language in the manager which affects the whole app
                     languageManager.setLanguage(languageCode)
                 },
@@ -676,50 +660,4 @@ fun AddEventScreen(
             )
         }
     }
-}
-
-@Composable
-fun AccessibleTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    labelText: String,
-    modifier: Modifier = Modifier,
-    isReadOnly: Boolean = false,
-    maxLines: Int = 1,
-    colors: TextFieldColors = OutlinedTextFieldDefaults.colors()
-) {
-    val ttsManager = LocalTtsManager.current
-
-    OutlinedTextField(
-        value = value,
-        onValueChange = {
-            onValueChange(it)
-            // Optionally announce changes for more real-time feedback
-            if (ttsManager != null && it.length % 5 == 0 && it.isNotEmpty()) {
-                ttsManager.speak("$labelText: $it", TextToSpeech.QUEUE_FLUSH)
-            }
-        },
-        label = { Text(labelText) },
-        modifier = modifier.semantics {
-            customActions = listOf(
-                CustomAccessibilityAction("Read $labelText field") {
-                    ttsManager?.speak("$labelText: $value")
-                    true
-                }
-            )
-        },
-        readOnly = isReadOnly,
-        maxLines = maxLines,
-        colors = colors,
-        trailingIcon = {
-            // Add a speak button for each field
-            ttsManager?.let {
-                SpeakButton(
-                    text = "$labelText: $value",
-                    tint = LocalContentColor.current.copy(alpha = 0.6f),
-                    contentDescription = "Read $labelText value"
-                )
-            }
-        }
-    )
 }

@@ -28,12 +28,6 @@ class TaxPlanViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
     var taxPlans by mutableStateOf<List<TaxPlan>>(emptyList())
 
-    // Current plan details
-    var currentPlanName by mutableStateOf("")
-    var currentPlanDescription by mutableStateOf("")
-    var currentPlanSuggestions by mutableStateOf<List<TaxPlanSuggestion>>(emptyList())
-    var currentPlanSavings by mutableStateOf(0.0)
-
     // Delete confirmation
     var showDeleteConfirmation by mutableStateOf(false)
     var planToDelete by mutableStateOf<TaxPlan?>(null)
@@ -655,27 +649,5 @@ class TaxPlanViewModel : ViewModel() {
         // Ensure amount is never negative or zero
         val positiveAmount = if (amount <= 0) 0.01 else amount
         return String.format("RM %.2f", positiveAmount)
-    }
-
-    /**
-     * Get an emoji icon for a plan type
-     */
-    fun getPlanTypeIcon(plan: TaxPlan): String {
-        return when (plan.planType) {
-            "future" -> "📈" // Chart increasing
-            "business" -> "💼" // Briefcase
-            else -> "📋" // Default clipboard
-        }
-    }
-
-    /**
-     * Get a description for a plan type
-     */
-    fun getPlanTypeDescription(plan: TaxPlan): String {
-        return when (plan.planType) {
-            "future" -> "Future Income Plan"
-            "business" -> "Business Plan"
-            else -> "Standard Plan"
-        }
     }
 }

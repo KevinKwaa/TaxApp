@@ -53,20 +53,6 @@ class AccessibilityTtsManager private constructor(context: Context) {
         _isSpeaking.value = false
     }
 
-    fun updateLanguage(locale: Locale) {
-        textToSpeech?.language = locale
-    }
-
-    // Add this method to control speech rate
-    fun updateSpeechRate(rate: Float) {
-        textToSpeech?.setSpeechRate(rate)
-    }
-
-    // Add this method to control pitch
-    fun updatePitch(pitch: Float) {
-        textToSpeech?.setPitch(pitch)
-    }
-
     fun shutdown() {
         textToSpeech?.stop()
         textToSpeech?.shutdown()

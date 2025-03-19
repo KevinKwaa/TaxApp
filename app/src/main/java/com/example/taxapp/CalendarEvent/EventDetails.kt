@@ -5,7 +5,6 @@ import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -30,23 +29,18 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
@@ -71,10 +65,8 @@ import java.time.format.DateTimeFormatter
 fun EventDetailScreen(
     event: Event,
     onNavigateBack: () -> Unit,
-    onEditEvent: (Event) -> Unit,
     onDeleteEvent: (Event) -> Unit,
     onTodoStatusChange: (Event, Boolean) -> Unit, // Add handler for todo status change
-    modifier: Modifier = Modifier,
     navController: NavHostController,
 ) {
     val context = LocalContext.current
@@ -186,7 +178,6 @@ fun EventDetailScreen(
                 accessibilityState = accessibilityState,
                 currentLanguageCode = currentLanguageCode,
                 navController = navController,
-                eventRepository = eventRepository // Pass the repository to edit mode
             )
         } else {
             Scaffold(
@@ -309,12 +300,6 @@ fun EventDetailScreen(
                                                 Icons.Default.Check,
                                             contentDescription = null
                                         )
-//                                        Text(
-//                                            if (currentEvent.isCompleted)
-//                                                stringResource(id = R.string.mark_as_incomplete)
-//                                            else
-//                                                stringResource(id = R.string.mark_as_complete)
-//                                        )
                                     }
                                 }
                             }
@@ -324,7 +309,6 @@ fun EventDetailScreen(
                             FloatingActionButton(
                                 onClick = {
                                     // Store the original event for reference
-                                    val originalEvent = currentEvent
                                     showEditMode = true
                                 },
                                 containerColor = MaterialTheme.colorScheme.primary,
@@ -367,7 +351,6 @@ fun EventDetailScreen(
                         event = currentEvent,
                         locale = locale,
                         accessibleColors = accessibleColors,
-                        isDarkMode = isDarkMode,
                         onNavigateBack = onNavigateBack,
                         onShowEditMode = { showEditMode = true },
                         onShowDeleteConfirmation = { showDeleteConfirmation = true },
@@ -476,9 +459,7 @@ fun EventEditMode(
     onEventSaved: (Event) -> Unit,
     accessibilityState: AccessibilityState,
     currentLanguageCode: String,
-    modifier: Modifier = Modifier,
     navController: NavHostController,
-    eventRepository: EventRepository
 ) {
     // Get the custom colors from the accessibility theme
     val accessibleColors = LocalThemeColors.current
@@ -967,98 +948,6 @@ fun EventEditMode(
                             }
                         }
 
-                        // Completed toggle (only show if it's a to-do event)
-//                        AnimatedVisibility(visible = isTodoEvent) {
-//                            Card(
-//                                modifier = Modifier.fillMaxWidth(),
-//                                shape = RoundedCornerShape(12.dp),
-//                                colors = CardDefaults.cardColors(
-//                                    containerColor = if (isCompleted)
-//                                        Color.Gray.copy(alpha = 0.1f)
-//                                    else if (isPastDue)
-//                                        Color.Red.copy(alpha = 0.1f)
-//                                    else
-//                                        accessibleColors.cardBackground.copy(
-//                                            alpha = if (isDarkMode) 0.7f else 0.9f
-//                                        )
-//                                ),
-//                                border = BorderStroke(
-//                                    width = 1.dp,
-//                                    color = when {
-//                                        isCompleted -> Color.Gray.copy(alpha = 0.5f)
-//                                        isPastDue -> Color.Red.copy(alpha = 0.5f)
-//                                        else -> accessibleColors.cardBorder.copy(alpha = 0.5f)
-//                                    }
-//                                )
-//                            ) {
-//                                Row(
-//                                    modifier = Modifier
-//                                        .fillMaxWidth()
-//                                        .padding(horizontal = 16.dp, vertical = 12.dp),
-//                                    horizontalArrangement = Arrangement.SpaceBetween,
-//                                    verticalAlignment = Alignment.CenterVertically
-//                                ) {
-//                                    // Label with icon
-//                                    Row(
-//                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-//                                        verticalAlignment = Alignment.CenterVertically
-//                                    ) {
-//                                        Icon(
-//                                            imageVector = if (isCompleted)
-//                                                Icons.Default.Check
-//                                            else if (isPastDue)
-//                                                Icons.Default.Warning
-//                                            else
-//                                                Icons.Default.RadioButtonUnchecked,
-//                                            contentDescription = null,
-//                                            tint = when {
-//                                                isCompleted -> Color.Gray
-//                                                isPastDue -> Color.Red
-//                                                else -> accessibleColors.calendarBorder
-//                                            }
-//                                        )
-//
-//                                        Column {
-//                                            Text(
-//                                                text = stringResource(id = R.string.mark_as_completed),
-//                                                style = MaterialTheme.typography.bodyLarge,
-//                                                color = when {
-//                                                    isCompleted -> Color.Gray
-//                                                    isPastDue -> Color.Red
-//                                                    else -> accessibleColors.calendarText
-//                                                }
-//                                            )
-//
-//                                            if (isPastDue) {
-//                                                Text(
-//                                                    text = stringResource(id = R.string.past_due_warning),
-//                                                    style = MaterialTheme.typography.bodySmall,
-//                                                    color = Color.Red
-//                                                )
-//                                            }
-//                                        }
-//                                    }
-//
-//                                    // Checkbox
-//                                    Checkbox(
-//                                        checked = isCompleted,
-//                                        onCheckedChange = {
-//                                            isCompleted = it
-//                                            // Add TTS feedback for switch toggle
-//                                            if (accessibilityState.textToSpeech) {
-//                                                val message = if (it) "Marked as completed" else "Marked as incomplete"
-//                                                tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
-//                                            }
-//                                        },
-//                                        colors = CheckboxDefaults.colors(
-//                                            checkedColor = Color.Gray,
-//                                            uncheckedColor = if (isPastDue) Color.Red else accessibleColors.calendarBorder
-//                                        )
-//                                    )
-//                                }
-//                            }
-//                        }
-
                         // Reminder Toggle with card styling to match other screens
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -1148,10 +1037,6 @@ fun EventEditMode(
             },
             onDismiss = { showDatePicker = false },
             initialDate = selectedDate,
-//            validateDate = { date ->
-//                // For editing, we'll allow past dates (user might be editing an old event)
-//                Pair(true, null)
-//            }
         )
     }
 
@@ -1293,7 +1178,6 @@ fun EventDetailCard(
     event: Event,
     locale: java.util.Locale,
     accessibleColors: AccessibleColors,
-    isDarkMode: Boolean,
     onNavigateBack: () -> Unit,
     onShowEditMode: () -> Unit,
     onShowDeleteConfirmation: () -> Unit,
@@ -1329,17 +1213,7 @@ fun EventDetailCard(
                             LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) > event.endTime))
 
     Card(
-        modifier = modifier
-//            .shadow(
-//                elevation = if (isDarkMode) 12.dp else 4.dp,
-//                //spotColor = Color.Transparent,
-//                spotColor = when {
-//                    event.isTodoEvent && isPastDue -> Color.Red.copy(alpha = 0.5f)
-//                    event.isTodoEvent && !event.isCompleted -> accessibleColors.selectedDay.copy(alpha = 0.3f)
-//                    else -> accessibleColors.selectedDay.copy(alpha = 0.3f)
-//                },
-//                shape = RoundedCornerShape(24.dp)
-            ,
+        modifier = modifier,
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp
@@ -1732,45 +1606,6 @@ fun EventDetailRow(
                 text = value,
                 style = MaterialTheme.typography.bodyLarge,
                 color = warningColor ?: colors.calendarText
-            )
-        }
-    }
-}
-
-@Composable
-fun EventDetailRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    value: String,
-    colors: AccessibleColors
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = colors.selectedDay,
-            modifier = Modifier.size(28.dp)
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = colors.calendarText
-            )
-
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyLarge,
-                color = colors.calendarText
             )
         }
     }

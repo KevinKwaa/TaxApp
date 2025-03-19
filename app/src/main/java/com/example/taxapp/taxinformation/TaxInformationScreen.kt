@@ -11,10 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Receipt
@@ -23,16 +21,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.taxapp.R
@@ -103,7 +97,6 @@ fun TaxInformationScreen(
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    //titleContentColor = MaterialTheme.colorScheme.onTertiary
                 ),
                 actions = {
                     // Language button with improved styling
@@ -120,7 +113,6 @@ fun TaxInformationScreen(
                         Icon(
                             imageVector = Icons.Default.Language, // Use the standard language icon
                             contentDescription = "Change Language",
-                            //tint = accessibleColors.buttonText,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -139,7 +131,6 @@ fun TaxInformationScreen(
                         Icon(
                             imageVector = Icons.Default.Settings,  // Standard settings icon
                             contentDescription = "Accessibility Settings",
-                            //tint = accessibleColors.buttonText,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -353,10 +344,6 @@ fun TaxInformationContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                //colors = CardDefaults.cardColors(
-                    //containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    //contentColor = Color.Black
-                //)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -475,7 +462,6 @@ fun TaxInformationContent(
                 colors =
                     CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    //contentColor = accessibleColors.headerText
                 )
             ) {
                 Column(
@@ -536,7 +522,6 @@ fun TaxInformationContent(
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    //contentColor = Color.Black
                 )
             ) {
                 Column(
@@ -605,7 +590,6 @@ fun TaxInformationContent(
             modifier = Modifier.padding(top = 16.dp, bottom = 1.dp) // Extra padding at bottom for scrollability
         )
 
-        //Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()

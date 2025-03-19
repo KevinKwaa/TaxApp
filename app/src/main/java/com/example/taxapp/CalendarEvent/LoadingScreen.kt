@@ -33,7 +33,6 @@ import com.example.taxapp.accessibility.LocalThemeColors
 @Composable
 fun LoadingScreen(
     message: String = "Loading events...",
-    accessibilityState: AccessibilityState = AccessibilityState()
 ) {
     // Get theme colors from accessibility settings
     val accessibleColors = LocalThemeColors.current

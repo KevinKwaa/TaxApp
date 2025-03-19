@@ -346,18 +346,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
                             navController.navigate("event_details")
                         },
-                        // Add the back navigation callback
-                        onNavigateBack = {
-                            // Announce navigation back to home
-                            ttsManager?.speak("Going back to home screen")
-
-                            navController.navigate("home") {
-                                // Pop up to home to avoid building up back stack
-                                popUpTo("home") { inclusive = false }
-                            }
-                        },
-
-                        modifier = modifier,
                         navController = navController
                     )
                 }
@@ -458,36 +446,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             ttsManager?.speak("Returning to calendar")
 
                             navController.popBackStack()
-                        },
-                        onEditEvent = { updatedEvent ->
-                            // Show loading status
-                            statusMessage = "Updating event..."
-                            operationStatus = OperationStatus.LOADING
-                            showStatusFeedback = true
-
-                            // Update the event in Firebase
-                            coroutineScope.launch {
-                                val result = eventRepository.updateEvent(updatedEvent)
-                                if (result) {
-                                    // Update status to success
-                                    statusMessage = "Event updated successfully!"
-                                    operationStatus = OperationStatus.SUCCESS
-                                    showStatusFeedback = true
-
-                                    // Announce successful update
-                                    ttsManager?.speak("Event updated: ${updatedEvent.title}")
-                                    currentEvent.value = updatedEvent
-                                    navController.popBackStack()
-                                } else {
-                                    // Update status to error
-                                    statusMessage = "Failed to update event. Please try again."
-                                    operationStatus = OperationStatus.ERROR
-                                    showStatusFeedback = true
-
-                                    // Announce failure
-                                    ttsManager?.speak("Failed to update event. Please try again.")
-                                }
-                            }
                         },
                         onDeleteEvent = { eventToDelete ->
                             // Show loading status

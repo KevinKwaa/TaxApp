@@ -25,7 +25,6 @@ class LanguageManager(private val context: Context) {
     val currentLanguageCode: StateFlow<String> = _currentLanguageCode
 
     private val _languageChanged = mutableStateOf(false)
-    val languageChanged = _languageChanged
 
     // Change the app's language
     fun setLanguage(languageCode: String, activity: ComponentActivity? = null) {
@@ -69,11 +68,6 @@ class LanguageManager(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.applicationContext.createConfigurationContext(configuration)
         }
-    }
-
-    // Reset the language changed flag after handling
-    fun resetLanguageChangedFlag() {
-        _languageChanged.value = false
     }
 
     // Get the language code from preferences or default locale

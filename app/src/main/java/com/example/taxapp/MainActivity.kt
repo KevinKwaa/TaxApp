@@ -254,7 +254,6 @@ fun MainScreen() {
     ) {
         LoadingScreen(
             message = loadingMessage,
-            accessibilityState = accessibilityState
         )
     }
 

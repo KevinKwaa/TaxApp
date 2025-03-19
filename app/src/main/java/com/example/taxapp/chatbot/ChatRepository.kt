@@ -8,9 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
-/**
- * Repository for managing chat message persistence
- */
 class ChatRepository(context: Context) {
     private val TAG = "ChatRepository"
     private val chatMessageDao: ChatMessageDao
@@ -70,28 +67,6 @@ class ChatRepository(context: Context) {
     }
 
     /**
-     * Get the most recent messages
-     */
-    fun getRecentMessages(userId: String, limit: Int): Flow<List<ChatMessage>> {
-        Log.d(TAG, "Getting $limit recent messages for user: $userId")
-        return chatMessageDao.getRecentMessages(userId, limit)
-            .map { entities ->
-                entities.map { entity ->
-                    ChatMessage(
-                        id = entity.id,
-                        text = entity.text,
-                        type = MessageType.valueOf(entity.messageType),
-                        timestamp = entity.timestamp
-                    )
-                }
-            }
-            .catch { e ->
-                Log.e(TAG, "Error getting recent messages for user $userId", e)
-                emit(emptyList())
-            }
-    }
-
-    /**
      * Clear all chat history
      */
     suspend fun clearAllMessages(userId: String) {
@@ -112,20 +87,6 @@ class ChatRepository(context: Context) {
             chatMessageDao.deleteMessage(messageId, userId)
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting message $messageId for user $userId", e)
-        }
-    }
-
-    /**
-     * Get the total count of saved messages
-     */
-    suspend fun getMessageCount(userId: String): Int {
-        return try {
-            val count = chatMessageDao.getMessageCount(userId)
-            Log.d(TAG, "Message count for user $userId: $count")
-            count
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting message count for user $userId", e)
-            0
         }
     }
 }

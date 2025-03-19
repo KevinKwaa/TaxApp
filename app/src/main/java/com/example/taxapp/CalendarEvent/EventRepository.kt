@@ -41,18 +41,12 @@ class EventRepository {
     // Track active listeners to ensure proper cleanup
     private var activeListenerRegistration: ListenerRegistration? = null
 
-    fun clearEvents() {
-        _eventsCache.value = emptyMap()
-    }
-
     // Flag to track if repository is currently operating - prevents concurrent operations
     private val isRefreshing = AtomicBoolean(false)
 
     // Get the user-specific events collection
     private fun getUserEventsCollection(userId: String) =
         db.collection("users").document(userId).collection("events")
-
-    // These are the key methods in EventRepository.kt that need attention:
 
     // Update the forceRefresh method to be more thorough
     fun forceRefresh() {

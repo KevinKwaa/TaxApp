@@ -39,7 +39,6 @@ import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.ExpandLess
@@ -65,7 +64,6 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -108,13 +106,10 @@ import com.example.taxapp.accessibility.AccessibilitySettings
 import com.example.taxapp.accessibility.AccessibilityState
 import com.example.taxapp.accessibility.AccessibleColors
 import com.example.taxapp.accessibility.LocalDarkMode
-import com.example.taxapp.accessibility.LocalFontSizeAdjustment
 import com.example.taxapp.accessibility.LocalHighContrastMode
 import com.example.taxapp.accessibility.LocalThemeColors
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.accessibility.ScreenReader
-import com.example.taxapp.accessibility.SpeakButton
-import com.example.taxapp.accessibility.SpeakableContent
 import com.example.taxapp.multiLanguage.AppLanguageManager
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
@@ -145,8 +140,6 @@ fun CalendarScreen(
     refreshKey: Long = 0,
     onNavigateToAddEvent: (LocalDate) -> Unit,
     onNavigateToEventDetails: (Event) -> Unit,
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier,
     navController: NavHostController,
 ) {
     val context = LocalContext.current
@@ -187,9 +180,6 @@ fun CalendarScreen(
 
     // Force refresh key - this will trigger recomposition when refreshed
     val refreshTrigger by eventRepository.forceRefreshTrigger.collectAsState()
-
-    // Get the lifecycle owner to handle proper cleanup
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     // Create state for events - this is key to refreshing UI
     var eventsState by remember(refreshTrigger, currentUserId) {
@@ -474,17 +464,6 @@ fun CalendarScreen(
                                     color = accessibleColors.buttonText
                                 )
                             }
-                            // Previous month button
-//                            IconButton(
-//                                onClick = { currentYearMonth = currentYearMonth.minusMonths(1) },
-//                                modifier = Modifier.size(36.dp)
-//                            ) {
-//                                Icon(
-//                                    imageVector = Icons.Default.ChevronLeft,
-//                                    contentDescription = "Previous Month",
-//                                    tint = accessibleColors.buttonText
-//                                )
-//                            }
 
                             // Format the month name according to the current locale
                             val locale = languageManager.getCurrentLocale()
@@ -608,8 +587,8 @@ fun CalendarScreen(
                                                         Calendar.DAY_OF_WEEK,
                                                         Calendar.SHORT,
                                                         locale
-                                                    )//?.substring(0, 1)
-                                                } //?: "?"
+                                                    )
+                                                }
 
                                                 Text(
                                                     text = dayName,
@@ -650,22 +629,6 @@ fun CalendarScreen(
                             }
                         }
 
-//                        // Selected Date Events Section with localized date format
-//                        EventTabView(
-//                            events = liveEvents,
-//                            selectedDate = selectedDate,
-//                            onEventClick = { event ->
-//                                ttsManager?.speak("Opening event: ${event.title}")
-//                                onNavigateToEventDetails(event)
-//                            },
-//                            onTodoStatusChange = { event, isCompleted ->
-//                                handleTodoStatusChange(event, isCompleted)
-//                            },
-//                            accessibleColors = accessibleColors,
-//                            isDarkMode = isDarkMode,
-//                            //ttsManager = ttsManager
-//                        )
-
                         // Selected date header
                         val locale = when (currentLanguageCode) {
                             "zh" -> Locale.CHINA
@@ -704,32 +667,6 @@ fun CalendarScreen(
                                 isDarkMode = isDarkMode,
                             )
                         }
-
-                        // Add Event Button
-//                        Button(
-//                            onClick = { onNavigateToAddEvent(selectedDate) },
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(vertical = 8.dp),
-//                            colors = ButtonDefaults.buttonColors(
-//                                containerColor = accessibleColors.buttonBackground
-//                            )
-//                        ) {
-//                            Row(
-//                                verticalAlignment = Alignment.CenterVertically,
-//                                horizontalArrangement = Arrangement.Center,
-//                                modifier = Modifier.padding(vertical = 4.dp)
-//                            ) {
-//                                Icon(
-//                                    imageVector = Icons.Default.Add,
-//                                    contentDescription = null,
-//                                    modifier = Modifier.padding(end = 8.dp),
-//                                    tint = accessibleColors.headerText
-//                                )
-//                                Text(stringResource(id = R.string.add_new_event), color = accessibleColors.headerText)
-//                            }
-//                        }
-
                     }
                 }
             }
@@ -892,7 +829,6 @@ fun CalendarGrid(
 
     val firstDayOfMonth = yearMonth.atDay(1)
     val startOffset = firstDayOfMonth.dayOfWeek.value % 7
-    val currentMonth = YearMonth.now()
     val today = LocalDate.now()
     val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
 
@@ -1062,177 +998,6 @@ fun CalendarGrid(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun SelectedDateEvents(
-    selectedDate: LocalDate,
-    events: List<Event>,
-    onEventClick: (Event) -> Unit,
-    onAddEventClick: () -> Unit,
-    currentLanguageCode: String,
-    onTodoStatusChange: (Event, Boolean) -> Unit // New parameter
-) {
-    val accessibleColors = LocalThemeColors.current
-    val isDarkMode = LocalDarkMode.current
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(4.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = accessibleColors.cardBackground
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Format the date according to the current locale
-            val locale = when (currentLanguageCode) {
-                "zh" -> Locale.CHINA
-                "ms" -> Locale("ms", "MY")
-                else -> Locale.ENGLISH
-            }
-
-            val dateFormat = DateTimeFormatter.ofPattern("MMMM d, yyyy", locale)
-            val formattedDate = selectedDate.format(dateFormat)
-
-            // Header row with date
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CalendarToday,
-                    contentDescription = null,
-                    tint = accessibleColors.selectedDay,
-                    modifier = Modifier
-                        .size(28.dp)
-                        .padding(end = 8.dp)
-                )
-
-                Text(
-                    text = stringResource(id = R.string.events_for, formattedDate),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            // Content
-            if (events.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (isDarkMode)
-                                accessibleColors.cardBackground.copy(alpha = 0.5f)
-                            else
-                                accessibleColors.calendarBorder.copy(alpha = 0.1f)
-                        )
-                        .padding(vertical = 20.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.EventNote,
-                            contentDescription = null,
-                            tint = accessibleColors.calendarText.copy(alpha = 0.5f),
-                            modifier = Modifier.size(32.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = stringResource(id = R.string.no_events),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = accessibleColors.calendarText.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            } else {
-                // Enhanced: Add to-do events section if any exist
-                val todoEvents = events.filter { it.isTodoEvent }
-                val regularEvents = events.filter { !it.isTodoEvent }
-
-                if (todoEvents.isNotEmpty()) {
-                    Text(
-                        text = stringResource(id = R.string.todo_events),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = accessibleColors.headerText,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    // To-do events list
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = if (regularEvents.isEmpty()) 320.dp else 160.dp)
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(todoEvents) { event ->
-                                EventListItem(
-                                    event = event,
-                                    onClick = { onEventClick(event) },
-                                    onTodoStatusChange = onTodoStatusChange
-                                )
-                            }
-                        }
-                    }
-
-                    if (regularEvents.isNotEmpty()) {
-                        Divider(modifier = Modifier.padding(vertical = 16.dp))
-
-                        Text(
-                            text = stringResource(id = R.string.regular_events),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = accessibleColors.headerText,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
-                }
-
-                // Regular events list (or all events if there's no separation)
-                if (todoEvents.isEmpty() || regularEvents.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = if (todoEvents.isEmpty()) 320.dp else 160.dp)
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(if (todoEvents.isEmpty()) events else regularEvents) { event ->
-                                EventListItem(
-                                    event = event,
-                                    onClick = { onEventClick(event) },
-                                    onTodoStatusChange = if (event.isTodoEvent) onTodoStatusChange else null
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
 fun EventListItem(
     event: Event,
     onClick: () -> Unit,
@@ -1240,7 +1005,6 @@ fun EventListItem(
 ) {
     val isDarkMode = LocalDarkMode.current
     val accessibleColors = LocalThemeColors.current
-    val isHighContrast = LocalHighContrastMode.current
     val ttsManager = LocalTtsManager.current
 
     // Check if the event is past due
@@ -1462,7 +1226,6 @@ fun EventTabView(
     onTodoStatusChange: (Event, Boolean) -> Unit,
     accessibleColors: AccessibleColors,
     isDarkMode: Boolean,
-    //ttsManager: TextToSpeech?
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf(
@@ -1566,7 +1329,6 @@ fun EventTabView(
 
         val allEvents = events[selectedDate] ?: emptyList()
         val todoEvents = allEvents.filter { it.isTodoEvent }
-        val regularEvents = allEvents.filter { !it.isTodoEvent }
 
         val displayEvents = when (selectedTabIndex) {
             0 -> allEvents // All events tab

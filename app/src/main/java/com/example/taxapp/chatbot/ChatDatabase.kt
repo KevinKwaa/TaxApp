@@ -16,7 +16,6 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.taxapp.chatbot.MessageType
 import kotlinx.coroutines.flow.Flow
-import java.util.Date
 
 private const val TAG = "ChatDBEntities"
 /**
