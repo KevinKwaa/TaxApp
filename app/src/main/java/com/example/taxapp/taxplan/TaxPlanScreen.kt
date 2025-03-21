@@ -167,11 +167,16 @@ fun TaxPlanScreen(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                 ),
                 navigationIcon = {
-                    IconButton(onClick = handleBackNavigation) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = stringResource(id = R.string.back)
-                        )
+                    if (viewModel.isViewingPlan) {
+                        IconButton(onClick = {
+                            ttsManager?.speak("Going back to tax plans")
+                            handleBackNavigation()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = stringResource(id = R.string.back)
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -389,6 +394,7 @@ fun TaxPlanScreen(
                 confirmButton = {
                     Button(
                         onClick = {
+                            ttsManager?.speak("Deleting tax plan")
                             viewModel.deleteTaxPlan(
                                 onSuccess = {
                                     AppUtil.showToast(context, "Tax plan deleted successfully")
@@ -406,7 +412,10 @@ fun TaxPlanScreen(
                     }
                 },
                 dismissButton = {
-                    OutlinedButton(onClick = { viewModel.cancelDelete() }) {
+                    OutlinedButton(onClick = {
+                        ttsManager?.speak("Canceling delete")
+                        viewModel.cancelDelete()
+                    }) {
                         Text(stringResource(id = R.string.cancel))
                     }
                 }

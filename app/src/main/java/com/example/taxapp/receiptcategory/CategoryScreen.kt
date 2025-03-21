@@ -701,6 +701,7 @@ fun CategoryScreenContent(
                 confirmButton = {
                     Button(
                         onClick = {
+                            ttsManager?.speak("Clearing all expenses for year ${categoryViewModel.yearToClear}")
                             categoryViewModel.clearExpensesForYear(
                                 onSuccess = {
                                     // Use the pre-created success message
@@ -719,7 +720,10 @@ fun CategoryScreenContent(
                     }
                 },
                 dismissButton = {
-                    OutlinedButton(onClick = { categoryViewModel.cancelClearYear() }) {
+                    OutlinedButton(onClick = {
+                        ttsManager?.speak("Canceling clear year")
+                        categoryViewModel.cancelClearYear()
+                    }) {
                         Text(text = stringResource(id = R.string.cancel))
                     }
                 }
@@ -981,6 +985,7 @@ fun DeleteConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val ttsManager = LocalTtsManager.current
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -998,7 +1003,10 @@ fun DeleteConfirmationDialog(
         },
         confirmButton = {
             Button(
-                onClick = onConfirm,
+                onClick = {
+                    ttsManager?.speak("Deleting expense item")
+                    onConfirm()
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error
                 )
@@ -1007,7 +1015,10 @@ fun DeleteConfirmationDialog(
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
+            OutlinedButton(onClick = {
+                ttsManager?.speak("Canceling delete")
+                onDismiss()
+            }) {
                 Text(text = stringResource(id = R.string.cancel))
             }
         }
@@ -1265,7 +1276,10 @@ fun EditExpenseItemDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     OutlinedButton(
-                        onClick = onCancel,
+                        onClick = {
+                            ttsManager?.speak("Canceling edit")
+                            onCancel()
+                        },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(stringResource(id = R.string.cancel))
