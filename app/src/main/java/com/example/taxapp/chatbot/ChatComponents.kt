@@ -100,7 +100,7 @@ fun ChatFAB(
                 FloatingActionButton(
                     onClick = {
                         chatViewModel.toggleChatVisibility()
-                        ttsManager?.speak("Opening chat assistant")
+                        ttsManager?.speak("Opening AI chat assistant")
                     },
                     modifier = Modifier.semantics {
                         contentDescription = "Open AI chat assistant"
@@ -222,7 +222,7 @@ fun ChatDialog(
                             IconButton(
                                 onClick = {
                                     chatViewModel.toggleHistoryView()
-                                    ttsManager?.speak("Opening chat history")
+                                    ttsManager?.speak("Opening AI chat history")
                                 }
                             ) {
                                 Icon(

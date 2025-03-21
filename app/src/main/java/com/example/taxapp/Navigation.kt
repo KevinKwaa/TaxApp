@@ -134,6 +134,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     LaunchedEffect(navController) {
         navController.addOnDestinationChangedListener { _, destination, arguments ->
             when (destination.route) {
+                "login" -> {
+                    ttsManager?.speak("Login screen")
+                }
+                "register" -> {
+                    ttsManager?.speak("Register screen")
+                }
                 "home" -> {
                     ttsManager?.speak("Home screen")
                 }

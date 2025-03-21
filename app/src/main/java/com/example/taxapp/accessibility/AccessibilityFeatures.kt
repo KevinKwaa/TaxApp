@@ -59,6 +59,21 @@ fun AccessibilitySettings(
     val textColor = accessibleColors.calendarText
     val titleColor = accessibleColors.headerText
 
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
+    ScreenReader("Accessibility Features")
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -170,6 +185,15 @@ fun AccessibilitySettings(
                                         // Default to the most common type when enabling
                                         tempSettings = tempSettings.copy(colorBlindnessType = ColorBlindnessType.DEUTERANOPIA)
                                     }
+
+                                    // Add TTS feedback
+                                    if (tempSettings.textToSpeech) {
+                                        val message = if (it)
+                                            "Color blind mode enabled"
+                                        else
+                                            "Color blind mode disabled"
+                                        tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+                                    }
                                 },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = accessibleColors.selectedDay,
@@ -275,6 +299,15 @@ fun AccessibilitySettings(
                             checked = tempSettings.highContrastMode,
                             onCheckedChange = {
                                 tempSettings = tempSettings.copy(highContrastMode = it)
+
+                                // Add TTS feedback
+                                if (tempSettings.textToSpeech) {
+                                    val message = if (it)
+                                        "High contrast mode enabled"
+                                    else
+                                        "High contrast mode disabled"
+                                    tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+                                }
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = accessibleColors.selectedDay,
@@ -299,6 +332,15 @@ fun AccessibilitySettings(
                             checked = tempSettings.darkMode,
                             onCheckedChange = {
                                 tempSettings = tempSettings.copy(darkMode = it)
+
+                                // Add TTS feedback
+                                if (tempSettings.textToSpeech) {
+                                    val message = if (it)
+                                        "Dark mode enabled"
+                                    else
+                                        "Dark mode disabled"
+                                    tts?.speak(message, TextToSpeech.QUEUE_FLUSH, null, null)
+                                }
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = accessibleColors.selectedDay,
@@ -342,6 +384,11 @@ fun AccessibilitySettings(
                 ) {
                     Button(
                         onClick = {
+                            // Add TTS feedback
+                            if (tempSettings.textToSpeech) {
+                                tts?.speak("Applying changes", TextToSpeech.QUEUE_FLUSH, null, null)
+                            }
+
                             // Update both the local callback and the repository
                             onSettingsChanged(tempSettings)
                             coroutineScope.launch {
@@ -363,7 +410,17 @@ fun AccessibilitySettings(
                     }
 
                     Button(
-                        onClick = onDismiss,
+                        onClick = {
+                            // Add TTS feedback
+                            if (tempSettings.textToSpeech) {
+                                tts?.speak("Cancelling", TextToSpeech.QUEUE_FLUSH, null, null)
+                            }
+
+                            // Add small delay to ensure TTS completes before dialog dismisses
+                            coroutineScope.launch {
+                                onDismiss()
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
@@ -387,8 +444,17 @@ fun ColorBlindTypeOption(
     description: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    accessibleColors: AccessibleColors
+    accessibleColors: AccessibleColors,
+    ttsEnabled: Boolean = false
 ) {
+    val tts = LocalTtsManager.current
+    val finalOnClick = {
+        onClick()
+        if (ttsEnabled) {
+            tts?.speak("Selected $title")
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -402,7 +468,7 @@ fun ColorBlindTypeOption(
                 color = if (isSelected) accessibleColors.selectedDay else Color.Transparent,
                 shape = RoundedCornerShape(8.dp)
             )
-            .clickable(onClick = onClick)
+            .clickable(onClick = finalOnClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -427,7 +493,7 @@ fun ColorBlindTypeOption(
 
         RadioButton(
             selected = isSelected,
-            onClick = onClick,
+            onClick = finalOnClick,
             colors = RadioButtonDefaults.colors(
                 selectedColor = accessibleColors.selectedDay,
                 unselectedColor = accessibleColors.calendarBorder

@@ -129,7 +129,7 @@ fun EditProfileScreen(
         }
     }
 
-    ScreenReader("Home Screen")
+    //ScreenReader("Home Screen")
     val ttsManager = LocalTtsManager.current
 
     Scaffold(
@@ -343,7 +343,7 @@ fun EditProfileScreenContent(
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
-    ScreenReader("Edit Profile Screen")
+    //ScreenReader("Edit Profile Screen")
     val ttsManager = LocalTtsManager.current
 
     // Modify your validation function to accept context as a parameter

@@ -142,9 +142,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val ttsManager = LocalTtsManager.current
-
-
-    ScreenReader("Login Screen")
+    //ScreenReader("Login")
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
 
@@ -166,7 +164,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                 // Add back button at the top
                 IconButton(
                     onClick = {
-                        ttsManager?.speak("Returning")
+                        //ttsManager?.speak("Returning")
                         navController.popBackStack()
                     },
                     modifier = Modifier

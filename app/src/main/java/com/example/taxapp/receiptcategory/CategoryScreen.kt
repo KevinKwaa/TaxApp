@@ -147,7 +147,7 @@ fun CategoryScreen(
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
-    ScreenReader("Home Screen")
+    //ScreenReader("Home Screen")
     val ttsManager = LocalTtsManager.current
 
     Scaffold(
@@ -398,7 +398,7 @@ fun CategoryScreenContent(
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
-    ScreenReader("Category Screen")
+    //ScreenReader("Category Screen")
     val ttsManager = LocalTtsManager.current
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
@@ -430,7 +430,7 @@ fun CategoryScreenContent(
                             Tab(
                                 selected = year == selectedYear,
                                 onClick = {
-                                    ttsManager?.speak("Year $year")
+                                    ttsManager?.speak("Selected year $year")
                                     categoryViewModel.setSelectedYear(year)
                                 },
                                 text = {
@@ -765,6 +765,7 @@ fun CategoryItemsSection(
 ) {
     val rotationState by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f)
     val accessibleColors = LocalThemeColors.current
+    val ttsManager = LocalTtsManager.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -780,7 +781,10 @@ fun CategoryItemsSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onToggleExpand() }
+                    .clickable {
+                        ttsManager?.speak(if (isExpanded) "Collapsing category $category" else "Expanding category $category")
+                        onToggleExpand()
+                    }
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -870,6 +874,8 @@ fun ExpenseItemCard(
     onDelete: () -> Unit
 ) {
     val accessibleColors = LocalThemeColors.current
+    val ttsManager = LocalTtsManager.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -934,7 +940,10 @@ fun ExpenseItemCard(
                 Row {
                     // Edit button
                     IconButton(
-                        onClick = onEdit,
+                        onClick = {
+                            ttsManager?.speak("Editing expense item ${expenseItem.description}")
+                            onEdit()
+                        },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -947,7 +956,10 @@ fun ExpenseItemCard(
 
                     // Delete button
                     IconButton(
-                        onClick = onDelete,
+                        onClick = {
+                            ttsManager?.speak("Deleting expense item ${expenseItem.description}")
+                            onDelete()
+                        },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -1072,6 +1084,8 @@ fun EditExpenseItemDialog(
             categoryError = if (!valid) errorEmptyCategory else ""
             valid
         }
+
+        val ttsManager = LocalTtsManager.current
 
         // Initial validation
         LaunchedEffect(Unit) {
@@ -1262,6 +1276,7 @@ fun EditExpenseItemDialog(
                     Button(
                         onClick = {
                             if (validateAllFields()) {
+                                ttsManager?.speak("Saving expense item changes")
                                 onSave()
                             }
                         },

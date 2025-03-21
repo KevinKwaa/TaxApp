@@ -62,25 +62,55 @@ import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.accessibility.ScreenReader
 import com.example.taxapp.accessibility.scaledSp
 import com.example.taxapp.multiLanguage.AppLanguageManager
+import com.example.taxapp.multiLanguage.Language
 import com.example.taxapp.multiLanguage.LanguageProvider
 import com.example.taxapp.multiLanguage.LanguageSelector
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
-    var email by remember {
-        mutableStateOf("")
+fun RegisterScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    authViewModel: AuthViewModel
+) {
+    val context = LocalContext.current
+    val languageManager = remember { AppLanguageManager.getInstance(context) }
+    val coroutineScope = rememberCoroutineScope()
+    val activity = context as? ComponentActivity
+
+    var showAccessibilitySettings by remember { mutableStateOf(false) }
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
     }
 
-    var password by remember {
-        mutableStateOf("")
+    //ScreenReader("Register")
+
+    var showLanguageSelector by remember { mutableStateOf(false) }
+
+    // Observe the current language
+    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
+        mutableStateOf(languageManager.getCurrentLanguageCode())
     }
 
+    // Get the custom colors
+    val accessibleColors = LocalThemeColors.current
+
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     // Add confirmation password state
-    var confirmPassword by remember {
-        mutableStateOf("")
-    }
+    var confirmPassword by remember { mutableStateOf("") }
 
     // Add validation states
     var passwordError by remember { mutableStateOf<String?>(null) }
@@ -89,8 +119,6 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
 
     // Form validation state
     var isFormValid by remember { mutableStateOf(false) }
-
-    var context = LocalContext.current
 
     // Function to validate the form
     fun validateForm(context: Context) {
@@ -122,47 +150,6 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
         mutableStateOf(false)
     }
 
-    val coroutineScope = rememberCoroutineScope()
-    val activity = context as? ComponentActivity
-    var showLanguageSelector by remember { mutableStateOf(false) }
-    var showAccessibilitySettings by remember { mutableStateOf(false) }
-    // Access shared repositories
-    val languageManager = remember { AppLanguageManager.getInstance(context) }
-    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
-
-    // Observe the current language
-    var currentLanguageCode by remember(languageManager.currentLanguageCode) {
-        mutableStateOf(languageManager.getCurrentLanguageCode())
-    }
-
-    // Observe accessibility settings
-    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
-        initial = AccessibilityState()
-    )
-
-    // Create a TTS instance if text-to-speech is enabled
-    val tts = remember(accessibilityState.textToSpeech) {
-        if (accessibilityState.textToSpeech) {
-            TextToSpeech(context) { status ->
-                // Initialize TTS engine
-            }
-        } else null
-    }
-
-    // Clean up TTS when not needed
-    DisposableEffect(accessibilityState.textToSpeech) {
-        onDispose {
-            tts?.shutdown()
-        }
-    }
-
-    // Get the custom colors
-    val accessibleColors = LocalThemeColors.current
-    val ttsManager = LocalTtsManager.current
-
-    // Screen reader for accessibility
-    ScreenReader("Register Screen")
-
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Box(
             modifier = modifier
@@ -187,7 +174,7 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                     // Add back button at the top
                     IconButton(
                         onClick = {
-                            ttsManager?.speak("Returning")
+                            //ttsManager?.speak("Returning")
                             navController.popBackStack()
                         },
                         modifier = Modifier
@@ -210,7 +197,6 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                             .size(48.dp)
                             .clickable {
                                 showLanguageSelector = true
-                                ttsManager?.speak("Opening language selector")
                             }
                     ) {
                         Icon(
@@ -233,7 +219,6 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
                             .size(48.dp)
                             .clickable {
                                 showLanguageSelector = true
-                                ttsManager?.speak("Opening language selector")
                             }
                     ) {
                         Icon(
@@ -392,23 +377,51 @@ fun RegisterScreen(modifier: Modifier = Modifier, navController: NavHostControll
 
                         if (isFormValid) {
                             isLoading = true
-                            ttsManager?.speak("Creating account")
+                            if (accessibilityState.textToSpeech) {
+                                tts?.speak(
+                                    "Creating Account",
+                                    TextToSpeech.QUEUE_FLUSH,
+                                    null,
+                                    null
+                                )
+                            }
                             authViewModel.register(email, password) { success, errorMessage ->
                                 if (success) {
                                     isLoading = false
-                                    ttsManager?.speak("Registration successful")
+                                    if (accessibilityState.textToSpeech) {
+                                        tts?.speak(
+                                            "Registration Successful",
+                                            TextToSpeech.QUEUE_FLUSH,
+                                            null,
+                                            null
+                                        )
+                                    }
                                     navController.navigate("profile") {
                                         popUpTo("auth") { inclusive = true }
                                     }
                                 } else {
                                     isLoading = false
-                                    ttsManager?.speak("Registration failed. ${errorMessage ?: "Please try again"}")
+                                    if (accessibilityState.textToSpeech) {
+                                        tts?.speak(
+                                            "Registration failed. ${errorMessage ?: "Please try again"}",
+                                            TextToSpeech.QUEUE_FLUSH,
+                                            null,
+                                            null
+                                        )
+                                    }
                                     AppUtil.showToast(context, errorMessage ?: "Something went wrong")
                                 }
                             }
                         } else {
                             // Form is invalid - provide feedback with TTS
-                            ttsManager?.speak("Please correct the errors in the form before continuing")
+                            if (accessibilityState.textToSpeech) {
+                                tts?.speak(
+                                    "Please correct the errors in the form before continuing",
+                                    TextToSpeech.QUEUE_FLUSH,
+                                    null,
+                                    null
+                                )
+                            }
                             AppUtil.showToast(context, "Please correct the form errors before continuing")
                         }
                     },

@@ -192,12 +192,12 @@ fun CalendarScreen(
         eventsState = events
     }
 
-    // Clean up TTS when not needed
-    DisposableEffect(accessibilityState.textToSpeech) {
-        onDispose {
-            tts?.shutdown()
-        }
-    }
+//    // Clean up TTS when not needed
+//    DisposableEffect(accessibilityState.textToSpeech) {
+//        onDispose {
+//            tts?.shutdown()
+//        }
+//    }
 
     // Collect events safely with lifecycle awareness
     val liveEvents by produceState(
@@ -265,8 +265,6 @@ fun CalendarScreen(
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader("Calendar")
-    val ttsManager = LocalTtsManager.current
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
         Scaffold(
@@ -657,7 +655,14 @@ fun CalendarScreen(
                                 events = liveEvents,
                                 selectedDate = selectedDate,
                                 onEventClick = { event ->
-                                    ttsManager?.speak("Opening event: ${event.title}")
+                                    if (accessibilityState.textToSpeech) {
+                                        tts?.speak(
+                                            "Opening event: ${event.title}",
+                                            TextToSpeech.QUEUE_FLUSH,
+                                            null,
+                                            null
+                                        )
+                                    }
                                     onNavigateToEventDetails(event)
                                 },
                                 onTodoStatusChange = { event, isCompleted ->

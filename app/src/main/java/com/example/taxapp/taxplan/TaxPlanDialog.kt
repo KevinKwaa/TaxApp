@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.example.taxapp.R
+import com.example.taxapp.accessibility.LocalTtsManager
 
 /**
  * Dialog for creating a new tax plan
@@ -52,6 +53,8 @@ fun TaxPlanCreateDialog(
         "future" to stringResource(id = R.string.future_income_plan),
         "business" to stringResource(id = R.string.business_venture_plan)
     )
+
+    val ttsManager = LocalTtsManager.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -118,6 +121,7 @@ fun TaxPlanCreateDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    ttsManager?.speak("Generate plan")
                     // Use default name if empty - using pre-loaded string resources
                     val finalName = if (planName.isBlank()) {
                         when (selectedPlanType) {
@@ -136,7 +140,10 @@ fun TaxPlanCreateDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = {
+                ttsManager?.speak("Cancel")
+                onDismiss()
+            }) {
                 Text(stringResource(id = R.string.cancel))
             }
         }

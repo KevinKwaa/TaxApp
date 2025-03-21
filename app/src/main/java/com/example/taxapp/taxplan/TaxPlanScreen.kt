@@ -138,7 +138,7 @@ fun TaxPlanScreen(
         stringResource(id = R.string.tax_plan_detail_screen)
     else
         stringResource(id = R.string.tax_plan_screen)
-    ScreenReader(screenReaderText)
+    //ScreenReader(screenReaderText)
     val ttsManager = LocalTtsManager.current
 
     // Fixed back navigation handling
@@ -213,7 +213,10 @@ fun TaxPlanScreen(
 
                     // AI information button
                     IconButton(
-                        onClick = { showAIExplanation = true },
+                        onClick = {
+                            ttsManager?.speak("AI Tax Plan information")
+                            showAIExplanation = true
+                        },
                         modifier = Modifier
                             .size(36.dp)
                             .border(
@@ -487,7 +490,7 @@ fun TaxPlanListScreen(
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
     val isDarkMode = LocalDarkMode.current
-    ScreenReader(stringResource(id = R.string.tax_plan_screen))
+    //ScreenReader(stringResource(id = R.string.tax_plan_screen))
     val ttsManager = LocalTtsManager.current
 
     // Add this to TaxPlanListScreen
@@ -596,7 +599,10 @@ fun TaxPlanListScreen(
 
                     // Generate button
                     Button(
-                        onClick = { viewModel.showCreatePlanDialog() },
+                        onClick = {
+                            ttsManager?.speak("Generate a new tax plan?")
+                            viewModel.showCreatePlanDialog()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -706,6 +712,8 @@ fun TaxPlanItem(
     onDelete: () -> Unit,
     formatCurrency: (Double) -> String
 ) {
+    val ttsManager = LocalTtsManager.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -761,7 +769,10 @@ fun TaxPlanItem(
             ) {
                 // View button
                 IconButton(
-                    onClick = onView,
+                    onClick = {
+                        ttsManager?.speak("Viewing ${taxPlan.name} plan")
+                        onView()
+                    },
                     modifier = Modifier
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
@@ -776,7 +787,10 @@ fun TaxPlanItem(
 
                 // Delete button
                 IconButton(
-                    onClick = onDelete,
+                    onClick = {
+                        ttsManager?.speak("Deleting ${taxPlan.name} plan")
+                        onDelete()
+                    },
                     modifier = Modifier
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))

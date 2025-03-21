@@ -120,7 +120,7 @@ fun HomeScreen(
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
-    ScreenReader("Home Screen")
+    //ScreenReader("Home")
     val ttsManager = LocalTtsManager.current
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {

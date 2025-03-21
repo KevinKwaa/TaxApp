@@ -416,7 +416,7 @@ fun UploadReceiptContent(
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
-    ScreenReader("Upload Receipt Screen")
+    //ScreenReader("Upload Receipt Screen")
     val ttsManager = LocalTtsManager.current
 
     // Reset the ViewModel state when navigating to this screen

@@ -97,7 +97,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
 
     // Get the custom colors
     val accessibleColors = LocalThemeColors.current
-    ScreenReader("Auth Screen")
+    ScreenReader("Auth")
     val ttsManager = LocalTtsManager.current
 
     LanguageProvider(languageCode = currentLanguageCode, key = currentLanguageCode) {
@@ -180,7 +180,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
             //login button
             Button(
                 onClick = {
-                    ttsManager?.speak("Login")
+                    //ttsManager?.speak("Login")
                     navController.navigate("login")
                 },
                 modifier = Modifier
@@ -205,7 +205,6 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController){
             //
             OutlinedButton(
                 onClick = {
-                    ttsManager?.speak("Register yourself up")
                     navController.navigate("register")
                 },
                 modifier = Modifier
