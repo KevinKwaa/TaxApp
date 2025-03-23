@@ -1037,6 +1037,7 @@ fun EventEditMode(
             },
             onDismiss = { showDatePicker = false },
             initialDate = selectedDate,
+            allowPastDates = true
         )
     }
 

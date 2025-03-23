@@ -62,7 +62,8 @@ fun AccessibleDatePickerDialog(
     onDateSelected: (LocalDate) -> Unit,
     onDismiss: () -> Unit,
     initialDate: LocalDate = LocalDate.now(),
-    validateDate: ((LocalDate) -> Pair<Boolean, String?>)? = null
+    validateDate: ((LocalDate) -> Pair<Boolean, String?>)? = null,
+    allowPastDates: Boolean = true // New parameter to control past date validation
 ) {
     val accessibleColors = LocalThemeColors.current
 
@@ -88,8 +89,8 @@ fun AccessibleDatePickerDialog(
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate()
 
-                        // Check if date is in the past
-                        if (DateValidator.isPastDate(selectedDate)) {
+                        // Only check if date is in the past when not allowing past dates
+                        if (!allowPastDates && DateValidator.isPastDate(selectedDate)) {
                             dateError = "Cannot create an event in the past"
                             return@Button
                         }

@@ -100,6 +100,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.taxapp.R
 import com.example.taxapp.accessibility.AccessibilityRepository
 import com.example.taxapp.accessibility.AccessibilitySettings
@@ -152,6 +153,15 @@ fun CalendarScreen(
     var showPastDueNotification by remember { mutableStateOf(false) }
     var pastDueCount by remember { mutableStateOf(0) }
 
+    // Get notification manager
+    val notificationManager = remember { NotificationManager.getInstance(context) }
+
+    LaunchedEffect(Unit) {
+        Log.d("CalendarScreen", "Entered calendar screen - resetting past due acknowledgment")
+        // Reset acknowledgment when entering the calendar screen
+        notificationManager.resetPastDueAcknowledgement()
+    }
+
     // Access shared repositories
     val languageManager = remember { AppLanguageManager.getInstance(context) }
     val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
@@ -192,13 +202,6 @@ fun CalendarScreen(
         eventsState = events
     }
 
-//    // Clean up TTS when not needed
-//    DisposableEffect(accessibilityState.textToSpeech) {
-//        onDispose {
-//            tts?.shutdown()
-//        }
-//    }
-
     // Collect events safely with lifecycle awareness
     val liveEvents by produceState(
         initialValue = events,
@@ -226,7 +229,8 @@ fun CalendarScreen(
                         }
 
                         pastDueCount = allPastDueEvents.size
-                        if (pastDueCount > 0 && !showPastDueNotification) {
+                        if (pastDueCount > 0 && !notificationManager.wasPastDueAcknowledgedRecently()) {
+                            Log.d("CalendarScreen", "Setting showPastDueNotification to true")
                             showPastDueNotification = true
                         }
                     }
@@ -680,7 +684,10 @@ fun CalendarScreen(
         // Past Due Notification Dialog
         if (showPastDueNotification && pastDueCount > 0) {
             AlertDialog(
-                onDismissRequest = { showPastDueNotification = false },
+                onDismissRequest = {
+                    showPastDueNotification = false
+                    notificationManager.acknowledgePastDueNotification()
+                },
                 title = {
                     Text(
                         text = stringResource(id = R.string.past_due_todo_events),
@@ -719,6 +726,7 @@ fun CalendarScreen(
                                         .padding(vertical = 4.dp)
                                         .clickable {
                                             showPastDueNotification = false
+                                            notificationManager.acknowledgePastDueNotification()
                                             onNavigateToEventDetails(event)
                                         },
                                     colors = CardDefaults.cardColors(
@@ -761,6 +769,7 @@ fun CalendarScreen(
                                                     delay(300)
                                                     if (pastDueCount <= 1) {
                                                         showPastDueNotification = false
+                                                        notificationManager.acknowledgePastDueNotification()
                                                     }
                                                 }
                                             },
@@ -777,7 +786,10 @@ fun CalendarScreen(
                 },
                 confirmButton = {
                     Button(
-                        onClick = { showPastDueNotification = false },
+                        onClick = {
+                            showPastDueNotification = false
+                            notificationManager.acknowledgePastDueNotification()
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )

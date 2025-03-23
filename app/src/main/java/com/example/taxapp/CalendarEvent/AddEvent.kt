@@ -524,6 +524,7 @@ fun AddEventScreen(
                 },
                 onDismiss = { showDatePicker = false },
                 initialDate = selectedDate,
+                allowPastDates = true
             )
         }
 
