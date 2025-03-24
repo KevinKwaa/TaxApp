@@ -1,6 +1,7 @@
 package com.example.taxapp
 
 import android.os.Build
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
@@ -33,6 +34,8 @@ import com.example.taxapp.CalendarEvent.CalendarScreen
 import com.example.taxapp.CalendarEvent.Event
 import com.example.taxapp.CalendarEvent.EventDetailScreen
 import com.example.taxapp.CalendarEvent.EventRepository
+import com.example.taxapp.accessibility.AccessibilityRepository
+import com.example.taxapp.accessibility.AccessibilityState
 import com.example.taxapp.accessibility.LocalTtsManager
 import com.example.taxapp.chatbot.ChatFAB
 import com.example.taxapp.chatbot.ChatViewModel
@@ -113,6 +116,21 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     // Get the TTS manager from the composition
     val ttsManager = LocalTtsManager.current
 
+    val accessibilityRepository = remember { AccessibilityRepository.getInstance(context) }
+    // Observe accessibility settings
+    val accessibilityState by accessibilityRepository.accessibilityStateFlow.collectAsState(
+        initial = AccessibilityState()
+    )
+
+    // Create a TTS instance if text-to-speech is enabled
+    val tts = remember(accessibilityState.textToSpeech) {
+        if (accessibilityState.textToSpeech) {
+            TextToSpeech(context) { status ->
+                // Initialize TTS engine
+            }
+        } else null
+    }
+
     // Current event for editing/viewing
     val currentEvent = remember { mutableStateOf<Event?>(null) }
 
@@ -133,55 +151,139 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     // Track navigation to speak screen changes
     LaunchedEffect(navController) {
         navController.addOnDestinationChangedListener { _, destination, arguments ->
-            when (destination.route) {
-                "login" -> {
-                    ttsManager?.speak("Login screen")
-                }
-                "register" -> {
-                    ttsManager?.speak("Register screen")
-                }
-                "home" -> {
-                    ttsManager?.speak("Home screen")
-                }
-                "calendar" -> {
-                    ttsManager?.speak("Calendar screen, showing your schedule")
-                }
-                "event_details" -> {
-                    val event = currentEvent.value
-                    ttsManager?.speak("Event details for ${event?.title ?: "selected event"}")
-                }
-                "add_event/{date}" -> {
-                    // Extract date from arguments
-                    val dateString = arguments?.getString("date")
-                    val dateText = if (dateString != null) {
-                        try {
-                            val date = LocalDate.parse(dateString)
-                            val formatter = DateTimeFormatter.ofPattern("MMMM d")
-                            "for ${date.format(formatter)}"
-                        } catch (e: Exception) {
-                            ""
-                        }
-                    } else ""
+            if (accessibilityState.textToSpeech) {
+                when (destination.route) {
+                    "login" -> {
+//                        tts?.speak(
+//                            "Login screen",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Login screen")
+                    }
 
-                    ttsManager?.speak("Add new event screen $dateText")
-                }
-                "editProfile" -> {
-                    ttsManager?.speak("Edit profile screen")
-                }
-                "uploadReceipt" -> {
-                    ttsManager?.speak("Upload receipt screen")
-                }
-                "receiptSummary" -> {
-                    ttsManager?.speak("Receipt summary screen")
-                }
-                "category" -> {
-                    ttsManager?.speak("Tax categories screen")
-                }
-                "taxPlan" -> {
-                    ttsManager?.speak("Tax plan screen")
-                }
-                "taxInformation" -> {
-                    ttsManager?.speak("Tax information screen")
+                    "register" -> {
+//                        tts?.speak(
+//                            "Register screen",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Register screen")
+                    }
+
+                    "home" -> {
+//                        tts?.speak(
+//                            "Home screen",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Home screen")
+                    }
+
+                    "calendar" -> {
+//                        tts?.speak(
+//                            "Calendar screen, showing your schedule",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Calendar screen, showing your schedule")
+                    }
+
+                    "event_details" -> {
+                        val event = currentEvent.value
+//                        tts?.speak(
+//                            "Event details for ${event?.title ?: "selected event"}",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Event details for ${event?.title ?: "selected event"}")
+                    }
+
+                    "add_event/{date}" -> {
+                        // Extract date from arguments
+                        val dateString = arguments?.getString("date")
+                        val dateText = if (dateString != null) {
+                            try {
+                                val date = LocalDate.parse(dateString)
+                                val formatter = DateTimeFormatter.ofPattern("MMMM d")
+                                "for ${date.format(formatter)}"
+                            } catch (e: Exception) {
+                                ""
+                            }
+                        } else ""
+//                        tts?.speak(
+//                            "Add new event screen $dateText",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Add new event screen $dateText")
+                    }
+
+                    "editProfile" -> {
+//                        tts?.speak(
+//                            "Edit profile screen",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Edit profile screen")
+                    }
+
+                    "uploadReceipt" -> {
+//                        tts?.speak(
+//                            "Upload receipt screen",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Upload receipt screen")
+                    }
+
+                    "receiptSummary" -> {
+//                        tts?.speak(
+//                            "Receipt summary screen",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Receipt summary screen")
+                    }
+
+                    "category" -> {
+//                        tts?.speak(
+//                            "Tax categories screen",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Tax categories screen")
+                    }
+
+                    "taxPlan" -> {
+//                        tts?.speak(
+//                            "Tax plan screen",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Tax plan screen")
+                    }
+
+                    "taxInformation" -> {
+//                        tts?.speak(
+//                            "Tax information screen",
+//                            TextToSpeech.QUEUE_FLUSH,
+//                            null,
+//                            null
+//                        )
+                        ttsManager?.speak("Tax information screen")
+                    }
                 }
             }
         }

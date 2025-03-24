@@ -192,7 +192,10 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        IconButton(onClick = { /* Already on Home */ }) {
+                        IconButton(onClick = {
+                            ttsManager?.speak("Already on Home Screen")
+                        /* Already on Home */
+                        }) {
                             Icon(
                                 imageVector = Icons.Filled.Home,
                                 contentDescription = "Home",
@@ -201,7 +204,7 @@ fun HomeScreen(
                         }
 
                         IconButton(onClick = {
-                            ttsManager?.speak("Calendar")
+                            ttsManager?.speak("Calendar Screen")
                             navController.navigate("calendar")
                         }) {
                             Icon(
@@ -221,7 +224,7 @@ fun HomeScreen(
                         }
 
                         IconButton(onClick = {
-                            ttsManager?.speak("Categories")
+                            ttsManager?.speak("Categories Screen")
                             navController.navigate("category")
                         }) {
                             Icon(
@@ -231,7 +234,7 @@ fun HomeScreen(
                         }
 
                         IconButton(onClick = {
-                            ttsManager?.speak("Account")
+                            ttsManager?.speak("Account Screen")
                             navController.navigate("editProfile")
                         }) {
                             Icon(
